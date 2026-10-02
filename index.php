@@ -18,10 +18,36 @@ $clinic = site_settings([
     'chatbot_intro' => 'Chat hỗ trợ giúp bệnh nhân xem nhanh hướng dẫn thường gặp và gửi câu hỏi cho bộ phận hỗ trợ.',
 ]);
 
-$doctors = $conn->query('SELECT id, name, title, department, specialties, bio, photo_path FROM doctors ORDER BY id ASC');
-$quickReplies = get_active_quick_replies(6);
-$newsPosts = get_recent_news_posts(3, true);
-$customerResources = get_customer_resources(3, true);
+$cacheFile = APP_RUNTIME_ROOT . DIRECTORY_SEPARATOR . 'homepage_data.json';
+$homeData = null;
+if (is_file($cacheFile) && (time() - (int) filemtime($cacheFile) < 180)) {
+    $raw = @file_get_contents($cacheFile);
+    if ($raw !== false && $raw !== '') {
+        $homeData = json_decode($raw, true);
+    }
+}
+
+if (!is_array($homeData)) {
+    $doctorsRes = $conn->query('SELECT id, name, title, department, specialties, bio, photo_path FROM doctors ORDER BY id ASC');
+    $doctorsList = $doctorsRes ? $doctorsRes->fetch_all(MYSQLI_ASSOC) : [];
+    $quickRepliesList = get_active_quick_replies(6);
+    $newsPostsList = get_recent_news_posts(3, true);
+    $customerResourcesList = get_customer_resources(3, true);
+
+    $homeData = [
+        'doctors' => $doctorsList,
+        'quickReplies' => $quickRepliesList,
+        'newsPosts' => $newsPostsList,
+        'customerResources' => $customerResourcesList,
+    ];
+
+    @file_put_contents($cacheFile, json_encode($homeData, JSON_UNESCAPED_UNICODE));
+}
+
+$doctors = $homeData['doctors'] ?? [];
+$quickReplies = $homeData['quickReplies'] ?? [];
+$newsPosts = $homeData['newsPosts'] ?? [];
+$customerResources = $homeData['customerResources'] ?? [];
 $appointmentsEnabled = appointments_enabled();
 
 render_header('Cổng hỗ trợ bệnh viện');
@@ -151,10 +177,10 @@ render_hero($clinic['clinic_name'], $clinic['clinic_intro']);
     <h2 class="section-title">Giới thiệu về bác sĩ</h2>
     <p class="section-lead">Danh sách bác sĩ và thông tin giới thiệu hiện được cập nhật trực tiếp từ tài khoản admin.</p>
     <div class="grid grid-2">
-      <?php while ($doctor = $doctors->fetch_assoc()): ?>
+      <?php foreach ($doctors as $doctor): ?>
         <article class="service-card">
           <div class="doctor-card-head">
-            <img class="doctor-photo" src="<?= e(doctor_photo_url($doctor['photo_path'] ?? null)) ?>" alt="<?= e($doctor['name']) ?>">
+            <img class="doctor-photo" src="<?= e(doctor_photo_url($doctor['photo_path'] ?? null)) ?>" alt="<?= e($doctor['name']) ?>" loading="lazy" width="92" height="92">
             <div>
               <div class="service-icon"><?= (int) $doctor['id'] ?></div>
               <h3><?= e($doctor['name']) ?></h3>
@@ -171,7 +197,7 @@ render_hero($clinic['clinic_name'], $clinic['clinic_intro']);
           </div>
           <p><?= nl2br(e($doctor['bio'] !== '' ? $doctor['bio'] : 'Bác sĩ phụ trách tiếp nhận khám, tư vấn và cập nhật hồ sơ điều trị cho người bệnh trong chuyên khoa tương ứng.')) ?></p>
         </article>
-      <?php endwhile; ?>
+      <?php endforeach; ?>
     </div>
   </section>
 
