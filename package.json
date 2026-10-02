@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "description": "Hospital Web Support System - Cloudflare Edge Distribution & Render Integration",
   "private": true,
-  "main": "worker.js",
+  "main": "worker.mjs",
   "scripts": {
     "build": "node build_pages.js",
     "deploy": "wrangler deploy"
   },
   "devDependencies": {
-    "wrangler": "^3.114.0"
+    "wrangler": "^4.146.0"
   }
 }

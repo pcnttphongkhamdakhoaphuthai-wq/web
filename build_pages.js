@@ -467,4 +467,37 @@ const resourcesHtml = `<!DOCTYPE html>
 </html>`;
 fs.writeFileSync(path.join(distDir, 'resources.html'), resourcesHtml, 'utf-8');
 
+// ==========================================
+// 11. Sinh trang 404.html (Xử lý fallback theo chuẩn Cloudflare Static Assets)
+// ==========================================
+const notFoundHtml = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trang không tìm thấy (404) - Phòng khám Đa khoa Phú Thái</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <style>${commonStyles}</style>
+</head>
+<body>
+  ${commonHeader}
+  <main class="container" style="max-width:600px; margin:70px auto; text-align:center;">
+    <div class="card" style="padding:40px 24px;">
+      <h1 style="font-size:3rem; color:var(--primary); margin-bottom:12px;">404</h1>
+      <h2 style="font-size:1.4rem; color:var(--text); margin-bottom:12px;">Không tìm thấy trang yêu cầu</h2>
+      <p style="color:var(--muted); margin-bottom:28px;">Đường dẫn bạn truy cập có thể đã thay đổi hoặc không tồn tại trên hệ thống.</p>
+      <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+        <a href="/" class="btn">Về trang chủ</a>
+        <a href="/book_appointment.html" class="btn btn-secondary">Đặt lịch khám</a>
+      </div>
+    </div>
+  </main>
+  ${commonFooter}
+</body>
+</html>`;
+fs.writeFileSync(path.join(distDir, '404.html'), notFoundHtml, 'utf-8');
+
 console.log('[BUILD] Đóng gói thành công toàn bộ hệ thống giao diện tĩnh cho Cloudflare Pages tại thư mục dist/!');
