@@ -44,8 +44,9 @@ function load_app_config(): array
         'gemini_api_key' => getenv('HOSPITAL_GEMINI_API_KEY') ?: 'AIzaSyC5Oi03Bj5HDq98zZxav7TQugk3sHAxKAI',
     ];
 
-    $configPath = getenv('HOSPITAL_APP_CONFIG');
-    if (!is_string($configPath) || trim($configPath) === '') {
+    $rawConfigPath = getenv('HOSPITAL_APP_CONFIG');
+    $configPath = is_string($rawConfigPath) ? trim($rawConfigPath) : '';
+    if ($configPath === '') {
         $candidates = [
             __DIR__ . DIRECTORY_SEPARATOR . 'hospital_hosting.secrets.php',
             __DIR__ . DIRECTORY_SEPARATOR . 'hospital_full_ALL.secrets.php',
@@ -58,12 +59,9 @@ function load_app_config(): array
                 break;
             }
         }
-        if (!isset($configPath)) {
-            $configPath = __DIR__ . DIRECTORY_SEPARATOR . 'hospital_full_ALL.secrets.php';
-        }
     }
 
-    if (is_file($configPath)) {
+    if ($configPath !== '' && is_file($configPath)) {
         $fileConfig = require $configPath;
         if (is_array($fileConfig)) {
             $config = array_merge($config, $fileConfig);
