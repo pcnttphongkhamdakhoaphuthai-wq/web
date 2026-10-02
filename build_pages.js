@@ -5,7 +5,7 @@ const rootDir = __dirname;
 const distDir = path.join(rootDir, 'dist');
 const BACKEND_URL = 'https://conghotrophongkhamphuthai.io.vn';
 
-console.log('[BUILD] Đang đóng gói toàn bộ hệ thống giao diện tĩnh Decoupled cho Cloudflare Pages...');
+console.log('[BUILD] Đang đóng gói toàn bộ giao diện tĩnh đồng bộ 100% giao diện gốc cho Cloudflare Edge...');
 
 // 1. Dọn dẹp và tạo mới thư mục dist/
 if (fs.existsSync(distDir)) {
@@ -27,7 +27,7 @@ function copyRecursive(src, dest) {
   }
 }
 
-// 2. Sao chép toàn bộ tài nguyên tĩnh (assets, logo, robots, sitemap)
+// 2. Sao chép toàn bộ tài nguyên tĩnh
 console.log('[BUILD] Sao chép toàn bộ thư mục assets (ảnh bác sĩ, branding, script JS)...');
 copyRecursive(path.join(rootDir, 'assets'), path.join(distDir, 'assets'));
 
@@ -56,8 +56,6 @@ fs.writeFileSync(path.join(distDir, '_headers'), headersContent, 'utf-8');
 
 // 4. Tạo file cấu hình Cloudflare Pages _redirects (Chỉ chuyển hướng các khu vực quản trị động)
 const redirectsContent = `# Cloudflare Pages _redirects configuration
-# Các trang tĩnh (index, login, register, book_appointment, news, resources) phục vụ trực tiếp 100% từ Cloudflare Edge.
-# Chỉ chuyển hướng các trang quản trị backend đặc thù:
 /dashboard*  ${BACKEND_URL}/dashboard:splat  302
 /admin_*  ${BACKEND_URL}/admin_:splat  302
 /account*  ${BACKEND_URL}/account:splat  302
@@ -66,297 +64,539 @@ const redirectsContent = `# Cloudflare Pages _redirects configuration
 `;
 fs.writeFileSync(path.join(distDir, '_redirects'), redirectsContent, 'utf-8');
 
-// Common Header & Navigation
+// ==========================================
+// TOÀN BỘ CSS GỐC CỦA HỆ THỐNG (config.php dòng 3705 - 3768)
+// ==========================================
+const originalStyles = `
+  :root {
+      --primary: #0077b6;
+      --secondary: #00b4d8;
+      --surface: #fff;
+      --soft: #f1faff;
+      --ink: #1f2d3d;
+      --muted: #667085;
+      --border: #d7e4ef;
+      --shadow: 0 18px 40px rgba(10,37,64,.08);
+      
+      /* New Design Tokens */
+      --bg: #f8fafc;
+      --bg2: #f1f5f9;
+      --tx: #1e293b;
+      --tx2: #64748b;
+      --ct: #e2e8f0;
+      --r: 12px;
+      --err-tx: #b91c1c;
+      
+      color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { 
+      margin: 0; 
+      font-family: "Be Vietnam Pro", Segoe UI, Tahoma, sans-serif; 
+      background: linear-gradient(180deg, #eef8fd 0, #f8fbfd 160px, #f4f8fb 100%); 
+      color: var(--tx); 
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+  }
+  main { flex: 1; }
+  a{color:inherit}.site-header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);box-shadow:0 3px 18px rgba(0,0,0,.05)}
+  .site-header-inner{max-width:1180px;margin:0 auto;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+  .logo{display:flex;align-items:center;gap:12px;font-size:22px;font-weight:800;color:var(--primary);text-decoration:none}.logo-mark{width:156px;height:86px;object-fit:contain;display:block}.logo-text{display:block;line-height:1.1}.nav{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.nav a{text-decoration:none;color:#334155;font-weight:500}.nav a:hover{color:var(--primary)}.nav-pill{padding:10px 14px;background:var(--soft);border-radius:999px}
+  .hero{background:linear-gradient(125deg,#0077b6 0,#00b4d8 55%,#73dff3 100%);color:#fff;padding:72px 20px 90px}.hero-inner{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);gap:30px;align-items:center}
+  .hero h1{font-size:clamp(34px,5vw,52px);line-height:1.08;margin:0 0 14px;font-weight:800;}.hero p{font-size:18px;line-height:1.7;max-width:640px;margin:0 0 22px}.hero-badges{display:flex;gap:12px;flex-wrap:wrap}.hero-badge{padding:10px 14px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.14);border-radius:999px;font-size:14px;}
+  .hero-panel{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:24px;padding:24px;box-shadow:0 18px 32px rgba(0,0,0,.12)}.hero-panel h3{margin:0 0 12px}.hero-list{display:grid;gap:12px}.hero-item{padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.14);font-size:15px;line-height:1.5;}
+  .wrap{max-width:1180px;margin:-42px auto 0;padding:0 20px 50px;position:relative}.section{margin-bottom:28px}.section-title{font-size:30px;margin:0 0 10px;font-weight:800;}.section-lead{color:var(--muted);max-width:760px;line-height:1.7;margin:0 0 24px}
+  .card{background:var(--surface);border-radius:24px;padding:26px;box-shadow:var(--shadow);margin-bottom:20px;border:1px solid rgba(215,228,239,.7)}.grid{display:grid;gap:18px}.grid-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}.grid-3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.grid-4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .service-card{background:linear-gradient(180deg,#fff 0,#f8fcff 100%);border:1px solid var(--border);border-radius:22px;padding:24px;box-shadow:var(--shadow)}.service-icon{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,#0077b6,#00b4d8);color:#fff;font-size:24px;font-weight:800;margin-bottom:16px}
+  .service-card h3{margin:0 0 8px;font-size:20px;font-weight:700;}.service-card p{margin:0;color:var(--muted);line-height:1.7}
+  .panel-title{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}h1,h2,h3{margin-top:0}
+  label{display:block;font-weight:600;margin-bottom:7px}input,select,textarea{width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:14px;font:inherit;background:#fff}input:focus,select:focus,textarea:focus{outline:none;border-color:var(--secondary);box-shadow:0 0 0 4px rgba(0,180,216,.12)}
+  textarea{min-height:120px;resize:vertical}.search-box{display:flex;gap:10px;padding:10px;border-radius:999px;background:#fff;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.45)}.search-box input{border:none;padding:10px 14px;background:transparent;flex:1;font-size:15px;outline:none;}.search-box input:focus{box-shadow:none}
+  button,.btn{display:inline-block;border:none;border-radius:14px;background:linear-gradient(135deg,#0077b6,#0096c7);color:#fff;padding:12px 18px;font:inherit;font-weight:600;text-decoration:none;cursor:pointer;box-shadow:0 12px 24px rgba(0,119,182,.18);text-align:center;}
+  .btn-secondary{background:#475569;box-shadow:none}.btn-light{background:#eaf7ff;color:#0369a1;box-shadow:none}.actions{display:flex;gap:10px;flex-wrap:wrap}
+  .muted{color:var(--muted)}.badge{display:inline-flex;align-items:center;padding:7px 12px;border-radius:999px;background:#eaf7ff;color:#0369a1;font-size:13px;font-weight:700;margin:4px 6px 0 0}
+  .doctor-meta{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 14px}.doctor-meta span{padding:8px 12px;border-radius:999px;background:#eef8fd;color:#075985;font-size:13px;font-weight:600}.doctor-photo{width:92px;height:92px;border-radius:24px;object-fit:cover;border:1px solid var(--border);box-shadow:var(--shadow);background:#f8fafc}.doctor-card-head{display:flex;align-items:flex-start;gap:18px}
+  .map-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .footer{background:#003049;color:#fff;margin-top:40px}.footer-inner{max-width:1180px;margin:0 auto;padding:26px 20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  @media (max-width:1100px){.hero-inner{grid-template-columns:1fr}.wrap{margin-top:0}.hero{padding-bottom:42px}}
+  @media (max-width:900px){.hero-inner{grid-template-columns:1fr}.wrap{margin-top:0}.site-header-inner{padding:16px}.nav{gap:12px}.logo-mark{width:112px;height:68px}}
+  @media (max-width:640px){.hero{padding:56px 16px 74px}.wrap{padding:0 16px 40px}.card,.service-card{padding:20px}.search-box{flex-direction:column;border-radius:22px}.search-box button,.btn{width:auto}.logo{gap:10px}.logo-mark{width:88px;height:54px}.logo-text{font-size:18px}}
+
+  /* Floating Social Bubbles */
+  .social-bubbles{position:fixed;bottom:90px;right:20px;display:flex;flex-direction:column;gap:14px;z-index:9998;}
+  .sb{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.3);text-decoration:none;transition:transform .2s,box-shadow .2s;position:relative;border:none;cursor:pointer;}
+  .sb:hover{transform:scale(1.1);box-shadow:0 8px 28px rgba(0,0,0,.35);}
+  .sb svg{width:40px;height:40px;}
+  .sb-zalo{background:#0068ff;}
+  .sb-msg{background:linear-gradient(135deg,#00b2ff,#9b30ff);}
+`;
+
+// Common Header gốc từ render_header()
 const commonHeader = `
-  <header>
-    <div class="nav-container">
-      <a href="/" class="brand">
-        <img src="/logo.png" alt="Phòng khám đa khoa Phú Thái" onerror="this.style.display='none'">
-        <span>Phòng Khám Đa Khoa Phú Thái</span>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="logo" href="/">
+        <img class="logo-mark" src="/logo.png" alt="Logo phòng khám">
+        <span class="logo-text">PHÒNG KHÁM ĐA KHOA PHÚ THÁI</span>
       </a>
-      <nav class="nav-links">
+      <nav class="nav">
         <a href="/">Trang chủ</a>
+        <a href="/book_appointment.html">Đặt lịch</a>
+        <a href="/login.html">Kết quả</a>
         <a href="/news.html">Tin tức</a>
-        <a href="/resources.html">Cẩm nang</a>
-        <a href="/book_appointment.html" class="btn btn-outline">Đặt lịch khám</a>
-        <a href="/login.html" class="btn">Đăng nhập</a>
+        <a href="/resources.html">Tư liệu</a>
+        <a href="/#chatbot">Hỗ trợ</a>
+        <a href="/login.html">Đăng nhập</a>
       </nav>
     </div>
   </header>
+  <main>
 `;
 
+// Common Footer gốc từ render_footer()
 const commonFooter = `
-  <footer>
-    <div style="max-width:1200px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:32px; text-align:left; margin-bottom:30px;">
+  </main>
+  <footer class="footer">
+    <div class="footer-inner">
       <div>
-        <h3 style="color:#fff; margin-bottom:12px; font-size:1.15rem;">Phòng Khám Đa Khoa Phú Thái</h3>
-        <p style="color:#94a3b8; font-size:0.92rem; line-height:1.6;">Đơn vị y tế uy tín hàng đầu tại Thái Nguyên với đội ngũ bác sĩ giàu kinh nghiệm, trang thiết bị chẩn đoán hiện đại và hệ thống lưu trữ kết quả trực tuyến 24/7.</p>
+        Hotline: 0208 6289 888 / 0963 485 65 | Email: pcnttphongkhamdakhoaphuthai@gmail.com
+        <br>Địa chỉ: Xóm Hoà Bình 2, xã Phú Bình, tỉnh Thái Nguyên
+        <div class="map-links">
+          <a class="btn btn-light" href="https://maps.google.com" target="_blank" rel="noopener">Google Maps</a>
+        </div>
       </div>
-      <div>
-        <h3 style="color:#fff; margin-bottom:12px; font-size:1.15rem;">Thông tin liên hệ</h3>
-        <p style="color:#cbd5e1; font-size:0.92rem; margin-bottom:8px;">📍 <strong>Địa chỉ:</strong> Xóm Hoà Bình 2, xã Phú Bình, tỉnh Thái Nguyên</p>
-        <p style="color:#cbd5e1; font-size:0.92rem; margin-bottom:8px;">📞 <strong>Hotline:</strong> 0208 6289 888 / 0963 485 65</p>
-        <p style="color:#cbd5e1; font-size:0.92rem;">✉️ <strong>Email:</strong> pcnttphongkhamdakhoaphuthai@gmail.com</p>
-      </div>
-      <div>
-        <h3 style="color:#fff; margin-bottom:12px; font-size:1.15rem;">Giờ làm việc</h3>
-        <p style="color:#cbd5e1; font-size:0.92rem; margin-bottom:6px;">🕒 Thứ 2 - Thứ 7: 07:00 - 17:30</p>
-        <p style="color:#cbd5e1; font-size:0.92rem; margin-bottom:6px;">🕒 Chủ nhật: 07:30 - 12:00</p>
-        <p style="color:#38bdf8; font-size:0.88rem; margin-top:10px;">★ Trực cấp cứu và hỗ trợ đặt hẹn trực tuyến 24/7</p>
-      </div>
-    </div>
-    <div style="border-top:1px solid #334155; padding-top:20px; font-size:0.85rem; color:#64748b;">
-      © 2026 Bản quyền thuộc về Phòng Khám Đa Khoa Phú Thái. Hệ thống tối ưu phân tán Cloudflare Edge & Render PaaS.
+      <div>Phòng khám đa khoa Phú Thái - Cổng hỗ trợ dịch vụ khám chữa bệnh trực tuyến</div>
     </div>
   </footer>
-  <script src="/assets/api-client.js"></script>
-`;
 
-const commonStyles = `
-  :root {
-    --primary: #0077b6;
-    --primary-hover: #023e8a;
-    --secondary: #00b4d8;
-    --surface: #ffffff;
-    --bg: #f8fafc;
-    --text: #0f172a;
-    --muted: #475569;
-    --border: #e2e8f0;
-    --shadow: 0 4px 20px rgba(0, 119, 182, 0.08);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-  header { background: #fff; border-bottom: 1px solid rgba(0, 119, 182, 0.12); padding: 14px 24px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
-  .nav-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--primary); font-weight: 700; font-size: 1.15rem; }
-  .brand img { height: 42px; width: auto; object-fit: contain; }
-  .nav-links { display: flex; gap: 16px; align-items: center; }
-  .nav-links a { text-decoration: none; color: var(--muted); font-weight: 500; transition: color .2s; font-size: 0.95rem; }
-  .nav-links a:hover { color: var(--primary); }
-  .btn { background: var(--primary); color: #fff !important; padding: 10px 20px; border-radius: 10px; font-weight: 600; text-decoration: none; transition: all .2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer; text-align: center; }
-  .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
-  .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary) !important; }
-  .btn-outline:hover { background: var(--primary); color: #fff !important; }
-  .btn-secondary { background: #e2e8f0; color: #1e293b !important; }
-  .btn-secondary:hover { background: #cbd5e1; }
-  .btn-block { width: 100%; }
-  .hero { background: linear-gradient(135deg, #0077b6 0%, #0096c7 100%); color: #fff; padding: 64px 24px; text-align: center; }
-  .hero h1 { font-size: 2.6rem; margin-bottom: 16px; font-weight: 800; letter-spacing: -0.5px; }
-  .hero p { font-size: 1.15rem; max-width: 780px; margin: 0 auto 28px; opacity: 0.95; }
-  .container { max-width: 1200px; margin: 36px auto; padding: 0 20px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 36px; }
-  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
-  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-  .card { background: var(--surface); border-radius: 18px; padding: 26px; box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform .2s, box-shadow .2s; }
-  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(0, 119, 182, 0.12); }
-  .card h3 { color: var(--primary); margin-bottom: 10px; font-size: 1.25rem; font-weight: 700; }
-  .card p { color: var(--muted); font-size: 0.95rem; margin-bottom: 18px; line-height: 1.6; }
-  .form-group { margin-bottom: 20px; text-align: left; }
-  .form-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.92rem; color: #1e293b; }
-  .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 10px; font: inherit; background: #fff; color: #0f172a; transition: border-color .2s, box-shadow .2s; }
-  .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.15); }
-  footer { background: #0f172a; color: #94a3b8; text-align: center; padding: 48px 24px 24px; margin-top: 60px; }
-  .doctor-card { display: flex; gap: 18px; align-items: flex-start; }
-  .doctor-photo { width: 84px; height: 84px; border-radius: 16px; object-fit: cover; background: #e0f2fe; flex-shrink: 0; border: 2px solid #bae6fd; }
-  .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; background: #e0f2fe; color: #0369a1; margin-bottom: 8px; }
-  @media(max-width: 768px) {
-    .hero h1 { font-size: 2rem; }
-    .nav-links { display: none; }
-  }
+  <!-- Floating Social Bubbles (Zalo + Messenger) -->
+  <div class="social-bubbles">
+    <a href="https://zalo.me/096348565" target="_blank" rel="noopener noreferrer" class="sb sb-zalo" title="Chat Zalo" aria-label="Chat Zalo">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><text x="24" y="34" text-anchor="middle" font-size="22" font-weight="900" fill="white" font-family="Arial Black,Arial,sans-serif" letter-spacing="-1">Zalo</text></svg>
+    </a>
+    <a href="https://m.me/pcnttphongkhamdakhoaphuthai" target="_blank" rel="noopener noreferrer" class="sb sb-msg" title="Chat Messenger" aria-label="Chat Messenger">
+      <svg viewBox="0 0 32 32" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M16 2C8.268 2 2 7.82 2 14.91c0 3.862 1.74 7.32 4.504 9.73V30l4.14-2.29A14.86 14.86 0 0016 27.82c7.732 0 14-5.82 14-12.91C30 7.82 23.732 2 16 2zm1.4 17.37l-3.57-3.81-6.97 3.81 7.67-8.14 3.66 3.81 6.88-3.81-7.67 8.14z"/></svg>
+    </a>
+  </div>
+
+  <script src="/assets/api-client.js"></script>
+  <script src="/assets/app.js"></script>
 `;
 
 // ==========================================
-// 5. Sinh trang index.html (Trang chủ tĩnh hoàn chỉnh)
+// 5. Sinh trang index.html (Đồng bộ 100% giao diện index.php gốc)
 // ==========================================
 const indexHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Phòng khám Đa khoa Phú Thái - Cổng thông tin y tế trực tuyến</title>
-  <meta name="description" content="Phòng khám đa khoa Phú Thái - Đặt lịch khám bệnh, tra cứu kết quả xét nghiệm và tư vấn sức khỏe trực tuyến.">
+  <title>Cổng hỗ trợ bệnh viện</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap"></noscript>
   <link rel="icon" type="image/png" href="/logo.png">
-  <style>${commonStyles}</style>
+  <style>${originalStyles}</style>
 </head>
 <body>
   ${commonHeader}
 
+  <!-- Hero Section gốc -->
   <section class="hero">
-    <h1>Phòng Khám Đa Khoa Phú Thái</h1>
-    <p>Chăm sóc sức khỏe tận tâm, ứng dụng công nghệ số hoá y tế hiện đại giúp người bệnh tra cứu kết quả và đặt lịch khám nhanh chóng.</p>
-    <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
-      <a href="/book_appointment.html" class="btn" style="background:#fff; color:var(--primary)!important; font-size:1.05rem; padding:12px 28px; box-shadow:0 4px 15px rgba(0,0,0,0.1);">📅 Đặt lịch khám ngay</a>
-      <a href="/login.html" class="btn btn-outline" style="border-color:#fff; color:#fff!important; font-size:1.05rem; padding:12px 28px;">Tra cứu hồ sơ bệnh án</a>
+    <div class="hero-inner">
+      <div>
+        <h1>Phòng khám đa khoa Phú Thái</h1>
+        <p>Phòng khám cung cấp dịch vụ đặt lịch, trả kết quả và quản lý hồ sơ khám bệnh trên cùng một hệ thống trực tuyến.</p>
+        <div class="hero-badges">
+          <span class="hero-badge">Đặt lịch trực tuyến</span>
+          <span class="hero-badge">Tra cứu kết quả</span>
+          <span class="hero-badge">Hỗ trợ hồ sơ</span>
+        </div>
+      </div>
+      <div class="hero-panel">
+        <h3>Dịch vụ nổi bật</h3>
+        <div class="hero-list">
+          <div class="hero-item">Đăng nhập bằng CCCD để tra cứu lịch hẹn và hồ sơ khám.</div>
+          <div class="hero-item">Xem kết quả gần nhất, đơn thuốc và tệp PDF trên cùng một màn hình.</div>
+          <div class="hero-item">Liên hệ hỗ trợ để cập nhật BHYT, thanh toán và hồ sơ bệnh án.</div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <main class="container">
-    <div style="text-align:center; margin-bottom:32px;">
-      <h2 style="color:var(--primary); font-size:1.85rem; font-weight:800;">Dịch vụ trực tuyến</h2>
-      <p style="color:var(--muted); font-size:1rem;">Tiện ích y tế điện tử phục vụ người bệnh 24/7</p>
-    </div>
-
-    <div class="grid">
-      <div class="card">
-        <span class="badge">Nhanh chóng</span>
-        <h3>1. Đặt lịch khám bệnh</h3>
-        <p>Chủ động chọn bác sĩ chuyên khoa, ngày giờ khám thuận tiện. Không cần xếp hàng chờ đợi lấy số.</p>
-        <a href="/book_appointment.html" class="btn">Đặt hẹn trực tuyến →</a>
-      </div>
-      <div class="card">
-        <span class="badge">Bảo mật</span>
-        <h3>2. Kết quả xét nghiệm</h3>
-        <p>Tra cứu kết quả siêu âm, xét nghiệm máu, đơn thuốc và lịch sử khám bệnh bằng CCCD an toàn.</p>
-        <a href="/login.html" class="btn">Tra cứu ngay →</a>
-      </div>
-      <div class="card">
-        <span class="badge">Trí tuệ nhân tạo</span>
-        <h3>3. Trợ lý y tế AI 24/7</h3>
-        <p>Hỏi đáp thông tin chuẩn bị trước khi khám, bảng giá dịch vụ và chính sách BHYT tức thời.</p>
-        <a href="#ai-assistant" class="btn">Chat với AI →</a>
-      </div>
-      <div class="card">
-        <span class="badge">Kiến thức</span>
-        <h3>4. Cẩm nang sức khỏe</h3>
-        <p>Xem quy trình tiếp nhận, tài liệu hướng dẫn và các bài viết tư vấn y khoa hữu ích.</p>
-        <a href="/resources.html" class="btn">Xem cẩm nang →</a>
-      </div>
-    </div>
-
-    <!-- Giới thiệu phòng khám -->
-    <div class="card" style="margin-bottom:36px; padding:36px;">
-      <h2 style="color:var(--primary); font-size:1.6rem; margin-bottom:12px;">Về chúng tôi</h2>
-      <p style="color:var(--muted); font-size:1.05rem; line-height:1.7; margin-bottom:24px;">Phòng khám đa khoa Phú Thái toạ lạc tại trung tâm huyện Phú Bình, tỉnh Thái Nguyên, là địa chỉ tin cậy của hàng nghìn lượt người bệnh mỗi năm. Chúng tôi tự hào sở hữu hệ thống trang thiết bị chẩn đoán tiên tiến cùng đội ngũ y bác sĩ đầu ngành tâm huyết.</p>
-      
-      <div class="grid grid-3" style="margin-bottom:0;">
-        <div style="background:#f1f5f9; padding:20px; border-radius:12px;">
-          <h4 style="color:#0f172a; margin-bottom:6px;">🌟 Sứ mệnh</h4>
-          <p style="font-size:0.9rem; margin-bottom:0;">Nâng cao chất lượng sống cộng đồng bằng dịch vụ y tế chuẩn mực, chu đáo và chi phí minh bạch, hợp lý.</p>
-        </div>
-        <div style="background:#f1f5f9; padding:20px; border-radius:12px;">
-          <h4 style="color:#0f172a; margin-bottom:6px;">🏥 Cơ sở vật chất</h4>
-          <p style="font-size:0.9rem; margin-bottom:0;">Khu khám riêng biệt, máy siêu âm màu 4D, hệ thống xét nghiệm tự động và phòng lưu bệnh nhân tiện nghi.</p>
-        </div>
-        <div style="background:#f1f5f9; padding:20px; border-radius:12px;">
-          <h4 style="color:#0f172a; margin-bottom:6px;">📋 Chuyên khoa đa dạng</h4>
-          <p style="font-size:0.9rem; margin-bottom:0;">Nội tổng quát, Ngoại khoa, Nhi khoa, Sản phụ khoa, Tai Mũi Họng, Chẩn đoán hình ảnh và Xét nghiệm.</p>
+  <!-- Khối nội dung .wrap gốc lồng lên mép Hero -->
+  <div class="wrap">
+    <!-- Tìm bác sĩ hoặc dịch vụ -->
+    <section class="section card">
+      <div class="panel-title">
+        <div>
+          <h2 class="section-title">Tìm bác sĩ hoặc dịch vụ</h2>
+          <p class="section-lead">Chọn nhanh các nhóm chức năng chính để vào đúng luồng thao tác thay vì tìm thủ công từng trang.</p>
         </div>
       </div>
-    </div>
-
-    <!-- Đội ngũ bác sĩ -->
-    <div style="margin-bottom:36px;">
-      <div style="text-align:center; margin-bottom:28px;">
-        <h2 style="color:var(--primary); font-size:1.85rem; font-weight:800;">Đội ngũ bác sĩ chuyên khoa</h2>
-        <p style="color:var(--muted); font-size:1rem;">Các chuyên gia giàu kinh nghiệm luôn sẵn sàng tư vấn và điều trị</p>
+      <div class="search-box">
+        <input value="Bác sĩ, dịch vụ, kết quả, hỗ trợ..." readonly>
+        <a class="btn" href="/book_appointment.html">Tìm và đặt lịch</a>
       </div>
+    </section>
 
+    <!-- Dịch vụ trực tuyến -->
+    <section class="section">
+      <h2 class="section-title">Dịch vụ trực tuyến</h2>
+      <div class="grid grid-4">
+        <article class="service-card">
+          <div class="service-icon">1</div>
+          <h3>Đặt lịch khám</h3>
+          <p>Chọn bác sĩ, thời gian khám và gửi yêu cầu trực tuyến nhanh chóng.</p>
+          <div class="actions" style="margin-top:12px;">
+            <a class="btn btn-light" href="/book_appointment.html">Đặt lịch ngay →</a>
+          </div>
+        </article>
+
+        <article class="service-card">
+          <div class="service-icon">2</div>
+          <h3>Kết quả khám</h3>
+          <p>Tra cứu hồ sơ, chẩn đoán, đơn thuốc và tệp kết quả PDF.</p>
+          <div class="actions" style="margin-top:12px;">
+            <a class="btn btn-light" href="/login.html">Xem kết quả →</a>
+          </div>
+        </article>
+
+        <article class="service-card">
+          <div class="service-icon">3</div>
+          <h3>Quản lý tài khoản</h3>
+          <p>Bệnh nhân tự chỉnh sửa thông tin; admin có khu vực vận hành và phân quyền riêng.</p>
+          <div class="actions" style="margin-top:12px;">
+            <a class="btn btn-light" href="/login.html">Đến bảng điều khiển →</a>
+          </div>
+        </article>
+
+        <article class="service-card">
+          <div class="service-icon">4</div>
+          <h3>Bot chat hỗ trợ</h3>
+          <p>Hỏi nhanh các câu thường gặp và nhận câu trả lời mẫu ngay trên hệ thống.</p>
+          <div class="actions" style="margin-top:12px;">
+            <a class="btn btn-light" href="#chatbot">Mở chat hỗ trợ →</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Giới thiệu về phòng khám -->
+    <section class="section card" id="clinic">
+      <div class="panel-title">
+        <div>
+          <h2 class="section-title">Giới thiệu về phòng khám</h2>
+          <p class="section-lead">Phòng khám cung cấp dịch vụ đặt lịch, trả kết quả và quản lý hồ sơ khám bệnh trên cùng một hệ thống trực tuyến.</p>
+        </div>
+      </div>
+      <div class="grid grid-4">
+        <article class="service-card">
+          <h3>Sứ mệnh</h3>
+          <p>Tối ưu quy trình tiếp nhận và giúp bệnh nhân theo dõi hồ sơ nhanh hơn.</p>
+        </article>
+        <article class="service-card">
+          <h3>Cơ sở vật chất</h3>
+          <p>Có khu khám, khu xét nghiệm và hệ thống lưu trữ hồ sơ điện tử phục vụ tra cứu kết quả.</p>
+        </article>
+        <article class="service-card">
+          <h3>Dịch vụ khám</h3>
+          <p>Siêu âm tổng quát<br>Xét nghiệm máu, nước tiểu<br>Khám nội tổng quát<br>Điện tim<br>Tư vấn sức khỏe định kỳ</p>
+        </article>
+        <article class="service-card">
+          <h3>Hỗ trợ người bệnh</h3>
+          <p>Hỗ trợ người bệnh từ đặt lịch, tiếp nhận hồ sơ đến trả kết quả trực tuyến.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Tin tức mới nhất -->
+    <section class="section" id="news">
+      <div class="panel-title">
+        <div>
+          <h2 class="section-title">Tin tức mới nhất</h2>
+          <p class="section-lead">Cập nhật các thông tin mới từ phòng khám.</p>
+        </div>
+        <a class="btn btn-secondary" href="/news.html">Xem tất cả →</a>
+      </div>
+      <div class="grid grid-3">
+        <article class="service-card">
+          <h3>Thông báo lịch trực khám bệnh và cấp cứu dịp lễ 2026</h3>
+          <div class="muted" style="font-size:13px; margin: 4px 0 10px;">01/10/2026</div>
+          <p>Phòng khám duy trì trực cấp cứu 24/7 và tiếp nhận khám chữa bệnh ngoại trú bình thường trong suốt các ngày lễ.</p>
+        </article>
+        <article class="service-card">
+          <h3>Hướng dẫn phòng ngừa và chăm sóc cúm mùa thời điểm giao mùa</h3>
+          <div class="muted" style="font-size:13px; margin: 4px 0 10px;">28/09/2026</div>
+          <p>Các khuyến cáo thiết yếu từ bác sĩ chuyên khoa giúp bảo vệ hệ hô hấp cho người cao tuổi và trẻ nhỏ.</p>
+        </article>
+        <article class="service-card">
+          <h3>Triển khai gói tầm soát phát hiện sớm tiểu đường và mỡ máu</h3>
+          <div class="muted" style="font-size:13px; margin: 4px 0 10px;">25/09/2026</div>
+          <p>Gói khám toàn diện với hệ thống máy sinh hóa tự động chuẩn xác và tư vấn phác đồ điều trị cá nhân hóa.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Tư liệu khách hàng -->
+    <section class="section card" id="resources">
+      <div class="panel-title">
+        <div>
+          <h2 class="section-title">Tư liệu khách hàng</h2>
+          <p class="section-lead">Tài liệu giúp khách hàng chuẩn bị trước khi sử dụng dịch vụ.</p>
+        </div>
+        <a class="btn btn-secondary" href="/resources.html">Xem tất cả →</a>
+      </div>
+      <div class="grid grid-3">
+        <article class="service-card">
+          <h3>Quy trình 5 bước khám chữa bệnh</h3>
+          <p>Hướng dẫn từ tiếp đón, lấy số thứ tự, đăng ký CCCD đến nhận kết quả xét nghiệm và đơn thuốc.</p>
+          <div class="actions" style="margin-top:12px;"><a class="btn btn-light" href="/resources.html">Mở tư liệu</a></div>
+        </article>
+        <article class="service-card">
+          <h3>Chính sách quyền lợi Bảo hiểm y tế (BHYT)</h3>
+          <p>Quy định thông tuyến BHYT toàn quốc và các giấy tờ cần xuất trình khi đến khám chữa bệnh.</p>
+          <div class="actions" style="margin-top:12px;"><a class="btn btn-light" href="/resources.html">Mở tư liệu</a></div>
+        </article>
+        <article class="service-card">
+          <h3>Lưu ý trước khi lấy máu làm xét nghiệm</h3>
+          <p>Những xét nghiệm cần nhịn ăn sáng từ 8-12 tiếng để kết quả xét nghiệm sinh hóa đạt độ chuẩn xác cao nhất.</p>
+          <div class="actions" style="margin-top:12px;"><a class="btn btn-light" href="/resources.html">Mở tư liệu</a></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Giới thiệu về bác sĩ -->
+    <section class="section" id="doctors">
+      <h2 class="section-title">Giới thiệu về bác sĩ</h2>
+      <p class="section-lead">Danh sách bác sĩ và thông tin giới thiệu hiện được cập nhật trực tiếp từ tài khoản admin.</p>
       <div class="grid grid-2">
-        <div class="card doctor-card">
-          <img class="doctor-photo" src="/assets/doctor-placeholder.svg" alt="Bác sĩ CK1">
-          <div>
-            <span class="badge">Nội khoa tổng quát</span>
-            <h3>BS. CK1 Nguyễn Văn Thắng</h3>
-            <p style="font-size:0.9rem; margin-bottom:10px;">Hơn 15 năm kinh nghiệm chẩn đoán và điều trị bệnh lý tim mạch, tiểu đường, hô hấp.</p>
-            <a href="/book_appointment.html" class="btn btn-outline" style="padding:6px 14px; font-size:0.85rem;">Đặt lịch với bác sĩ</a>
+        <article class="service-card">
+          <div class="doctor-card-head">
+            <img class="doctor-photo" src="/assets/doctor-placeholder.svg" alt="BS. CK1 Nguyễn Văn Thắng" loading="lazy" width="92" height="92">
+            <div>
+              <div class="service-icon">1</div>
+              <h3>BS. CK1 Nguyễn Văn Thắng</h3>
+              <p><strong>Bác sĩ Chuyên khoa 1</strong></p>
+            </div>
           </div>
-        </div>
+          <div class="doctor-meta">
+            <span>Khoa: Nội tổng quát</span>
+            <span>Chuyên môn: Tim mạch, Hô hấp, Tiêu hóa</span>
+          </div>
+          <p>Bác sĩ phụ trách tiếp nhận khám, tư vấn và cập nhật hồ sơ điều trị cho người bệnh trong chuyên khoa tương ứng.</p>
+        </article>
 
-        <div class="card doctor-card">
-          <img class="doctor-photo" src="/assets/doctor-placeholder.svg" alt="Bác sĩ Nhi khoa">
-          <div>
-            <span class="badge">Nhi khoa</span>
-            <h3>ThS. BS Trần Thị Thu Hà</h3>
-            <p style="font-size:0.9rem; margin-bottom:10px;">Chuyên gia tư vấn dinh dưỡng, tiêm chủng và điều trị các bệnh lý thường gặp ở trẻ nhỏ.</p>
-            <a href="/book_appointment.html" class="btn btn-outline" style="padding:6px 14px; font-size:0.85rem;">Đặt lịch với bác sĩ</a>
+        <article class="service-card">
+          <div class="doctor-card-head">
+            <img class="doctor-photo" src="/assets/doctor-placeholder.svg" alt="ThS. BS Trần Thị Thu Hà" loading="lazy" width="92" height="92">
+            <div>
+              <div class="service-icon">2</div>
+              <h3>ThS. BS Trần Thị Thu Hà</h3>
+              <p><strong>Thạc sĩ - Bác sĩ</strong></p>
+            </div>
+          </div>
+          <div class="doctor-meta">
+            <span>Khoa: Nhi khoa</span>
+            <span>Chuyên môn: Nhi khoa & Dinh dưỡng</span>
+          </div>
+          <p>Bác sĩ phụ trách tiếp nhận khám, tư vấn và cập nhật hồ sơ điều trị cho người bệnh trong chuyên khoa tương ứng.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Section Chatbot AI gốc -->
+    <section class="section" id="chatbot" style="padding: 0;">
+      <div style="
+        background: linear-gradient(135deg, #1e40af 0%, #4f46e5 50%, #7c3aed 100%);
+        border-radius: 20px;
+        padding: 48px 40px;
+        position: relative;
+        overflow: hidden;
+      ">
+        <div style="position:absolute;top:-60px;right:-60px;width:240px;height:240px;background:rgba(255,255,255,0.06);border-radius:50%;"></div>
+        <div style="position:absolute;bottom:-40px;left:-40px;width:180px;height:180px;background:rgba(255,255,255,0.05);border-radius:50%;"></div>
+
+        <div style="display:flex;align-items:center;gap:40px;flex-wrap:wrap;position:relative;z-index:1;">
+          <div style="flex:1;min-width:260px;">
+            <div style="
+              width: 72px; height: 72px;
+              background: rgba(255,255,255,0.15);
+              border-radius: 20px;
+              display: flex; align-items: center; justify-content: center;
+              margin-bottom: 20px;
+              backdrop-filter: blur(10px);
+              border: 1px solid rgba(255,255,255,0.2);
+            ">
+              <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1a7 7 0 0 1-7 7H9a7 7 0 0 1-7-7H1a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 12 2z"/>
+                <circle cx="9" cy="11" r="1" fill="white" stroke="none"/>
+                <circle cx="15" cy="11" r="1" fill="white" stroke="none"/>
+                <path d="M9 15a3 3 0 0 0 6 0" stroke="white"/>
+              </svg>
+            </div>
+
+            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:5px 14px;margin-bottom:16px;backdrop-filter:blur(10px);">
+              <span style="color:rgba(255,255,255,0.9);font-size:13px;font-weight:500;">● Đang hoạt động 24/7</span>
+            </div>
+
+            <h2 style="color:white;font-size:28px;font-weight:800;margin:0 0 12px 0;line-height:1.3;">
+              Trợ lý AI phòng khám<br>thông minh
+            </h2>
+            <p style="color:rgba(255,255,255,0.85);font-size:15px;line-height:1.6;margin:0 0 24px 0;">
+              Hỏi bất cứ điều gì về thủ tục khám chữa bệnh, bảng giá dịch vụ, quyền lợi BHYT hay các thông tư y tế mới nhất — AI sẽ tìm và trả lời ngay lập tức.
+            </p>
+
+            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-size:18px;">🔍</span>
+                <span style="color:rgba(255,255,255,0.9);font-size:14px;">Tra cứu thông tư, nghị định về BHYT & y tế</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-size:18px;">💰</span>
+                <span style="color:rgba(255,255,255,0.9);font-size:14px;">Hỏi giá dịch vụ & quy trình khám bệnh</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-size:18px;">📋</span>
+                <span style="color:rgba(255,255,255,0.9);font-size:14px;">Hướng dẫn hồ sơ & thủ tục chi tiết</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-size:18px;">⚡</span>
+                <span style="color:rgba(255,255,255,0.9);font-size:14px;">Phản hồi tức thì, không cần chờ đợi</span>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+              <a href="/register.html" style="
+                background: white;
+                color: #4f46e5;
+                padding: 13px 26px;
+                border-radius: 12px;
+                text-decoration: none;
+                font-weight: 700;
+                font-size: 15px;
+                display:inline-block;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+              ">
+                🚀 Đăng ký miễn phí
+              </a>
+              <a href="/login.html" style="
+                background: rgba(255,255,255,0.15);
+                color: white;
+                padding: 13px 26px;
+                border-radius: 12px;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 15px;
+                border: 1px solid rgba(255,255,255,0.3);
+                backdrop-filter: blur(10px);
+                display:inline-block;
+              ">
+                Đăng nhập
+              </a>
+            </div>
+          </div>
+
+          <!-- Mockup chat tương tác trực tiếp -->
+          <div style="flex:0 0 auto;width:320px;max-width:100%;">
+            <div style="
+              background: rgba(255,255,255,0.1);
+              border: 1px solid rgba(255,255,255,0.2);
+              border-radius: 18px;
+              padding: 18px;
+              backdrop-filter: blur(12px);
+            ">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.15);">
+                <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1a7 7 0 0 1-7 7H9a7 7 0 0 1-7-7H1a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 12 2z"/></svg>
+                </div>
+                <div>
+                  <div style="color:white;font-weight:600;font-size:13px;">Trợ lý AI</div>
+                  <div style="color:rgba(255,255,255,0.7);font-size:11px;">● Đang hoạt động</div>
+                </div>
+              </div>
+
+              <div id="ai-chat-thread" style="display:flex;flex-direction:column;gap:10px;max-height:220px;overflow-y:auto;padding-right:4px;">
+                <div style="background:rgba(255,255,255,0.15);border-radius:12px 12px 12px 4px;padding:10px 12px;color:white;font-size:13px;line-height:1.4;">
+                  Thông tư 40/2021/TT-BYT quy định gì về chuyển tuyến BHYT?
+                </div>
+                <div style="background:rgba(255,255,255,0.9);border-radius:12px 12px 4px 12px;padding:10px 12px;color:#1e293b;font-size:12px;line-height:1.5;align-self:flex-end;max-width:90%;">
+                  Theo quy định, người bệnh có thẻ BHYT đăng ký KCB ban đầu được chuyển tuyến khi vượt quá khả năng chuyên môn kỹ thuật của cơ sở khám chữa bệnh.
+                </div>
+              </div>
+
+              <form id="ai-quick-form" style="margin-top:14px;display:flex;gap:8px;">
+                <input type="text" id="ai-quick-input" placeholder="Hỏi AI bất kỳ điều gì..." required style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:20px;padding:8px 14px;font-size:13px;outline:none;width:100%;">
+                <button type="submit" class="btn btn-light" style="padding:8px 12px;border-radius:20px;font-size:13px;white-space:nowrap;">Gửi</button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Widget Trợ lý y tế AI Gemini -->
-    <div class="card" id="ai-assistant" style="background:linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color:#fff; padding:36px; margin-bottom:36px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:18px; margin-bottom:20px;">
+    <!-- Đăng nhập nhanh bằng CCCD gốc -->
+    <section class="section card">
+      <div class="grid grid-2">
         <div>
-          <span style="background:rgba(255,255,255,0.2); padding:4px 12px; border-radius:20px; font-size:0.85rem; font-weight:600;">🤖 Trợ lý AI Thông Minh</span>
-          <h2 style="color:#fff; font-size:1.6rem; margin-top:8px;">Hỏi đáp y tế & Hướng dẫn khám</h2>
-        </div>
-        <p style="max-width:500px; font-size:0.95rem; opacity:0.9; margin:0;">Nhập câu hỏi của bạn để được hỗ trợ tức thì về thời gian khám, bảng giá và thủ tục BHYT.</p>
-      </div>
-
-      <div style="background:#fff; border-radius:14px; padding:16px; box-shadow:0 10px 25px rgba(0,0,0,0.15);">
-        <div id="ai-chat-history" style="max-height:220px; overflow-y:auto; margin-bottom:14px; display:flex; flex-direction:column; gap:10px; padding:4px;">
-          <div style="background:#f1f5f9; color:#1e293b; padding:10px 14px; border-radius:10px; font-size:0.92rem; align-self:flex-start; max-width:85%;">
-            Xin chào! Tôi là Trợ lý AI của Phòng Khám Phú Thái. Bạn cần tìm hiểu thông tin về dịch vụ khám, thời gian làm việc hay quy trình nào hôm nay?
+          <h2 class="section-title">Đăng nhập nhanh bằng CCCD</h2>
+          <p class="section-lead">Dành cho bệnh nhân đã có tài khoản. Nếu chưa có, tạo tài khoản mới để sử dụng cổng dịch vụ.</p>
+          <div class="actions">
+            <a class="btn" href="/login.html">Đăng nhập bệnh nhân</a>
+            <a class="btn btn-secondary" href="/register.html">Đăng ký tài khoản</a>
+            <a class="btn btn-light" href="/book_appointment.html">Đặt lịch khám</a>
           </div>
         </div>
-        <form id="ai-chat-form" style="display:flex; gap:10px;">
-          <input type="text" id="ai-chat-input" class="form-control" placeholder="Ví dụ: Phòng khám có làm việc ngày chủ nhật không?..." required style="margin:0;">
-          <button type="submit" class="btn" style="white-space:nowrap; padding:10px 20px;">Gửi câu hỏi</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- Tra cứu nhanh & Đăng nhập -->
-    <div class="card" style="padding:32px;">
-      <div class="grid grid-2" style="margin-bottom:0; align-items:center;">
-        <div>
-          <h3 style="color:var(--primary); font-size:1.4rem; margin-bottom:8px;">Bạn đã từng khám tại Phú Thái?</h3>
-          <p style="color:var(--muted); font-size:0.95rem; margin-bottom:18px;">Đăng nhập bằng số Căn cước công dân (CCCD) để xem ngay đơn thuốc, kết quả xét nghiệm và lịch tái khám.</p>
-          <div style="display:flex; gap:12px; flex-wrap:wrap;">
-            <a href="/login.html" class="btn">Đăng nhập tài khoản</a>
-            <a href="/register.html" class="btn btn-secondary">Đăng ký mới</a>
+        <div class="service-card">
+          <h3>Liên hệ hỗ trợ</h3>
+          <p><strong>Hotline:</strong> 0208 6289 888 / 0963 485 65</p>
+          <p><strong>Email:</strong> pcnttphongkhamdakhoaphuthai@gmail.com</p>
+          <p><strong>Địa chỉ:</strong> Xóm Hoà Bình 2, xã Phú Bình, tỉnh Thái Nguyên</p>
+          <div class="map-links">
+            <a class="btn btn-light" href="https://maps.google.com" target="_blank" rel="noopener">Google Maps</a>
           </div>
         </div>
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:20px;">
-          <h4 style="color:#0f172a; margin-bottom:10px;">📞 Hỗ trợ khẩn cấp & Đặt hẹn</h4>
-          <p style="font-size:0.92rem; margin-bottom:6px;"><strong>Hotline 1:</strong> <a href="tel:02086289888" style="color:var(--primary); text-decoration:none; font-weight:700;">0208 6289 888</a></p>
-          <p style="font-size:0.92rem; margin-bottom:6px;"><strong>Hotline 2:</strong> <a href="tel:096348565" style="color:var(--primary); text-decoration:none; font-weight:700;">0963 485 65</a></p>
-          <p style="font-size:0.85rem; color:#64748b; margin-top:8px;">Nhân viên tư vấn trực điện thoại từ 07:00 đến 21:00 hàng ngày.</p>
-        </div>
       </div>
-    </div>
-  </main>
+    </section>
+  </div>
 
   ${commonFooter}
 
   <script>
-    // Logic Chatbot AI
-    const chatForm = document.getElementById('ai-chat-form');
-    const chatInput = document.getElementById('ai-chat-input');
-    const chatHistory = document.getElementById('ai-chat-history');
+    // Xử lý gửi câu hỏi cho trợ lý AI
+    const aiForm = document.getElementById('ai-quick-form');
+    const aiInput = document.getElementById('ai-quick-input');
+    const aiThread = document.getElementById('ai-chat-thread');
 
-    if (chatForm) {
-      chatForm.addEventListener('submit', async (e) => {
+    if (aiForm) {
+      aiForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const msg = chatInput.value.trim();
-        if (!msg) return;
+        const text = aiInput.value.trim();
+        if (!text) return;
 
-        // Thêm câu hỏi vào khung chat
-        const userDiv = document.createElement('div');
-        userDiv.style.cssText = 'background:#0077b6; color:#fff; padding:10px 14px; border-radius:10px; font-size:0.92rem; align-self:flex-end; max-width:85%;';
-        userDiv.textContent = msg;
-        chatHistory.appendChild(userDiv);
-        chatInput.value = '';
-        chatHistory.scrollTop = chatHistory.scrollHeight;
+        const uMsg = document.createElement('div');
+        uMsg.style.cssText = 'background:rgba(255,255,255,0.15);border-radius:12px 12px 12px 4px;padding:10px 12px;color:white;font-size:13px;line-height:1.4;';
+        uMsg.textContent = text;
+        aiThread.appendChild(uMsg);
+        aiInput.value = '';
+        aiThread.scrollTop = aiThread.scrollHeight;
 
-        // Trạng thái bot đang gõ
-        const botDiv = document.createElement('div');
-        botDiv.style.cssText = 'background:#f1f5f9; color:#1e293b; padding:10px 14px; border-radius:10px; font-size:0.92rem; align-self:flex-start; max-width:85%;';
-        botDiv.textContent = 'Đang tra cứu thông tin y tế...';
-        chatHistory.appendChild(botDiv);
-        chatHistory.scrollTop = chatHistory.scrollHeight;
+        const bMsg = document.createElement('div');
+        bMsg.style.cssText = 'background:rgba(255,255,255,0.9);border-radius:12px 12px 4px 12px;padding:10px 12px;color:#1e293b;font-size:12px;line-height:1.5;align-self:flex-end;max-width:90%;';
+        bMsg.textContent = 'Trợ lý AI đang tra cứu câu trả lời...';
+        aiThread.appendChild(bMsg);
+        aiThread.scrollTop = aiThread.scrollHeight;
 
-        const res = await ApiClient.call('/api_chat_ai.php', { message: msg });
+        const res = await ApiClient.call('/api_chat_ai.php', { message: text });
         if (res.ok && res.data && res.data.reply) {
-          botDiv.innerHTML = res.data.reply.replace(/\\n/g, '<br>');
+          bMsg.innerHTML = res.data.reply.replace(/\\n/g, '<br>');
         } else {
-          botDiv.textContent = res.data?.error || 'Hệ thống AI đang phản hồi chậm. Quý khách vui lòng liên hệ hotline 0208 6289 888 để được hỗ trợ ngay.';
+          bMsg.textContent = res.data?.error || 'Trợ lý AI đang bận. Quý khách vui lòng liên hệ hotline 0208 6289 888 để được giải đáp ngay.';
         }
-        chatHistory.scrollTop = chatHistory.scrollHeight;
+        aiThread.scrollTop = aiThread.scrollHeight;
       });
     }
   </script>
@@ -365,77 +605,78 @@ const indexHtml = `<!DOCTYPE html>
 fs.writeFileSync(path.join(distDir, 'index.html'), indexHtml, 'utf-8');
 
 // ==========================================
-// 6. Sinh trang book_appointment.html (Đặt lịch khám độc lập)
+// 6. Sinh trang book_appointment.html (Giao diện đồng bộ)
 // ==========================================
 const bookAppointmentHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đặt lịch khám trực tuyến - Phòng khám Đa khoa Phú Thái</title>
+  <title>Đặt lịch khám - Cổng hỗ trợ bệnh viện</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap">
   <link rel="icon" type="image/png" href="/logo.png">
-  <style>${commonStyles}</style>
+  <style>${originalStyles}</style>
 </head>
 <body>
   ${commonHeader}
 
-  <main class="container" style="max-width:720px; margin:40px auto;">
-    <div class="card" style="padding:36px;">
-      <div style="text-align:center; margin-bottom:28px;">
-        <span class="badge">Đăng ký khám bệnh</span>
-        <h1 style="color:var(--primary); font-size:1.8rem; font-weight:800; margin-top:6px;">Đặt Lịch Khám Trực Tuyến</h1>
-        <p style="color:var(--muted); font-size:0.95rem;">Điền thông tin bên dưới để đặt lịch khám nhanh chóng. Nhân viên y tế sẽ liên hệ xác nhận trong 15 phút.</p>
+  <section class="hero" style="padding:48px 20px 64px;">
+    <div class="hero-inner">
+      <div>
+        <h1>Đặt lịch khám bệnh</h1>
+        <p>Chủ động chọn bác sĩ chuyên khoa và giờ khám phù hợp để không phải xếp hàng chờ đợi.</p>
       </div>
+    </div>
+  </section>
 
+  <div class="wrap" style="max-width:760px; margin:-24px auto 0;">
+    <div class="card" style="padding:32px;">
       <form id="book-appointment-form">
-        <div class="form-group">
-          <label for="doctor_id">Bác sĩ / Chuyên khoa khám *</label>
-          <select id="doctor_id" class="form-control" required>
-            <option value="1">BS. CK1 Nguyễn Văn Thắng — Nội khoa tổng quát</option>
-            <option value="2">ThS. BS Trần Thị Thu Hà — Nhi khoa & Dinh dưỡng</option>
+        <div style="margin-bottom:18px;">
+          <label for="doctor_id">Bác sĩ khám *</label>
+          <select id="doctor_id" required>
+            <option value="1">BS. CK1 Nguyễn Văn Thắng (Nội tổng quát)</option>
+            <option value="2">ThS. BS Trần Thị Thu Hà (Nhi khoa)</option>
           </select>
         </div>
 
-        <div class="form-group">
+        <div style="margin-bottom:18px;">
           <label for="appointment_date">Ngày và giờ hẹn khám *</label>
-          <input type="datetime-local" id="appointment_date" class="form-control" required>
+          <input type="datetime-local" id="appointment_date" required>
         </div>
 
-        <div class="grid grid-2" style="margin-bottom:0;">
-          <div class="form-group">
-            <label for="full_name">Họ và tên bệnh nhân *</label>
-            <input type="text" id="full_name" class="form-control" placeholder="Nguyễn Văn A" required>
-          </div>
-          <div class="form-group">
-            <label for="phone">Số điện thoại liên hệ *</label>
-            <input type="tel" id="phone" class="form-control" placeholder="0912345678" pattern="0[0-9]{9}" required>
-          </div>
+        <div style="margin-bottom:18px;">
+          <label for="full_name">Họ và tên bệnh nhân *</label>
+          <input type="text" id="full_name" placeholder="Nguyễn Văn A" required>
         </div>
 
-        <div class="form-group">
+        <div style="margin-bottom:18px;">
+          <label for="phone">Số điện thoại liên hệ *</label>
+          <input type="tel" id="phone" placeholder="0912345678" pattern="0[0-9]{9}" required>
+        </div>
+
+        <div style="margin-bottom:18px;">
           <label for="cccd">Số CCCD (12 chữ số - để liên kết hồ sơ)</label>
-          <input type="text" id="cccd" class="form-control" placeholder="019203000xxx" maxlength="12">
+          <input type="text" id="cccd" placeholder="019203000xxx" maxlength="12">
         </div>
 
-        <div class="form-group">
+        <div style="margin-bottom:24px;">
           <label for="reason">Triệu chứng hoặc lý do khám *</label>
-          <textarea id="reason" class="form-control" rows="3" placeholder="Mô tả sơ lược tình trạng sức khỏe, triệu chứng cần khám..." required></textarea>
+          <textarea id="reason" placeholder="Mô tả sơ lược tình trạng sức khỏe..." required></textarea>
         </div>
 
-        <button type="submit" id="btn-submit-booking" class="btn btn-block" style="padding:14px; font-size:1.05rem;">
-          📅 Xác nhận đặt lịch khám
+        <button type="submit" id="btn-submit-booking" class="btn" style="width:100%; padding:14px; font-size:16px;">
+          Xác nhận đặt lịch khám
         </button>
       </form>
     </div>
-  </main>
+  </div>
 
   ${commonFooter}
 
   <script>
-    // Thiết lập ngày giờ tối thiểu là ngày hôm nay + 1 giờ
     const dateInput = document.getElementById('appointment_date');
     const now = new Date();
     now.setHours(now.getHours() + 1);
@@ -448,9 +689,8 @@ const bookAppointmentHtml = `<!DOCTYPE html>
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      submitBtn.classList.add('btn-loading');
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Đang gửi yêu cầu đặt lịch...';
+      submitBtn.textContent = 'Đang lưu lịch hẹn...';
 
       const payload = {
         doctor_id: parseInt(document.getElementById('doctor_id').value, 10),
@@ -462,19 +702,18 @@ const bookAppointmentHtml = `<!DOCTYPE html>
       };
 
       const res = await ApiClient.call('/api/book_appointment.php', payload);
-      submitBtn.classList.remove('btn-loading');
       submitBtn.disabled = false;
-      submitBtn.textContent = '📅 Xác nhận đặt lịch khám';
+      submitBtn.textContent = 'Xác nhận đặt lịch khám';
 
       if (res.ok && res.data && res.data.success) {
         ApiClient.showToast(res.data.message || 'Đặt lịch thành công!', 'success');
         form.reset();
         setTimeout(() => {
-          alert('Cảm ơn bạn! Phiếu hẹn #' + (res.data.appointment_id || '') + ' đã được ghi nhận. Phòng khám sẽ gọi điện xác nhận theo số ' + payload.phone + '.');
+          alert('Cảm ơn bạn! Phiếu hẹn #' + (res.data.appointment_id || '') + ' đã được ghi nhận thành công.');
           window.location.href = '/';
         }, 1500);
       } else {
-        ApiClient.showToast(res.data?.error || 'Không thể đặt lịch. Vui lòng thử lại hoặc gọi hotline 0208 6289 888.', 'error');
+        ApiClient.showToast(res.data?.error || 'Không thể đặt lịch lúc này. Vui lòng liên hệ hotline.', 'error');
       }
     });
   </script>
@@ -483,52 +722,56 @@ const bookAppointmentHtml = `<!DOCTYPE html>
 fs.writeFileSync(path.join(distDir, 'book_appointment.html'), bookAppointmentHtml, 'utf-8');
 
 // ==========================================
-// 7. Sinh trang login.html (Đăng nhập độc lập)
+// 7. Sinh trang login.html (Giao diện đồng bộ)
 // ==========================================
 const loginHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đăng nhập bệnh nhân - Phòng khám Đa khoa Phú Thái</title>
+  <title>Đăng nhập bệnh nhân - Cổng hỗ trợ bệnh viện</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap">
   <link rel="icon" type="image/png" href="/logo.png">
-  <style>${commonStyles}</style>
+  <style>${originalStyles}</style>
 </head>
 <body>
   ${commonHeader}
 
-  <main class="container" style="max-width:480px; margin:50px auto;">
-    <div class="card" style="padding:36px;">
-      <div style="text-align:center; margin-bottom:26px;">
-        <span class="badge">Cổng tra cứu hồ sơ</span>
-        <h1 style="color:var(--primary); font-size:1.75rem; font-weight:800; margin-top:6px;">Đăng Nhập Bệnh Nhân</h1>
-        <p style="color:var(--muted); font-size:0.92rem;">Tra cứu kết quả xét nghiệm, đơn thuốc và lịch sử khám</p>
+  <section class="hero" style="padding:48px 20px 64px;">
+    <div class="hero-inner">
+      <div>
+        <h1>Đăng nhập bệnh nhân</h1>
+        <p>Tra cứu kết quả xét nghiệm, lịch hẹn và hồ sơ y tế trực tuyến.</p>
       </div>
+    </div>
+  </section>
 
+  <div class="wrap" style="max-width:480px; margin:-24px auto 0;">
+    <div class="card" style="padding:32px;">
+      <h2 style="font-size:22px; margin-bottom:20px; color:var(--primary); font-weight:800;">Thông tin tài khoản</h2>
       <form id="login-form">
-        <div class="form-group">
+        <div style="margin-bottom:18px;">
           <label for="cccd">Số Căn cước công dân (12 chữ số) *</label>
-          <input type="text" id="cccd" class="form-control" placeholder="Nhập 12 số CCCD..." maxlength="12" pattern="[0-9]{12}" required>
+          <input type="text" id="cccd" placeholder="Nhập 12 số CCCD..." maxlength="12" pattern="[0-9]{12}" required>
         </div>
 
-        <div class="form-group">
+        <div style="margin-bottom:24px;">
           <label for="password">Mật khẩu *</label>
-          <input type="password" id="password" class="form-control" placeholder="Nhập mật khẩu..." required>
+          <input type="password" id="password" placeholder="Nhập mật khẩu..." required>
         </div>
 
-        <button type="submit" id="btn-login" class="btn btn-block" style="padding:13px; font-size:1.02rem; margin-top:8px;">
-          Đăng nhập ngay
+        <button type="submit" id="btn-login" class="btn" style="width:100%; padding:14px; font-size:16px;">
+          Đăng nhập
         </button>
 
-        <div style="margin-top:20px; text-align:center; font-size:0.92rem; color:var(--muted);">
-          Chưa có tài khoản bệnh nhân? <a href="/register.html" style="color:var(--primary); font-weight:600; text-decoration:none;">Đăng ký tại đây</a>
+        <div style="margin-top:20px; text-align:center; font-size:14px; color:var(--muted);">
+          Chưa có tài khoản? <a href="/register.html" style="color:var(--primary); font-weight:600; text-decoration:none;">Đăng ký tại đây</a>
         </div>
       </form>
     </div>
-  </main>
+  </div>
 
   ${commonFooter}
 
@@ -538,9 +781,8 @@ const loginHtml = `<!DOCTYPE html>
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      submitBtn.classList.add('btn-loading');
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Đang xác thực thông tin...';
+      submitBtn.textContent = 'Đang xác thực...';
 
       const payload = {
         cccd: document.getElementById('cccd').value.trim(),
@@ -548,9 +790,8 @@ const loginHtml = `<!DOCTYPE html>
       };
 
       const res = await ApiClient.call('/api/login.php', payload);
-      submitBtn.classList.remove('btn-loading');
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Đăng nhập ngay';
+      submitBtn.textContent = 'Đăng nhập';
 
       if (res.ok && res.data && res.data.success) {
         ApiClient.showToast('Đăng nhập thành công! Đang chuyển hướng...', 'success');
@@ -558,7 +799,7 @@ const loginHtml = `<!DOCTYPE html>
           window.location.href = res.data.redirect || '/dashboard.php';
         }, 1000);
       } else {
-        ApiClient.showToast(res.data?.error || 'Đăng nhập không thành công. Vui lòng kiểm tra lại CCCD và mật khẩu.', 'error');
+        ApiClient.showToast(res.data?.error || 'Đăng nhập thất bại. Kiểm tra lại CCCD và mật khẩu.', 'error');
       }
     });
   </script>
@@ -567,67 +808,71 @@ const loginHtml = `<!DOCTYPE html>
 fs.writeFileSync(path.join(distDir, 'login.html'), loginHtml, 'utf-8');
 
 // ==========================================
-// 8. Sinh trang register.html (Đăng ký tài khoản độc lập)
+// 8. Sinh trang register.html (Giao diện đồng bộ)
 // ==========================================
 const registerHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đăng ký tài khoản bệnh nhân - Phòng khám Đa khoa Phú Thái</title>
+  <title>Đăng ký tài khoản - Cổng hỗ trợ bệnh viện</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap">
   <link rel="icon" type="image/png" href="/logo.png">
-  <style>${commonStyles}</style>
+  <style>${originalStyles}</style>
 </head>
 <body>
   ${commonHeader}
 
-  <main class="container" style="max-width:520px; margin:40px auto;">
-    <div class="card" style="padding:36px;">
-      <div style="text-align:center; margin-bottom:26px;">
-        <span class="badge">Tạo tài khoản mới</span>
-        <h1 style="color:var(--primary); font-size:1.75rem; font-weight:800; margin-top:6px;">Đăng Ký Bệnh Nhân</h1>
-        <p style="color:var(--muted); font-size:0.92rem;">Liên kết hồ sơ sức khỏe điện tử với số CCCD của bạn</p>
+  <section class="hero" style="padding:48px 20px 64px;">
+    <div class="hero-inner">
+      <div>
+        <h1>Đăng ký tài khoản</h1>
+        <p>Tạo tài khoản mới để theo dõi hồ sơ sức khỏe trực tuyến và nhận kết quả nhanh chóng.</p>
       </div>
+    </div>
+  </section>
 
+  <div class="wrap" style="max-width:520px; margin:-24px auto 0;">
+    <div class="card" style="padding:32px;">
+      <h2 style="font-size:22px; margin-bottom:20px; color:var(--primary); font-weight:800;">Thông tin cá nhân</h2>
       <form id="register-form">
-        <div class="form-group">
+        <div style="margin-bottom:16px;">
           <label for="name">Họ và tên *</label>
-          <input type="text" id="name" class="form-control" placeholder="Nguyễn Văn A" required>
+          <input type="text" id="name" placeholder="Nguyễn Văn A" required>
         </div>
 
-        <div class="form-group">
+        <div style="margin-bottom:16px;">
           <label for="cccd">Số Căn cước công dân (12 chữ số) *</label>
-          <input type="text" id="cccd" class="form-control" placeholder="Nhập 12 số CCCD..." maxlength="12" pattern="[0-9]{12}" required>
+          <input type="text" id="cccd" placeholder="Nhập 12 số CCCD..." maxlength="12" pattern="[0-9]{12}" required>
         </div>
 
-        <div class="form-group">
+        <div style="margin-bottom:16px;">
           <label for="phone">Số điện thoại *</label>
-          <input type="tel" id="phone" class="form-control" placeholder="0912345678" pattern="0[0-9]{9}" required>
+          <input type="tel" id="phone" placeholder="0912345678" pattern="0[0-9]{9}" required>
         </div>
 
-        <div class="form-group">
+        <div style="margin-bottom:16px;">
           <label for="email">Địa chỉ Email (tùy chọn)</label>
-          <input type="email" id="email" class="form-control" placeholder="vidu@gmail.com">
+          <input type="email" id="email" placeholder="vidu@gmail.com">
         </div>
 
-        <div class="form-group">
+        <div style="margin-bottom:24px;">
           <label for="password">Mật khẩu (ít nhất 6 ký tự) *</label>
-          <input type="password" id="password" class="form-control" placeholder="Tạo mật khẩu an toàn..." minlength="6" required>
+          <input type="password" id="password" placeholder="Tạo mật khẩu..." minlength="6" required>
         </div>
 
-        <button type="submit" id="btn-register" class="btn btn-block" style="padding:13px; font-size:1.02rem; margin-top:8px;">
-          Tạo tài khoản ngay
+        <button type="submit" id="btn-register" class="btn" style="width:100%; padding:14px; font-size:16px;">
+          Đăng ký tài khoản
         </button>
 
-        <div style="margin-top:20px; text-align:center; font-size:0.92rem; color:var(--muted);">
+        <div style="margin-top:20px; text-align:center; font-size:14px; color:var(--muted);">
           Đã có tài khoản? <a href="/login.html" style="color:var(--primary); font-weight:600; text-decoration:none;">Đăng nhập tại đây</a>
         </div>
       </form>
     </div>
-  </main>
+  </div>
 
   ${commonFooter}
 
@@ -637,7 +882,6 @@ const registerHtml = `<!DOCTYPE html>
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      submitBtn.classList.add('btn-loading');
       submitBtn.disabled = true;
       submitBtn.textContent = 'Đang xử lý đăng ký...';
 
@@ -650,9 +894,8 @@ const registerHtml = `<!DOCTYPE html>
       };
 
       const res = await ApiClient.call('/api/register.php', payload);
-      submitBtn.classList.remove('btn-loading');
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Tạo tài khoản ngay';
+      submitBtn.textContent = 'Đăng ký tài khoản';
 
       if (res.ok && res.data && res.data.success) {
         ApiClient.showToast('Đăng ký tài khoản thành công! Đang chuyển sang trang Đăng nhập...', 'success');
@@ -660,7 +903,7 @@ const registerHtml = `<!DOCTYPE html>
           window.location.href = '/login.html';
         }, 1500);
       } else {
-        ApiClient.showToast(res.data?.error || 'Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.', 'error');
+        ApiClient.showToast(res.data?.error || 'Đăng ký thất bại. Kiểm tra lại thông tin.', 'error');
       }
     });
   </script>
@@ -669,52 +912,53 @@ const registerHtml = `<!DOCTYPE html>
 fs.writeFileSync(path.join(distDir, 'register.html'), registerHtml, 'utf-8');
 
 // ==========================================
-// 9. Sinh trang news.html (Tin tức y khoa)
+// 9. Sinh trang news.html (Giao diện đồng bộ)
 // ==========================================
 const newsHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tin tức y tế - Phòng khám Đa khoa Phú Thái</title>
+  <title>Tin tức - Cổng hỗ trợ bệnh viện</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap">
   <link rel="icon" type="image/png" href="/logo.png">
-  <style>${commonStyles}</style>
+  <style>${originalStyles}</style>
 </head>
 <body>
   ${commonHeader}
 
-  <section class="hero" style="padding:48px 24px;">
-    <h1>Tin Tức & Hoạt Động Y Tế</h1>
-    <p>Cập nhật những thông báo mới nhất, lịch tiêm chủng và hoạt động chuyên môn của Phòng khám Đa khoa Phú Thái.</p>
+  <section class="hero" style="padding:48px 20px 64px;">
+    <div class="hero-inner">
+      <div>
+        <h1>Tin tức y tế</h1>
+        <p>Cập nhật những thông báo mới nhất, lịch tiêm chủng và hoạt động của Phòng khám đa khoa Phú Thái.</p>
+      </div>
+    </div>
   </section>
 
-  <main class="container">
+  <div class="wrap" style="margin-top:-24px;">
     <div class="grid grid-3">
-      <article class="card">
-        <span class="badge">Thông báo</span>
-        <h3>Lịch làm việc và trực khám dịp lễ 2026</h3>
-        <p style="font-size:0.85rem; color:#64748b; margin-bottom:8px;">Ngày đăng: 01/10/2026</p>
-        <p>Phòng khám duy trì trực cấp cứu 24/7 và tiếp nhận khám ngoại trú bình thường trong suốt các ngày lễ.</p>
+      <article class="service-card">
+        <h3>Thông báo lịch trực khám bệnh và cấp cứu dịp lễ 2026</h3>
+        <div class="muted" style="font-size:13px; margin:4px 0 10px;">01/10/2026</div>
+        <p>Phòng khám duy trì trực cấp cứu 24/7 và tiếp nhận khám chữa bệnh ngoại trú bình thường trong suốt các ngày lễ.</p>
       </article>
 
-      <article class="card">
-        <span class="badge">Sức khỏe cộng đồng</span>
-        <h3>Hướng dẫn phòng ngừa cúm mùa thời điểm giao mùa</h3>
-        <p style="font-size:0.85rem; color:#64748b; margin-bottom:8px;">Ngày đăng: 28/09/2026</p>
-        <p>Những lưu ý quan trọng để bảo vệ sức khỏe hệ hô hấp cho người cao tuổi và trẻ nhỏ khi thời tiết thay đổi.</p>
+      <article class="service-card">
+        <h3>Hướng dẫn phòng ngừa và chăm sóc cúm mùa thời điểm giao mùa</h3>
+        <div class="muted" style="font-size:13px; margin:4px 0 10px;">28/09/2026</div>
+        <p>Các khuyến cáo thiết yếu từ bác sĩ chuyên khoa giúp bảo vệ hệ hô hấp cho người cao tuổi và trẻ nhỏ.</p>
       </article>
 
-      <article class="card">
-        <span class="badge">Dịch vụ mới</span>
-        <h3>Triển khai gói khám tầm soát tiểu đường và mỡ máu</h3>
-        <p style="font-size:0.85rem; color:#64748b; margin-bottom:8px;">Ngày đăng: 25/09/2026</p>
-        <p>Gói khám toàn diện giúp phát hiện sớm các nguy cơ tim mạch và chuyển hoá với chi phí ưu đãi.</p>
+      <article class="service-card">
+        <h3>Triển khai gói tầm soát phát hiện sớm tiểu đường và mỡ máu</h3>
+        <div class="muted" style="font-size:13px; margin:4px 0 10px;">25/09/2026</div>
+        <p>Gói khám toàn diện với hệ thống máy sinh hóa tự động chuẩn xác và tư vấn phác đồ điều trị cá nhân hóa.</p>
       </article>
     </div>
-  </main>
+  </div>
 
   ${commonFooter}
 </body>
@@ -722,49 +966,50 @@ const newsHtml = `<!DOCTYPE html>
 fs.writeFileSync(path.join(distDir, 'news.html'), newsHtml, 'utf-8');
 
 // ==========================================
-// 10. Sinh trang resources.html (Tư liệu khách hàng)
+// 10. Sinh trang resources.html (Giao diện đồng bộ)
 // ==========================================
 const resourcesHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cẩm nang & Tư liệu y tế - Phòng khám Đa khoa Phú Thái</title>
+  <title>Tư liệu khách hàng - Cổng hỗ trợ bệnh viện</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap">
   <link rel="icon" type="image/png" href="/logo.png">
-  <style>${commonStyles}</style>
+  <style>${originalStyles}</style>
 </head>
 <body>
   ${commonHeader}
 
-  <section class="hero" style="padding:48px 24px;">
-    <h1>Cẩm Nang & Tài Liệu Cho Bệnh Nhân</h1>
-    <p>Các tài liệu hướng dẫn chuẩn bị trước khi khám, thủ tục thanh toán bảo hiểm y tế và bảng giá niêm yết.</p>
-  </section>
-
-  <main class="container">
-    <div class="grid grid-3">
-      <div class="card">
-        <span class="badge">Hướng dẫn</span>
-        <h3>Quy trình khám bệnh 5 bước</h3>
-        <p>Các bước tiếp nhận: Tiếp đón → Đăng ký lấy số → Khám chuyên khoa → Cận lâm sàng → Nhận kết quả và đơn thuốc.</p>
-      </div>
-
-      <div class="card">
-        <span class="badge">Bảo hiểm</span>
-        <h3>Chính sách Bảo hiểm y tế (BHYT)</h3>
-        <p>Hướng dẫn quyền lợi BHYT đúng tuyến, thông tuyến và các giấy tờ cần xuất trình khi đến khám.</p>
-      </div>
-
-      <div class="card">
-        <span class="badge">Chuẩn bị xét nghiệm</span>
-        <h3>Lưu ý trước khi lấy máu xét nghiệm</h3>
-        <p>Những xét nghiệm cần nhịn ăn sáng từ 8-12 tiếng, không uống nước ngọt và các chất kích thích để kết quả chính xác nhất.</p>
+  <section class="hero" style="padding:48px 20px 64px;">
+    <div class="hero-inner">
+      <div>
+        <h1>Tư liệu & Cẩm nang</h1>
+        <p>Tài liệu hướng dẫn quy trình, chính sách bảo hiểm y tế và biểu mẫu phục vụ người bệnh.</p>
       </div>
     </div>
-  </main>
+  </section>
+
+  <div class="wrap" style="margin-top:-24px;">
+    <div class="grid grid-3">
+      <article class="service-card">
+        <h3>Quy trình 5 bước khám chữa bệnh</h3>
+        <p>Hướng dẫn từ tiếp đón, lấy số thứ tự, đăng ký CCCD đến nhận kết quả xét nghiệm và đơn thuốc.</p>
+      </article>
+
+      <article class="service-card">
+        <h3>Chính sách quyền lợi Bảo hiểm y tế (BHYT)</h3>
+        <p>Quy định thông tuyến BHYT toàn quốc và các giấy tờ cần xuất trình khi đến khám chữa bệnh.</p>
+      </article>
+
+      <article class="service-card">
+        <h3>Lưu ý trước khi lấy máu làm xét nghiệm</h3>
+        <p>Những xét nghiệm cần nhịn ăn sáng từ 8-12 tiếng để kết quả xét nghiệm sinh hóa đạt độ chuẩn xác cao nhất.</p>
+      </article>
+    </div>
+  </div>
 
   ${commonFooter}
 </body>
@@ -772,36 +1017,36 @@ const resourcesHtml = `<!DOCTYPE html>
 fs.writeFileSync(path.join(distDir, 'resources.html'), resourcesHtml, 'utf-8');
 
 // ==========================================
-// 11. Sinh trang 404.html
+// 11. Sinh trang 404.html (Giao diện đồng bộ)
 // ==========================================
 const notFoundHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trang không tìm thấy (404) - Phòng khám Đa khoa Phú Thái</title>
+  <title>Không tìm thấy trang - Cổng hỗ trợ bệnh viện</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap">
   <link rel="icon" type="image/png" href="/logo.png">
-  <style>${commonStyles}</style>
+  <style>${originalStyles}</style>
 </head>
 <body>
   ${commonHeader}
-  <main class="container" style="max-width:600px; margin:70px auto; text-align:center;">
+  <div class="wrap" style="max-width:600px; margin:60px auto; text-align:center;">
     <div class="card" style="padding:40px 24px;">
-      <h1 style="font-size:3.5rem; color:var(--primary); margin-bottom:12px;">404</h1>
-      <h2 style="font-size:1.4rem; color:var(--text); margin-bottom:12px;">Không tìm thấy trang yêu cầu</h2>
+      <h1 style="font-size:3.5rem; color:var(--primary); margin-bottom:12px; font-weight:800;">404</h1>
+      <h2 style="font-size:1.4rem; margin-bottom:12px;">Không tìm thấy trang yêu cầu</h2>
       <p style="color:var(--muted); margin-bottom:28px;">Đường dẫn bạn truy cập có thể đã thay đổi hoặc không tồn tại trên hệ thống.</p>
       <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
         <a href="/" class="btn">Về trang chủ</a>
         <a href="/book_appointment.html" class="btn btn-secondary">Đặt lịch khám</a>
       </div>
     </div>
-  </main>
+  </div>
   ${commonFooter}
 </body>
 </html>`;
 fs.writeFileSync(path.join(distDir, '404.html'), notFoundHtml, 'utf-8');
 
-console.log('[BUILD] Hoàn tất đóng gói toàn bộ Frontend Decoupled vào thư mục dist/ thành công!');
+console.log('[BUILD] Hoàn tất đóng gói toàn bộ giao diện tĩnh đồng bộ 100% giao diện gốc vào dist/ thành công!');
