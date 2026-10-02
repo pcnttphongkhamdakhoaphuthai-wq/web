@@ -285,7 +285,41 @@ function running_in_cli(): bool
     return PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg';
 }
 
+function handle_cors_headers(): void
+{
+    $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
+    if ($origin === '') {
+        return;
+    }
+
+    $allowedExactOrigins = [
+        'https://conghotrophongkhamphuthai.io.vn',
+        'http://conghotrophongkhamphuthai.io.vn',
+        'https://web-iewr.onrender.com',
+    ];
+
+    $isAllowed = in_array($origin, $allowedExactOrigins, true);
+    if (!$isAllowed && preg_match('#^https://[a-z0-9\-]+\.pages\.dev$#i', $origin)) {
+        $isAllowed = true;
+    }
+
+    if ($isAllowed) {
+        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Access-Control-Allow-Credentials: true');
+        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-CSRF-Token');
+        header('Access-Control-Max-Age: 86400');
+        header('Vary: Origin');
+
+        if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+            http_response_code(204);
+            exit;
+        }
+    }
+}
+
 if (!running_in_cli()) {
+    handle_cors_headers();
     force_https_if_needed();
 
     ini_set('session.use_strict_mode', '1');
