@@ -59,7 +59,12 @@ RedirectMatch 403 ^/(admin_accounts_tabs|dashboard_tabs|tools)/.*$
     # Tự động chuyển hướng 301 ẩn đuôi .php khi người dùng gõ trực tiếp .php trên thanh địa chỉ (trừ POST/API)
     RewriteCond %{REQUEST_METHOD} !POST
     RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/([^.]+)\.php [NC]
-    RewriteRule ^ %1 [R=301,L]
+    RewriteCond %{HTTP:X-Forwarded-Proto} =https [NC]
+    RewriteRule ^ https://%{HTTP_HOST}/%1 [R=301,L]
+
+    RewriteCond %{REQUEST_METHOD} !POST
+    RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/([^.]+)\.php [NC]
+    RewriteRule ^ /%1 [R=301,L]
 
     # Xử lý chạy ngầm: Tự động ánh xạ đường dẫn không đuôi sang tệp .php vật lý tương ứng
     RewriteCond %{REQUEST_FILENAME} !-d

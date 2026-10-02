@@ -78,8 +78,9 @@ function load_app_config(): array
     if (is_string($envProxies) && trim($envProxies) !== '') {
         $proxyList = array_merge((array) $proxyList, array_filter(array_map('trim', explode(',', $envProxies))));
     }
-    if (getenv('RENDER') !== false) {
+    if (getenv('RENDER') !== false || !empty($_SERVER['HTTP_CF_RAY']) || !empty($_SERVER['HTTP_X_RENDER_ORIGIN_SERVER'])) {
         $proxyList[] = 'private';
+        $proxyList[] = '*';
     }
 
     $config['trusted_proxies'] = array_values(array_unique(array_filter((array) $proxyList, static function ($value): bool {
@@ -200,8 +201,10 @@ try {
 }
 
 foreach ([APP_SESSION_ROOT, APP_RATE_LIMIT_ROOT, APP_SECURITY_ROOT, APP_AUDIT_ROOT, APP_RESET_ROOT, APP_ADMIN_NOTICE_ROOT, APP_RESULTS_ROOT, APP_PUBLIC_ASSETS_ROOT, APP_DOCTOR_PHOTO_ROOT, APP_BRANDING_ROOT, APP_NEWS_MEDIA_ROOT] as $dir) {
-    if (!is_dir($dir) && !@mkdir($dir, 0777, true) && !is_dir($dir)) {
-        throw new RuntimeException('Khong the tao thu muc runtime: ' . $dir);
+    if (!is_dir($dir)) {
+        if (!@mkdir($dir, 0777, true) && !is_dir($dir)) {
+            error_log('[hospital_runtime] Khong the tao thu muc runtime: ' . $dir);
+        }
     }
 }
 
@@ -279,6 +282,11 @@ function force_https_if_needed(): void
     exit;
 }
 
+function running_in_cli(): bool
+{
+    return PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg';
+}
+
 if (!running_in_cli()) {
     force_https_if_needed();
 
@@ -295,8 +303,33 @@ if (!running_in_cli()) {
         'httponly' => true,
         'samesite' => 'Lax',
     ]);
-    session_save_path(APP_SESSION_ROOT);
-    session_start();
+
+    $sessionPath = APP_SESSION_ROOT;
+    if (!is_dir($sessionPath) || !is_writable($sessionPath)) {
+        $tempSessionPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'hospital_sessions';
+        if (!is_dir($tempSessionPath)) {
+            @mkdir($tempSessionPath, 0777, true);
+        }
+        if (is_dir($tempSessionPath) && is_writable($tempSessionPath)) {
+            $sessionPath = $tempSessionPath;
+        } else {
+            $sessionPath = sys_get_temp_dir();
+        }
+    }
+
+    try {
+        if ($sessionPath !== '') {
+            @session_save_path($sessionPath);
+        }
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+    } catch (Throwable $sessionErr) {
+        error_log('[hospital_session] session_start_failed: ' . $sessionErr->getMessage());
+        if (!isset($_SESSION) || !is_array($_SESSION)) {
+            $_SESSION = [];
+        }
+    }
 } else {
     $isHttps = false;
     if (!isset($_SESSION) || !is_array($_SESSION)) {
@@ -1116,10 +1149,6 @@ function latest_backup_info(): ?array
     return is_array($data) ? $data : null;
 }
 
-function running_in_cli(): bool
-{
-    return PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg';
-}
 
 function table_has_column(string $table, string $column): bool
 {

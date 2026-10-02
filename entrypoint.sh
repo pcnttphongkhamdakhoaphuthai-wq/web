@@ -41,7 +41,7 @@ chown -R www-data:www-data /var/www/html/storage \
                            /var/www/html/logs \
                            /var/www/html/assets
 
-chmod -R 775 /var/www/html/storage \
+chmod -R 777 /var/www/html/storage \
              /var/www/html/uploads \
              /var/www/html/logs
 
