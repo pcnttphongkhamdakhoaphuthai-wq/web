@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phòng khám Đa khoa Phú Thái - Cổng thông tin y tế trực tuyến</title>
+  <meta name="description" content="Phòng khám đa khoa Phú Thái - Đặt lịch khám bệnh, tra cứu kết quả xét nghiệm và tư vấn sức khỏe trực tuyến.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <style>
+  :root {
+    --primary: #0077b6;
+    --primary-hover: #023e8a;
+    --secondary: #00b4d8;
+    --surface: #ffffff;
+    --bg: #f8fafc;
+    --text: #0f172a;
+    --muted: #475569;
+    --border: #e2e8f0;
+    --shadow: 0 4px 20px rgba(0, 119, 182, 0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  header { background: #fff; border-bottom: 1px solid rgba(0, 119, 182, 0.12); padding: 14px 24px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+  .nav-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--primary); font-weight: 700; font-size: 1.15rem; }
+  .brand img { height: 42px; width: auto; object-fit: contain; }
+  .nav-links { display: flex; gap: 16px; align-items: center; }
+  .nav-links a { text-decoration: none; color: var(--muted); font-weight: 500; transition: color .2s; font-size: 0.95rem; }
+  .nav-links a:hover { color: var(--primary); }
+  .btn { background: var(--primary); color: #fff !important; padding: 10px 20px; border-radius: 10px; font-weight: 600; text-decoration: none; transition: all .2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer; text-align: center; }
+  .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+  .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary) !important; }
+  .btn-outline:hover { background: var(--primary); color: #fff !important; }
+  .btn-secondary { background: #e2e8f0; color: #1e293b !important; }
+  .btn-secondary:hover { background: #cbd5e1; }
+  .btn-block { width: 100%; }
+  .hero { background: linear-gradient(135deg, #0077b6 0%, #0096c7 100%); color: #fff; padding: 64px 24px; text-align: center; }
+  .hero h1 { font-size: 2.6rem; margin-bottom: 16px; font-weight: 800; letter-spacing: -0.5px; }
+  .hero p { font-size: 1.15rem; max-width: 780px; margin: 0 auto 28px; opacity: 0.95; }
+  .container { max-width: 1200px; margin: 36px auto; padding: 0 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 36px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .card { background: var(--surface); border-radius: 18px; padding: 26px; box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform .2s, box-shadow .2s; }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(0, 119, 182, 0.12); }
+  .card h3 { color: var(--primary); margin-bottom: 10px; font-size: 1.25rem; font-weight: 700; }
+  .card p { color: var(--muted); font-size: 0.95rem; margin-bottom: 18px; line-height: 1.6; }
+  .form-group { margin-bottom: 20px; text-align: left; }
+  .form-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.92rem; color: #1e293b; }
+  .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 10px; font: inherit; background: #fff; color: #0f172a; transition: border-color .2s, box-shadow .2s; }
+  .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.15); }
+  footer { background: #0f172a; color: #94a3b8; text-align: center; padding: 48px 24px 24px; margin-top: 60px; }
+  .doctor-card { display: flex; gap: 18px; align-items: flex-start; }
+  .doctor-photo { width: 84px; height: 84px; border-radius: 16px; object-fit: cover; background: #e0f2fe; flex-shrink: 0; border: 2px solid #bae6fd; }
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; background: #e0f2fe; color: #0369a1; margin-bottom: 8px; }
+  @media(max-width: 768px) {
+    .hero h1 { font-size: 2rem; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+  
+  <header>
+    <div class="nav-container">
+      <a href="/" class="brand">
+        <img src="/logo.png" alt="Phòng khám đa khoa Phú Thái" onerror="this.style.display='none'">
+        <span>Phòng Khám Đa Khoa Phú Thái</span>
+      </a>
+      <nav class="nav-links">
+        <a href="/">Trang chủ</a>
+        <a href="/news.html">Tin tức</a>
+        <a href="/resources.html">Cẩm nang</a>
+        <a href="/book_appointment.html" class="btn btn-outline">Đặt lịch khám</a>
+        <a href="/login.html" class="btn">Đăng nhập</a>
+      </nav>
+    </div>
+  </header>
+
+
+  <section class="hero">
+    <h1>Phòng Khám Đa Khoa Phú Thái</h1>
+    <p>Chăm sóc sức khỏe tận tâm, ứng dụng công nghệ số hoá y tế hiện đại giúp người bệnh tra cứu kết quả và đặt lịch khám nhanh chóng.</p>
+    <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+      <a href="/book_appointment.html" class="btn" style="background:#fff; color:var(--primary)!important; font-size:1.05rem; padding:12px 28px; box-shadow:0 4px 15px rgba(0,0,0,0.1);">📅 Đặt lịch khám ngay</a>
+      <a href="/login.html" class="btn btn-outline" style="border-color:#fff; color:#fff!important; font-size:1.05rem; padding:12px 28px;">Tra cứu hồ sơ bệnh án</a>
+    </div>
+  </section>
+
+  <main class="container">
+    <div style="text-align:center; margin-bottom:32px;">
+      <h2 style="color:var(--primary); font-size:1.85rem; font-weight:800;">Dịch vụ trực tuyến</h2>
+      <p style="color:var(--muted); font-size:1rem;">Tiện ích y tế điện tử phục vụ người bệnh 24/7</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <span class="badge">Nhanh chóng</span>
+        <h3>1. Đặt lịch khám bệnh</h3>
+        <p>Chủ động chọn bác sĩ chuyên khoa, ngày giờ khám thuận tiện. Không cần xếp hàng chờ đợi lấy số.</p>
+        <a href="/book_appointment.html" class="btn">Đặt hẹn trực tuyến →</a>
+      </div>
+      <div class="card">
+        <span class="badge">Bảo mật</span>
+        <h3>2. Kết quả xét nghiệm</h3>
+        <p>Tra cứu kết quả siêu âm, xét nghiệm máu, đơn thuốc và lịch sử khám bệnh bằng CCCD an toàn.</p>
+        <a href="/login.html" class="btn">Tra cứu ngay →</a>
+      </div>
+      <div class="card">
+        <span class="badge">Trí tuệ nhân tạo</span>
+        <h3>3. Trợ lý y tế AI 24/7</h3>
+        <p>Hỏi đáp thông tin chuẩn bị trước khi khám, bảng giá dịch vụ và chính sách BHYT tức thời.</p>
+        <a href="#ai-assistant" class="btn">Chat với AI →</a>
+      </div>
+      <div class="card">
+        <span class="badge">Kiến thức</span>
+        <h3>4. Cẩm nang sức khỏe</h3>
+        <p>Xem quy trình tiếp nhận, tài liệu hướng dẫn và các bài viết tư vấn y khoa hữu ích.</p>
+        <a href="/resources.html" class="btn">Xem cẩm nang →</a>
+      </div>
+    </div>
+
+    <!-- Giới thiệu phòng khám -->
+    <div class="card" style="margin-bottom:36px; padding:36px;">
+      <h2 style="color:var(--primary); font-size:1.6rem; margin-bottom:12px;">Về chúng tôi</h2>
+      <p style="color:var(--muted); font-size:1.05rem; line-height:1.7; margin-bottom:24px;">Phòng khám đa khoa Phú Thái toạ lạc tại trung tâm huyện Phú Bình, tỉnh Thái Nguyên, là địa chỉ tin cậy của hàng nghìn lượt người bệnh mỗi năm. Chúng tôi tự hào sở hữu hệ thống trang thiết bị chẩn đoán tiên tiến cùng đội ngũ y bác sĩ đầu ngành tâm huyết.</p>
+      
+      <div class="grid grid-3" style="margin-bottom:0;">
+        <div style="background:#f1f5f9; padding:20px; border-radius:12px;">
+          <h4 style="color:#0f172a; margin-bottom:6px;">🌟 Sứ mệnh</h4>
+          <p style="font-size:0.9rem; margin-bottom:0;">Nâng cao chất lượng sống cộng đồng bằng dịch vụ y tế chuẩn mực, chu đáo và chi phí minh bạch, hợp lý.</p>
+        </div>
+        <div style="background:#f1f5f9; padding:20px; border-radius:12px;">
+          <h4 style="color:#0f172a; margin-bottom:6px;">🏥 Cơ sở vật chất</h4>
+          <p style="font-size:0.9rem; margin-bottom:0;">Khu khám riêng biệt, máy siêu âm màu 4D, hệ thống xét nghiệm tự động và phòng lưu bệnh nhân tiện nghi.</p>
+        </div>
+        <div style="background:#f1f5f9; padding:20px; border-radius:12px;">
+          <h4 style="color:#0f172a; margin-bottom:6px;">📋 Chuyên khoa đa dạng</h4>
+          <p style="font-size:0.9rem; margin-bottom:0;">Nội tổng quát, Ngoại khoa, Nhi khoa, Sản phụ khoa, Tai Mũi Họng, Chẩn đoán hình ảnh và Xét nghiệm.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Đội ngũ bác sĩ -->
+    <div style="margin-bottom:36px;">
+      <div style="text-align:center; margin-bottom:28px;">
+        <h2 style="color:var(--primary); font-size:1.85rem; font-weight:800;">Đội ngũ bác sĩ chuyên khoa</h2>
+        <p style="color:var(--muted); font-size:1rem;">Các chuyên gia giàu kinh nghiệm luôn sẵn sàng tư vấn và điều trị</p>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="card doctor-card">
+          <img class="doctor-photo" src="/assets/doctor-placeholder.svg" alt="Bác sĩ CK1">
+          <div>
+            <span class="badge">Nội khoa tổng quát</span>
+            <h3>BS. CK1 Nguyễn Văn Thắng</h3>
+            <p style="font-size:0.9rem; margin-bottom:10px;">Hơn 15 năm kinh nghiệm chẩn đoán và điều trị bệnh lý tim mạch, tiểu đường, hô hấp.</p>
+            <a href="/book_appointment.html" class="btn btn-outline" style="padding:6px 14px; font-size:0.85rem;">Đặt lịch với bác sĩ</a>
+          </div>
+        </div>
+
+        <div class="card doctor-card">
+          <img class="doctor-photo" src="/assets/doctor-placeholder.svg" alt="Bác sĩ Nhi khoa">
+          <div>
+            <span class="badge">Nhi khoa</span>
+            <h3>ThS. BS Trần Thị Thu Hà</h3>
+            <p style="font-size:0.9rem; margin-bottom:10px;">Chuyên gia tư vấn dinh dưỡng, tiêm chủng và điều trị các bệnh lý thường gặp ở trẻ nhỏ.</p>
+            <a href="/book_appointment.html" class="btn btn-outline" style="padding:6px 14px; font-size:0.85rem;">Đặt lịch với bác sĩ</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Widget Trợ lý y tế AI Gemini -->
+    <div class="card" id="ai-assistant" style="background:linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color:#fff; padding:36px; margin-bottom:36px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:18px; margin-bottom:20px;">
+        <div>
+          <span style="background:rgba(255,255,255,0.2); padding:4px 12px; border-radius:20px; font-size:0.85rem; font-weight:600;">🤖 Trợ lý AI Thông Minh</span>
+          <h2 style="color:#fff; font-size:1.6rem; margin-top:8px;">Hỏi đáp y tế & Hướng dẫn khám</h2>
+        </div>
+        <p style="max-width:500px; font-size:0.95rem; opacity:0.9; margin:0;">Nhập câu hỏi của bạn để được hỗ trợ tức thì về thời gian khám, bảng giá và thủ tục BHYT.</p>
+      </div>
+
+      <div style="background:#fff; border-radius:14px; padding:16px; box-shadow:0 10px 25px rgba(0,0,0,0.15);">
+        <div id="ai-chat-history" style="max-height:220px; overflow-y:auto; margin-bottom:14px; display:flex; flex-direction:column; gap:10px; padding:4px;">
+          <div style="background:#f1f5f9; color:#1e293b; padding:10px 14px; border-radius:10px; font-size:0.92rem; align-self:flex-start; max-width:85%;">
+            Xin chào! Tôi là Trợ lý AI của Phòng Khám Phú Thái. Bạn cần tìm hiểu thông tin về dịch vụ khám, thời gian làm việc hay quy trình nào hôm nay?
+          </div>
+        </div>
+        <form id="ai-chat-form" style="display:flex; gap:10px;">
+          <input type="text" id="ai-chat-input" class="form-control" placeholder="Ví dụ: Phòng khám có làm việc ngày chủ nhật không?..." required style="margin:0;">
+          <button type="submit" class="btn" style="white-space:nowrap; padding:10px 20px;">Gửi câu hỏi</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tra cứu nhanh & Đăng nhập -->
+    <div class="card" style="padding:32px;">
+      <div class="grid grid-2" style="margin-bottom:0; align-items:center;">
+        <div>
+          <h3 style="color:var(--primary); font-size:1.4rem; margin-bottom:8px;">Bạn đã từng khám tại Phú Thái?</h3>
+          <p style="color:var(--muted); font-size:0.95rem; margin-bottom:18px;">Đăng nhập bằng số Căn cước công dân (CCCD) để xem ngay đơn thuốc, kết quả xét nghiệm và lịch tái khám.</p>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <a href="/login.html" class="btn">Đăng nhập tài khoản</a>
+            <a href="/register.html" class="btn btn-secondary">Đăng ký mới</a>
+          </div>
+        </div>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:20px;">
+          <h4 style="color:#0f172a; margin-bottom:10px;">📞 Hỗ trợ khẩn cấp & Đặt hẹn</h4>
+          <p style="font-size:0.92rem; margin-bottom:6px;"><strong>Hotline 1:</strong> <a href="tel:02086289888" style="color:var(--primary); text-decoration:none; font-weight:700;">0208 6289 888</a></p>
+          <p style="font-size:0.92rem; margin-bottom:6px;"><strong>Hotline 2:</strong> <a href="tel:096348565" style="color:var(--primary); text-decoration:none; font-weight:700;">0963 485 65</a></p>
+          <p style="font-size:0.85rem; color:#64748b; margin-top:8px;">Nhân viên tư vấn trực điện thoại từ 07:00 đến 21:00 hàng ngày.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  
+  <footer>
+    <div style="max-width:1200px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:32px; text-align:left; margin-bottom:30px;">
+      <div>
+        <h3 style="color:#fff; margin-bottom:12px; font-size:1.15rem;">Phòng Khám Đa Khoa Phú Thái</h3>
+        <p style="color:#94a3b8; font-size:0.92rem; line-height:1.6;">Đơn vị y tế uy tín hàng đầu tại Thái Nguyên với đội ngũ bác sĩ giàu kinh nghiệm, trang thiết bị chẩn đoán hiện đại và hệ thống lưu trữ kết quả trực tuyến 24/7.</p>
+      </div>
+      <div>
+        <h3 style="color:#fff; margin-bottom:12px; font-size:1.15rem;">Thông tin liên hệ</h3>
+        <p style="color:#cbd5e1; font-size:0.92rem; margin-bottom:8px;">📍 <strong>Địa chỉ:</strong> Xóm Hoà Bình 2, xã Phú Bình, tỉnh Thái Nguyên</p>
+        <p style="color:#cbd5e1; font-size:0.92rem; margin-bottom:8px;">📞 <strong>Hotline:</strong> 0208 6289 888 / 0963 485 65</p>
+        <p style="color:#cbd5e1; font-size:0.92rem;">✉️ <strong>Email:</strong> pcnttphongkhamdakhoaphuthai@gmail.com</p>
+      </div>
+      <div>
+        <h3 style="color:#fff; margin-bottom:12px; font-size:1.15rem;">Giờ làm việc</h3>
+        <p style="color:#cbd5e1; font-size:0.92rem; margin-bottom:6px;">🕒 Thứ 2 - Thứ 7: 07:00 - 17:30</p>
+        <p style="color:#cbd5e1; font-size:0.92rem; margin-bottom:6px;">🕒 Chủ nhật: 07:30 - 12:00</p>
+        <p style="color:#38bdf8; font-size:0.88rem; margin-top:10px;">★ Trực cấp cứu và hỗ trợ đặt hẹn trực tuyến 24/7</p>
+      </div>
+    </div>
+    <div style="border-top:1px solid #334155; padding-top:20px; font-size:0.85rem; color:#64748b;">
+      © 2026 Bản quyền thuộc về Phòng Khám Đa Khoa Phú Thái. Hệ thống tối ưu phân tán Cloudflare Edge & Render PaaS.
+    </div>
+  </footer>
+  <script src="/assets/api-client.js"></script>
+
+
+  <script>
+    // Logic Chatbot AI
+    const chatForm = document.getElementById('ai-chat-form');
+    const chatInput = document.getElementById('ai-chat-input');
+    const chatHistory = document.getElementById('ai-chat-history');
+
+    if (chatForm) {
+      chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = chatInput.value.trim();
+        if (!msg) return;
+
+        // Thêm câu hỏi vào khung chat
+        const userDiv = document.createElement('div');
+        userDiv.style.cssText = 'background:#0077b6; color:#fff; padding:10px 14px; border-radius:10px; font-size:0.92rem; align-self:flex-end; max-width:85%;';
+        userDiv.textContent = msg;
+        chatHistory.appendChild(userDiv);
+        chatInput.value = '';
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        // Trạng thái bot đang gõ
+        const botDiv = document.createElement('div');
+        botDiv.style.cssText = 'background:#f1f5f9; color:#1e293b; padding:10px 14px; border-radius:10px; font-size:0.92rem; align-self:flex-start; max-width:85%;';
+        botDiv.textContent = 'Đang tra cứu thông tin y tế...';
+        chatHistory.appendChild(botDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        const res = await ApiClient.call('/api_chat_ai.php', { message: msg });
+        if (res.ok && res.data && res.data.reply) {
+          botDiv.innerHTML = res.data.reply.replace(/\n/g, '<br>');
+        } else {
+          botDiv.textContent = res.data?.error || 'Hệ thống AI đang phản hồi chậm. Quý khách vui lòng liên hệ hotline 0208 6289 888 để được hỗ trợ ngay.';
+        }
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+      });
+    }
+  </script>
+</body>
+</html>

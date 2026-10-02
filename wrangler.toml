@@ -1,6 +1,7 @@
 # ==============================================================================
-# Cloudflare Workers Static Assets Configuration
+# Cloudflare Workers & Static Assets Configuration
 # Dịch vụ: web (Phòng khám đa khoa Phú Thái)
+# Kiến trúc: Decoupled Edge Static CDN + Smart Backend API Proxy
 # ==============================================================================
 
 name = "web"
@@ -10,3 +11,7 @@ compatibility_date = "2024-09-23"
 # Phân phối trực tiếp toàn bộ giao diện tĩnh từ thư mục dist/ tại Cloudflare Edge CDN
 [assets]
 directory = "./dist"
+
+# Biến môi trường kết nối trực tiếp đến hệ thống Backend Render
+[vars]
+BACKEND_ORIGIN = "https://web-iewr.onrender.com"
