@@ -11,7 +11,7 @@ services:
     region: singapore
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /
+    healthCheckPath: /healthz.php
     autoDeploy: true
 
     envVars:

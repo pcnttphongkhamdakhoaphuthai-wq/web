@@ -38,12 +38,21 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # 3. Kích hoạt các module Apache cần thiết (mod_rewrite, mod_headers)
 RUN a2enmod rewrite headers
 
-# 4. Cấu hình Apache cho phép .htaccess và bảo vệ thư mục DocumentRoot
-RUN echo '<Directory /var/www/html>\n\
-    Options -Indexes +FollowSymLinks\n\
-    AllowOverride All\n\
-    Require all granted\n\
-</Directory>' > /etc/apache2/conf-available/hospital-app.conf \
+# 4. Cấu hình Apache cho phép .htaccess và giới hạn MPM Prefork (tiết kiệm RAM trên Render)
+RUN { \
+        echo '<Directory /var/www/html>'; \
+        echo '    Options -Indexes +FollowSymLinks'; \
+        echo '    AllowOverride All'; \
+        echo '    Require all granted'; \
+        echo '</Directory>'; \
+        echo '<IfModule mpm_prefork_module>'; \
+        echo '    StartServers             2'; \
+        echo '    MinSpareServers          2'; \
+        echo '    MaxSpareServers          4'; \
+        echo '    MaxRequestWorkers        15'; \
+        echo '    MaxConnectionsPerChild   1000'; \
+        echo '</IfModule>'; \
+    } > /etc/apache2/conf-available/hospital-app.conf \
     && a2enconf hospital-app
 
 # 5. Cấu hình PHP production settings tối ưu
@@ -68,9 +77,10 @@ WORKDIR /var/www/html
 # 7. Sao chép toàn bộ mã nguồn vào container
 COPY . /var/www/html/
 
-# 8. Cài đặt entrypoint script và cấp quyền thực thi
+# 8. Cài đặt entrypoint script, chuẩn hóa ký tự xuống dòng và cấp quyền thực thi
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh \
+    && chmod +x /usr/local/bin/entrypoint.sh
 
 # 9. Khởi tạo các thư mục runtime cần thiết và phân quyền sở hữu sơ bộ
 RUN mkdir -p /var/www/html/storage/backups \

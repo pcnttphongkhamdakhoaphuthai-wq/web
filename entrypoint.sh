@@ -10,7 +10,7 @@ PORT="${PORT:-80}"
 echo "[ENTRYPOINT] Configuring Apache to listen on port ${PORT}..."
 
 if [ -f /etc/apache2/ports.conf ]; then
-    sed -i -E "s/Listen [0-9]+/Listen ${PORT}/" /etc/apache2/ports.conf
+    echo "Listen ${PORT}" > /etc/apache2/ports.conf
 fi
 
 if [ -f /etc/apache2/sites-available/000-default.conf ]; then
