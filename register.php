@@ -53,7 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $passwordHash = hash_password($password);
                 if ($emailEnabled) {
                     $stmt = $conn->prepare('INSERT INTO patients (cccd, full_name, phone, email, password_hash) VALUES (?, ?, ?, ?, ?)');
-                    $stmt->bind_param('sssss', $cccd, $fullName, $phone, $email, $passwordHash);
+                    $emailParam = ($email !== '') ? $email : null;
+                    $stmt->bind_param('sssss', $cccd, $fullName, $phone, $emailParam, $passwordHash);
                 } else {
                     $stmt = $conn->prepare('INSERT INTO patients (cccd, full_name, phone, password_hash) VALUES (?, ?, ?, ?)');
                     $stmt->bind_param('ssss', $cccd, $fullName, $phone, $passwordHash);

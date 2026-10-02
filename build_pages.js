@@ -54,17 +54,23 @@ const headersContent = `/*
 `;
 fs.writeFileSync(path.join(distDir, '_headers'), headersContent, 'utf-8');
 
-// 4. Tạo file cấu hình Cloudflare Pages _redirects (Proxy API & Chuyển hướng an toàn)
+// 4. Tạo file cấu hình Cloudflare Pages _redirects (Chuyển hướng an toàn tuân thủ Cloudflare)
 const redirectsContent = `# Cloudflare Pages _redirects configuration
-# Tự động proxy các yêu cầu động và API về Backend Render
-/api_chat_ai.php  ${BACKEND_URL}/api_chat_ai.php  200
-/patient_chat_poll.php  ${BACKEND_URL}/patient_chat_poll.php  200
-/api/*  ${BACKEND_URL}/api/:splat  200
+# Chuyển hướng các trang động và biểu mẫu xác thực về Backend Render chính thức
+/login.html  ${BACKEND_URL}/login.php  302
+/register.html  ${BACKEND_URL}/register.php  302
+/book_appointment.html  ${BACKEND_URL}/book_appointment.php  302
+/login.php  ${BACKEND_URL}/login.php  302
+/register.php  ${BACKEND_URL}/register.php  302
+/book_appointment.php  ${BACKEND_URL}/book_appointment.php  302
 /dashboard*  ${BACKEND_URL}/dashboard:splat  302
 /admin_*  ${BACKEND_URL}/admin_:splat  302
 /account*  ${BACKEND_URL}/account:splat  302
 /download_*  ${BACKEND_URL}/download_:splat  302
 /logout.php  ${BACKEND_URL}/logout.php  302
+/api_chat_ai.php  ${BACKEND_URL}/api_chat_ai.php  302
+/patient_chat_poll.php  ${BACKEND_URL}/patient_chat_poll.php  302
+/api/*  ${BACKEND_URL}/api/:splat  302
 `;
 fs.writeFileSync(path.join(distDir, '_redirects'), redirectsContent, 'utf-8');
 
@@ -79,8 +85,8 @@ const commonHeader = `
       <div class="nav-links">
         <a href="/news.html">Tin tức</a>
         <a href="/resources.html">Tư liệu</a>
-        <a href="/login.html">Đăng nhập</a>
-        <a href="/book_appointment.html" class="btn">Đặt lịch khám</a>
+        <a href="${BACKEND_URL}/login.php">Đăng nhập</a>
+        <a href="${BACKEND_URL}/book_appointment.php" class="btn">Đặt lịch khám</a>
       </div>
     </div>
   </header>
@@ -218,14 +224,16 @@ const indexHtml = `<!DOCTYPE html>
 fs.writeFileSync(path.join(distDir, 'index.html'), indexHtml, 'utf-8');
 
 // ==========================================
-// 6. Sinh trang login.html (Đăng nhập tĩnh)
+// 6. Sinh trang login.html (Chuyển hướng xác thực an toàn)
 // ==========================================
 const loginHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=${BACKEND_URL}/login.php">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đăng nhập bệnh nhân - Phòng khám Đa khoa Phú Thái</title>
+  <title>Đăng nhập - Phòng khám Đa khoa Phú Thái</title>
+  <script>window.location.replace("${BACKEND_URL}/login.php");</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -234,29 +242,11 @@ const loginHtml = `<!DOCTYPE html>
 </head>
 <body>
   ${commonHeader}
-  <main class="container" style="max-width:480px; margin:50px auto;">
-    <div class="card" style="padding:32px;">
-      <h2 style="color:var(--primary); font-size:1.6rem; margin-bottom:10px; text-align:center;">Đăng nhập bệnh nhân</h2>
-      <p style="text-align:center; color:var(--muted); margin-bottom:24px; font-size:0.95rem;">Nhập số CCCD và mật khẩu để tra cứu hồ sơ kết quả khám</p>
-
-      <form action="${BACKEND_URL}/login.php" method="POST">
-        <div class="form-group">
-          <label for="cccd">Số Căn cước công dân (12 số)</label>
-          <input type="text" id="cccd" name="cccd" class="form-control" required placeholder="Ví dụ: 019200000000" pattern="[0-9]{12}">
-        </div>
-        <div class="form-group">
-          <label for="password">Mật khẩu</label>
-          <input type="password" id="password" name="password" class="form-control" required placeholder="Nhập mật khẩu của bạn">
-        </div>
-        <button type="submit" class="btn" style="width:100%; padding:13px; font-size:1rem; margin-top:8px;">Đăng nhập ngay</button>
-      </form>
-
-      <div style="margin-top:20px; text-align:center; font-size:0.9rem; color:var(--muted);">
-        Chưa có tài khoản? <a href="/register.html" style="color:var(--primary); font-weight:600; text-decoration:none;">Đăng ký ngay</a>
-      </div>
-      <div style="margin-top:10px; text-align:center; font-size:0.88rem;">
-        <a href="${BACKEND_URL}/forgot_password.php" style="color:var(--muted); text-decoration:underline;">Quên mật khẩu?</a>
-      </div>
+  <main class="container" style="max-width:480px; margin:60px auto;">
+    <div class="card" style="padding:32px; text-align:center;">
+      <h2 style="color:var(--primary); font-size:1.5rem; margin-bottom:14px;">Đang kết nối bảo mật...</h2>
+      <p style="color:var(--muted); margin-bottom:24px;">Hệ thống đang chuyển bạn đến Cổng Đăng Nhập Chính Thức của Phòng Khám Đa Khoa Phú Thái.</p>
+      <a href="${BACKEND_URL}/login.php" class="btn" style="padding:12px 24px;">Bấm vào đây nếu trình duyệt không tự chuyển</a>
     </div>
   </main>
   ${commonFooter}
@@ -265,14 +255,16 @@ const loginHtml = `<!DOCTYPE html>
 fs.writeFileSync(path.join(distDir, 'login.html'), loginHtml, 'utf-8');
 
 // ==========================================
-// 7. Sinh trang register.html (Đăng ký tĩnh)
+// 7. Sinh trang register.html (Chuyển hướng xác thực an toàn)
 // ==========================================
 const registerHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=${BACKEND_URL}/register.php">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Đăng ký tài khoản - Phòng khám Đa khoa Phú Thái</title>
+  <script>window.location.replace("${BACKEND_URL}/register.php");</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -281,34 +273,11 @@ const registerHtml = `<!DOCTYPE html>
 </head>
 <body>
   ${commonHeader}
-  <main class="container" style="max-width:540px; margin:40px auto;">
-    <div class="card" style="padding:32px;">
-      <h2 style="color:var(--primary); font-size:1.6rem; margin-bottom:10px; text-align:center;">Đăng ký tài khoản</h2>
-      <p style="text-align:center; color:var(--muted); margin-bottom:24px; font-size:0.95rem;">Tạo tài khoản để theo dõi lịch hẹn và kết quả xét nghiệm trực tuyến</p>
-
-      <form action="${BACKEND_URL}/register.php" method="POST">
-        <div class="form-group">
-          <label for="full_name">Họ và tên</label>
-          <input type="text" id="full_name" name="full_name" class="form-control" required placeholder="Nguyễn Văn A">
-        </div>
-        <div class="form-group">
-          <label for="cccd">Số Căn cước công dân (12 chữ số)</label>
-          <input type="text" id="cccd" name="cccd" class="form-control" required placeholder="019200000000" pattern="[0-9]{12}">
-        </div>
-        <div class="form-group">
-          <label for="phone">Số điện thoại</label>
-          <input type="tel" id="phone" name="phone" class="form-control" required placeholder="0912345678">
-        </div>
-        <div class="form-group">
-          <label for="password">Mật khẩu</label>
-          <input type="password" id="password" name="password" class="form-control" required placeholder="Tối thiểu 6 ký tự">
-        </div>
-        <button type="submit" class="btn" style="width:100%; padding:13px; font-size:1rem; margin-top:8px;">Tạo tài khoản</button>
-      </form>
-
-      <div style="margin-top:20px; text-align:center; font-size:0.9rem; color:var(--muted);">
-        Đã có tài khoản? <a href="/login.html" style="color:var(--primary); font-weight:600; text-decoration:none;">Đăng nhập</a>
-      </div>
+  <main class="container" style="max-width:480px; margin:60px auto;">
+    <div class="card" style="padding:32px; text-align:center;">
+      <h2 style="color:var(--primary); font-size:1.5rem; margin-bottom:14px;">Đang kết nối bảo mật...</h2>
+      <p style="color:var(--muted); margin-bottom:24px;">Hệ thống đang chuyển bạn đến Cổng Đăng Ký Chính Thức của Phòng Khám Đa Khoa Phú Thái.</p>
+      <a href="${BACKEND_URL}/register.php" class="btn" style="padding:12px 24px;">Bấm vào đây nếu trình duyệt không tự chuyển</a>
     </div>
   </main>
   ${commonFooter}
@@ -317,14 +286,16 @@ const registerHtml = `<!DOCTYPE html>
 fs.writeFileSync(path.join(distDir, 'register.html'), registerHtml, 'utf-8');
 
 // ==========================================
-// 8. Sinh trang book_appointment.html (Đặt lịch)
+// 8. Sinh trang book_appointment.html (Chuyển hướng đặt lịch an toàn)
 // ==========================================
 const bookAppointmentHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=${BACKEND_URL}/book_appointment.php">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Đặt lịch khám - Phòng khám Đa khoa Phú Thái</title>
+  <script>window.location.replace("${BACKEND_URL}/book_appointment.php");</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -333,42 +304,11 @@ const bookAppointmentHtml = `<!DOCTYPE html>
 </head>
 <body>
   ${commonHeader}
-  <main class="container" style="max-width:640px; margin:40px auto;">
-    <div class="card" style="padding:32px;">
-      <h2 style="color:var(--primary); font-size:1.6rem; margin-bottom:10px; text-align:center;">Đặt lịch khám trực tuyến</h2>
-      <p style="text-align:center; color:var(--muted); margin-bottom:24px; font-size:0.95rem;">Chủ động chọn ngày khám và dịch vụ để được phục vụ tốt nhất</p>
-
-      <form action="${BACKEND_URL}/book_appointment.php" method="POST">
-        <div class="form-group">
-          <label for="specialty">Chuyên khoa khám</label>
-          <select id="specialty" name="department" class="form-control" required>
-            <option value="">-- Chọn chuyên khoa --</option>
-            <option value="Khám nội tổng quát">Khám nội tổng quát</option>
-            <option value="Siêu âm chẩn đoán">Siêu âm tổng quát / màu</option>
-            <option value="Xét nghiệm">Xét nghiệm máu, sinh hóa, nước tiểu</option>
-            <option value="Điện tim">Điện tim / Tim mạch</option>
-            <option value="Tư vấn sức khỏe">Tư vấn sức khỏe định kỳ</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="appointment_date">Ngày mong muốn khám</label>
-          <input type="date" id="appointment_date" name="appointment_date" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label for="appointment_time">Khung giờ</label>
-          <select id="appointment_time" name="appointment_time" class="form-control" required>
-            <option value="07:30 - 09:00">07:30 - 09:00 (Buổi sáng)</option>
-            <option value="09:00 - 11:30">09:00 - 11:30 (Buổi sáng)</option>
-            <option value="13:30 - 15:00">13:30 - 15:00 (Buổi chiều)</option>
-            <option value="15:00 - 17:00">15:00 - 17:00 (Buổi chiều)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="notes">Triệu chứng hoặc ghi chú</label>
-          <textarea id="notes" name="notes" rows="3" class="form-control" placeholder="Mô tả triệu chứng hoặc yêu cầu đặc biệt..."></textarea>
-        </div>
-        <button type="submit" class="btn" style="width:100%; padding:13px; font-size:1rem; margin-top:8px;">Gửi yêu cầu đặt lịch</button>
-      </form>
+  <main class="container" style="max-width:540px; margin:60px auto;">
+    <div class="card" style="padding:32px; text-align:center;">
+      <h2 style="color:var(--primary); font-size:1.5rem; margin-bottom:14px;">Đang kết nối hệ thống đặt lịch...</h2>
+      <p style="color:var(--muted); margin-bottom:24px;">Hệ thống đang chuyển bạn đến Cổng Đặt Lịch Khám Chính Thức để lựa chọn bác sĩ và khung giờ theo thời gian thực.</p>
+      <a href="${BACKEND_URL}/book_appointment.php" class="btn" style="padding:12px 24px;">Bấm vào đây nếu trình duyệt không tự chuyển</a>
     </div>
   </main>
   ${commonFooter}

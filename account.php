@@ -83,18 +83,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     redirect('account.php');
                 }
 
+                $emailParam = ($email !== '') ? $email : null;
                 $passwordHash = hash_password($newPassword);
                 if ($emailEnabled) {
                     $stmt = $conn->prepare('UPDATE patients SET full_name = ?, phone = ?, email = ?, password_hash = ? WHERE id = ?');
-                    $stmt->bind_param('ssssi', $fullName, $phone, $email, $passwordHash, $userId);
+                    $stmt->bind_param('ssssi', $fullName, $phone, $emailParam, $passwordHash, $userId);
                 } else {
                     $stmt = $conn->prepare('UPDATE patients SET full_name = ?, phone = ?, password_hash = ? WHERE id = ?');
                     $stmt->bind_param('sssi', $fullName, $phone, $passwordHash, $userId);
                 }
             } else {
+                $emailParam = ($email !== '') ? $email : null;
                 if ($emailEnabled) {
                     $stmt = $conn->prepare('UPDATE patients SET full_name = ?, phone = ?, email = ? WHERE id = ?');
-                    $stmt->bind_param('sssi', $fullName, $phone, $email, $userId);
+                    $stmt->bind_param('sssi', $fullName, $phone, $emailParam, $userId);
                 } else {
                     $stmt = $conn->prepare('UPDATE patients SET full_name = ?, phone = ? WHERE id = ?');
                     $stmt->bind_param('ssi', $fullName, $phone, $userId);

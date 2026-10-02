@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $doctors = $conn->query('SELECT id, name, title, department FROM doctors ORDER BY name ASC');
 $formAction = $editingAppointment ? 'Cập nhật lịch hẹn' : 'Xác nhận đặt lịch';
 $pageTitle = $editingAppointment ? 'Sửa lịch khám' : 'Đặt lịch khám';
-$selectedDoctorId = (string) ($editingAppointment['doctor_id'] ?? ($_POST['doctor_id'] ?? ''));
+$selectedDoctorId = (string) ($_POST['doctor_id'] ?? ($editingAppointment['doctor_id'] ?? ''));
 $selectedDate = (string) ($_POST['date'] ?? ($editingAppointment ? date('Y-m-d\TH:i', strtotime((string) $editingAppointment['appointment_date'])) : ''));
 $selectedReason = (string) ($_POST['reason'] ?? ($editingAppointment['reason'] ?? ''));
 
@@ -111,7 +111,7 @@ render_header($pageTitle);
     </div>
     <div>
       <label for="date">Ngày giờ khám</label>
-      <input id="date" type="datetime-local" name="date" value="<?= e($selectedDate) ?>" required>
+      <input id="date" type="datetime-local" name="date" value="<?= e($selectedDate) ?>" min="<?= date('Y-m-d\TH:i') ?>" required>
     </div>
     <div>
       <label for="reason">Lý do khám</label>
