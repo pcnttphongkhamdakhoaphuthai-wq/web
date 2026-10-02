@@ -35,8 +35,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         zip \
         opcache
 
-# 3. Kích hoạt các module Apache cần thiết (mod_rewrite, mod_headers)
-RUN a2enmod rewrite headers
+# 3. Kích hoạt các module Apache cần thiết (mod_rewrite, mod_headers, mod_expires, mod_deflate)
+RUN a2enmod rewrite headers expires deflate
 
 # 4. Cấu hình Apache cho phép .htaccess và giới hạn MPM Prefork (tiết kiệm RAM trên Render)
 RUN { \
