@@ -302,6 +302,9 @@ function handle_cors_headers(): void
     if (!$isAllowed && preg_match('#^https://[a-z0-9\-]+\.pages\.dev$#i', $origin)) {
         $isAllowed = true;
     }
+    if (!$isAllowed && preg_match('#^https://[a-z0-9\-\.]+\.workers\.dev$#i', $origin)) {
+        $isAllowed = true;
+    }
 
     if ($isAllowed) {
         header('Access-Control-Allow-Origin: ' . $origin);

@@ -1,9 +1,14 @@
 {
-  "name": "hospital-web-support",
+  "name": "webb",
   "version": "1.0.0",
-  "description": "Hospital Web Support System - Cloudflare Pages Static Edge Distribution",
+  "description": "Hospital Web Support System - Cloudflare Edge Distribution & Render Integration",
   "private": true,
+  "main": "worker.js",
   "scripts": {
-    "build": "node build_pages.js"
+    "build": "node build_pages.js",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.114.0"
   }
 }
