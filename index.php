@@ -352,4 +352,6 @@ render_hero($clinic['clinic_name'], $clinic['clinic_intro']);
     </div>
   </section>
 </div>
-
+<?php
+render_footer();
+?>

@@ -1274,8 +1274,6 @@ function ensure_admin_permission_schema(): void
     }
 }
 
-ensure_admin_permission_schema();
-
 function ensure_news_media_schema(): void
 {
     global $conn;
@@ -1303,11 +1301,29 @@ function ensure_news_media_schema(): void
     }
 }
 
-ensure_news_media_schema();
+function run_schema_migrations_if_needed(): void
+{
+    $lockFile = APP_RUNTIME_ROOT . DIRECTORY_SEPARATOR . 'schema_migrated.lock';
+    if (is_file($lockFile)) {
+        return;
+    }
+
+    ensure_admin_permission_schema();
+    ensure_news_media_schema();
+
+    @file_put_contents($lockFile, date('c'));
+}
+
+run_schema_migrations_if_needed();
 
 function patient_email_enabled(): bool
 {
-    return table_has_column('patients', 'email');
+    static $enabled = null;
+    if ($enabled !== null) {
+        return $enabled;
+    }
+    $enabled = table_has_column('patients', 'email');
+    return $enabled;
 }
 
 function sql_quote_identifier(string $identifier): string
@@ -2695,32 +2711,43 @@ function require_root_admin(): void
     }
 }
 
+function get_all_site_settings_cached(): array
+{
+    static $cache = null;
+    if ($cache !== null) {
+        return $cache;
+    }
+
+    global $conn;
+    $cache = [];
+    try {
+        $result = $conn->query("SELECT setting_key, setting_value FROM site_settings");
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $cache[(string) $row['setting_key']] = (string) $row['setting_value'];
+            }
+            $result->free();
+        }
+    } catch (Throwable $exception) {
+        log_internal_error('fetch_site_settings_failed', $exception);
+    }
+
+    return $cache;
+}
+
 function site_settings(array $defaults, bool $useDefaultIfEmpty = false): array
 {
-    global $conn;
-
+    $all = get_all_site_settings_cached();
     $settings = $defaults;
-    if ($defaults === []) {
-        return $settings;
-    }
-
-    $keys = array_keys($defaults);
-    $placeholders = implode(',', array_fill(0, count($keys), '?'));
-    $types = str_repeat('s', count($keys));
-
-    $stmt = $conn->prepare("SELECT setting_key, setting_value FROM site_settings WHERE setting_key IN ($placeholders)");
-    $stmt->bind_param($types, ...$keys);
-    $stmt->execute();
-    $rows = $stmt->get_result();
-    while ($row = $rows->fetch_assoc()) {
-        $val = (string) $row['setting_value'];
-        // Nếu useDefaultIfEmpty=true và DB rỗng → giữ nguyên default
-        if ($useDefaultIfEmpty && $val === '') {
-            continue;
+    foreach ($defaults as $key => $defaultVal) {
+        if (array_key_exists($key, $all)) {
+            $val = $all[$key];
+            if ($useDefaultIfEmpty && $val === '') {
+                continue;
+            }
+            $settings[$key] = $val;
         }
-        $settings[$row['setting_key']] = $val;
     }
-    $stmt->close();
 
     return $settings;
 }
@@ -3671,7 +3698,9 @@ function render_header(string $title): void
     $clinicName = site_setting('clinic_name', "PH\u{00D2}NG KH\u{00C1}M \u{0110}A KHOA PH\u{00DA} TH\u{00C1}I");
 
     echo '<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>' . e($title) . '</title>';
-    echo '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">';
+    echo '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
+    echo '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" media="print" onload="this.media=\'all\'">';
+    echo '<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap"></noscript>';
     echo '<style>
         :root {
             --primary: #0077b6;
