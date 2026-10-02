@@ -1,0 +1,26 @@
+# ==============================================================================
+# Robots.txt - Phòng khám Đa khoa Phú Thái
+# Domain: https://conghotrophongkhamphuthai.io.vn
+# ==============================================================================
+
+User-agent: *
+Allow: /
+Allow: /news
+Allow: /resources
+Allow: /book_appointment
+Allow: /login
+Allow: /register
+Allow: /assets/
+Allow: /logo.png
+
+# Chặn các trang quản trị và dữ liệu cá nhân nội bộ
+Disallow: /admin_*
+Disallow: /dashboard*
+Disallow: /account*
+Disallow: /download_result*
+Disallow: /tools/
+Disallow: /storage/
+Disallow: /logs/
+
+# Đường dẫn Sitemaps chuẩn
+Sitemap: https://conghotrophongkhamphuthai.io.vn/sitemap.xml

@@ -2847,6 +2847,85 @@ function check_appointment_schedule(): array
     return ['ok' => true, 'reason' => ''];
 }
 
+function validate_appointment_slot(mysqli $conn, int $doctorId, int $patientId, string $appointmentDate, int $excludeAppointmentId = 0): ?string
+{
+    $ts = strtotime($appointmentDate);
+    if ($ts === false) {
+        return 'Thời gian hẹn không hợp lệ.';
+    }
+
+    if (($ts - time()) < 1800) {
+        return 'Lịch khám phải được đặt trước ít nhất 30 phút so với thời điểm hiện tại.';
+    }
+
+    $schedule = get_appointment_schedule();
+    $dayKey = date('N', $ts);
+    $timeStr = date('H:i', $ts);
+    $dayCfg = $schedule[$dayKey] ?? null;
+
+    if ($dayCfg === null || empty($dayCfg['open'])) {
+        $dayNames = ['1'=>'Thứ Hai','2'=>'Thứ Ba','3'=>'Thứ Tư','4'=>'Thứ Năm','5'=>'Thứ Sáu','6'=>'Thứ Bảy','7'=>'Chủ Nhật'];
+        return ($dayNames[$dayKey] ?? 'Ngày này') . ' phòng khám không làm việc. Vui lòng chọn ngày khác.';
+    }
+
+    $from = $dayCfg['from'] ?? '07:00';
+    $to   = $dayCfg['to']   ?? '17:00';
+    if ($timeStr < $from || $timeStr > $to) {
+        return "Thời gian khám nằm ngoài giờ làm việc ({$from} – {$to}).";
+    }
+
+    if (!empty($dayCfg['break_open'])) {
+        $bFrom = $dayCfg['break_from'] ?? '12:00';
+        $bTo   = $dayCfg['break_to']   ?? '13:00';
+        if ($timeStr >= $bFrom && $timeStr < $bTo) {
+            return "Thời gian khám rơi vào giờ nghỉ trưa ({$bFrom} – {$bTo}). Vui lòng chọn giờ khác.";
+        }
+    }
+
+    $sqlDoctor = 'SELECT id, appointment_date FROM appointments 
+                  WHERE doctor_id = ? 
+                  AND status NOT IN ("Đã hủy", "Đã huỷ") 
+                  AND ABS(TIMESTAMPDIFF(MINUTE, appointment_date, ?)) < 30';
+    if ($excludeAppointmentId > 0) {
+        $sqlDoctor .= ' AND id != ' . (int) $excludeAppointmentId;
+    }
+    $sqlDoctor .= ' LIMIT 1';
+
+    $stmtDoc = $conn->prepare($sqlDoctor);
+    $stmtDoc->bind_param('is', $doctorId, $appointmentDate);
+    $stmtDoc->execute();
+    $resDoc = $stmtDoc->get_result();
+    $conflictDoc = $resDoc->fetch_assoc();
+    $stmtDoc->close();
+
+    if ($conflictDoc) {
+        $conflictTime = date('H:i d/m/Y', strtotime((string) $conflictDoc['appointment_date']));
+        return "Bác sĩ đã có lịch hẹn vào lúc {$conflictTime}. Mỗi ca khám cách nhau tối thiểu 30 phút. Vui lòng chọn giờ khác.";
+    }
+
+    $sqlPatient = 'SELECT id, appointment_date FROM appointments 
+                   WHERE patient_id = ? 
+                   AND status NOT IN ("Đã hủy", "Đã huỷ") 
+                   AND ABS(TIMESTAMPDIFF(MINUTE, appointment_date, ?)) < 30';
+    if ($excludeAppointmentId > 0) {
+        $sqlPatient .= ' AND id != ' . (int) $excludeAppointmentId;
+    }
+    $sqlPatient .= ' LIMIT 1';
+
+    $stmtPat = $conn->prepare($sqlPatient);
+    $stmtPat->bind_param('is', $patientId, $appointmentDate);
+    $stmtPat->execute();
+    $resPat = $stmtPat->get_result();
+    $conflictPat = $resPat->fetch_assoc();
+    $stmtPat->close();
+
+    if ($conflictPat) {
+        return "Bạn đã có một lịch khám khác gần khung giờ này. Vui lòng kiểm tra lại danh sách lịch khám.";
+    }
+
+    return null;
+}
+
 function normalize_appointment_datetime(string $dateValue): ?string
 {
     $timestamp = strtotime($dateValue);

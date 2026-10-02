@@ -48,21 +48,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $doctor = find_doctor_by_id($conn, $doctorId);
             if (!$doctor) {
                 set_flash('error', 'Bác sĩ không tồn tại.');
-            } elseif ($appointmentId > 0) {
-                $appointment = find_patient_appointment($conn, $appointmentId, $userId);
-                if (!$appointment) {
-                    set_flash('error', 'Không tìm thấy lịch hẹn cần cập nhật.');
-                } elseif (!appointment_is_editable($appointment)) {
-                    set_flash('error', 'Lịch hẹn này không còn được phép chỉnh sửa.');
+            } else {
+                $slotError = validate_appointment_slot($conn, $doctorId, $userId, $appointmentDate, $appointmentId);
+                if ($slotError !== null) {
+                    set_flash('error', $slotError);
+                } elseif ($appointmentId > 0) {
+                    $appointment = find_patient_appointment($conn, $appointmentId, $userId);
+                    if (!$appointment) {
+                        set_flash('error', 'Không tìm thấy lịch hẹn cần cập nhật.');
+                    } elseif (!appointment_is_editable($appointment)) {
+                        set_flash('error', 'Lịch hẹn này không còn được phép chỉnh sửa.');
+                    } else {
+                        update_appointment($conn, $appointmentId, $doctorId, $appointmentDate, $reason);
+                        set_flash('success', 'Đã cập nhật lịch hẹn.');
+                        redirect('dashboard.php');
+                    }
                 } else {
-                    update_appointment($conn, $appointmentId, $doctorId, $appointmentDate, $reason);
-                    set_flash('success', 'Đã cập nhật lịch hẹn.');
+                    create_patient_appointment($conn, $userId, $doctorId, $appointmentDate, $reason);
+                    set_flash('success', 'Đặt lịch thành công.');
                     redirect('dashboard.php');
                 }
-            } else {
-                create_patient_appointment($conn, $userId, $doctorId, $appointmentDate, $reason);
-                set_flash('success', 'Đặt lịch thành công.');
-                redirect('dashboard.php');
             }
         }
     }

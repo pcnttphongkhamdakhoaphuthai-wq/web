@@ -40,6 +40,9 @@ RUN a2enmod rewrite headers expires deflate
 
 # 4. Cấu hình Apache cho phép .htaccess và giới hạn MPM Prefork (tiết kiệm RAM trên Render)
 RUN { \
+        echo 'ServerName localhost'; \
+        echo 'UseCanonicalName Off'; \
+        echo 'UseCanonicalPhysicalPort Off'; \
         echo '<Directory /var/www/html>'; \
         echo '    Options -Indexes +FollowSymLinks'; \
         echo '    AllowOverride All'; \
