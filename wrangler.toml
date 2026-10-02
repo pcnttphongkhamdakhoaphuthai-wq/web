@@ -4,6 +4,7 @@
 # ==============================================================================
 
 name = "web"
+main = "index.js"
 compatibility_date = "2024-09-23"
 
 # Phân phối trực tiếp toàn bộ giao diện tĩnh từ thư mục dist/ tại Cloudflare Edge CDN

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Hospital Web Support System - Cloudflare Edge Static Distribution",
   "private": true,
+  "main": "index.js",
   "scripts": {
     "build": "node build_pages.js"
   }
