@@ -1,12 +1,67 @@
-# Cấu hình đường dẫn đẹp (Pretty URLs) cho Cổng hỗ trợ bệnh viện
-RewriteEngine On
+# ==============================================================================
+# BẢO MẬT & TỐI ƯU HÓA WEB SERVER (Apache / Cloud Hosting / cPanel / Render)
+# ==============================================================================
 
-# 1. Tự động chuyển hướng 301 để ẩn đuôi .php khi người dùng truy cập trực tiếp bằng file .php (Bỏ qua các yêu cầu POST/API)
-RewriteCond %{REQUEST_METHOD} !POST
-RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s([^.]+)\.php [NC]
-RewriteRule ^ %1 [R=301,L]
+# 1. Tắt hoàn toàn việc hiển thị danh sách tệp tin thư mục (Directory Browsing)
+Options -Indexes
 
-# 2. Xử lý chạy ngầm: Tự động ánh xạ đường dẫn không đuôi (.php) sang file vật lý tương ứng
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME}.php -f
-RewriteRule ^(.*?)/?$ $1.php [NC,L]
+# 2. Chặn truy cập trực tiếp vào các tệp tin cấu hình, cơ sở dữ liệu và mã nguồn nhạy cảm
+<FilesMatch "\.(sql|secrets\.php|env|log|zip|rar|7z|md|ps1|sh|yaml|yml)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 3. Chặn các tệp ẩn và tệp cấu hình hệ thống
+<FilesMatch "^\.(git|htaccess|dockerignore)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 4. Chặn truy cập trực tiếp vào Dockerfile và các công cụ nội bộ
+<Files "Dockerfile">
+    Require all denied
+</Files>
+<Files "render.yaml">
+    Require all denied
+</Files>
+
+# 5. Chặn truy cập trực tiếp vào các thư mục logic nội bộ
+RedirectMatch 403 ^/(admin_accounts_tabs|dashboard_tabs|tools)/.*$
+
+# 6. Thiết lập HTTP Security Headers (Bảo vệ XSS, Clickjacking, MIME-sniffing)
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# 7. Kích hoạt nén GZIP tăng tốc độ tải trang
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# 8. Cấu hình đường dẫn đẹp (Pretty URLs)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Tự động chuyển hướng 301 ẩn đuôi .php khi người dùng gõ trực tiếp .php trên thanh địa chỉ (trừ POST/API)
+    RewriteCond %{REQUEST_METHOD} !POST
+    RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s([^.]+)\.php [NC]
+    RewriteRule ^ %1 [R=301,L]
+
+    # Xử lý chạy ngầm: Tự động ánh xạ đường dẫn không đuôi sang tệp .php vật lý tương ứng
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^(.*?)/?$ $1.php [NC,L]
+</IfModule>

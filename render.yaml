@@ -1,0 +1,61 @@
+# ==============================================================================
+# Render Blueprint Specification (render.yaml)
+# Hospital Web Support Application
+# ==============================================================================
+
+services:
+  - type: web
+    name: hospital-web-support
+    runtime: docker
+    plan: starter # Hoac 'free' (Luu y: Render chi ho tro disk mount tu goi 'starter')
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    autoDeploy: true
+
+    envVars:
+      # Port binding duoc Render cung cap
+      - key: PORT
+        value: "10000"
+
+      # Thong so ket noi Co so du lieu TiDB Cloud (MySQL Compatible)
+      - key: HOSPITAL_DB_HOST
+        sync: false # Nhap host TiDB Cloud tren Dashboard (vi du: gateway01.ap-southeast-1.prod.aws.tidbcloud.com)
+      - key: HOSPITAL_DB_PORT
+        value: "4000" # Cong mac dinh cua TiDB Cloud la 4000
+      - key: HOSPITAL_DB_NAME
+        value: "benhvien_support"
+      - key: HOSPITAL_DB_USER
+        sync: false # Nhap user TiDB tren Dashboard (vi du: xxx.root)
+      - key: HOSPITAL_DB_PASSWORD
+        sync: false # Nhap mat khau TiDB tren Dashboard
+      - key: HOSPITAL_DB_SSL
+        value: "true"
+
+      # Cau hinh bao mat HTTPS & Proxy
+      - key: HOSPITAL_FORCE_HTTPS
+        value: "true"
+      - key: HOSPITAL_HTTPS_PORT
+        value: "443"
+
+      # Cau hinh duong dan luu tru runtime & backup
+      - key: HOSPITAL_RUNTIME_PATH
+        value: "/var/www/html/storage"
+      - key: HOSPITAL_BACKUP_PATH
+        value: "/var/www/html/storage/backups"
+
+      # Cac khoa tich hop API mo rong (Tuy chon)
+      - key: HOSPITAL_GEMINI_API_KEY
+        sync: false
+      - key: HOSPITAL_TURNSTILE_SITE_KEY
+        sync: false
+      - key: HOSPITAL_TURNSTILE_SECRET_KEY
+        sync: false
+
+    # O dia luu tru ben vung (Persistent Disk) danh cho goi Starter tro len
+    # (Luu tru cac file uploads, chat_logs, backups khong bi mat khi deploy lai)
+    disk:
+      name: hospital-storage-disk
+      mountPath: /var/www/html/storage
+      sizeGB: 1

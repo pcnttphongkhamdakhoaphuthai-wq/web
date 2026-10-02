@@ -12,9 +12,12 @@ function load_app_config(): array
     $defaultRuntimePath = APP_ROOT . DIRECTORY_SEPARATOR . 'storage';
     $config = [
         'db_host' => getenv('HOSPITAL_DB_HOST') ?: 'localhost',
+        'db_port' => (int) (getenv('HOSPITAL_DB_PORT') ?: 0),
         'db_name' => getenv('HOSPITAL_DB_NAME') ?: 'benhvien_support',
         'db_user' => getenv('HOSPITAL_DB_USER') ?: '',
         'db_password' => getenv('HOSPITAL_DB_PASSWORD') ?: '',
+        'db_ssl' => filter_var(getenv('HOSPITAL_DB_SSL') ?: false, FILTER_VALIDATE_BOOL),
+        'db_ssl_ca' => getenv('HOSPITAL_DB_SSL_CA') ?: '',
         'runtime_path' => getenv('HOSPITAL_RUNTIME_PATH') ?: $defaultRuntimePath,
         'backup_path' => getenv('HOSPITAL_BACKUP_PATH') ?: (APP_ROOT . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'backups'),
         'extra_backup_paths' => getenv('HOSPITAL_EXTRA_BACKUP_PATHS') ?: '',
@@ -71,10 +74,17 @@ function load_app_config(): array
     if (is_string($proxyList)) {
         $proxyList = array_filter(array_map('trim', explode(',', $proxyList)));
     }
+    $envProxies = getenv('HOSPITAL_TRUSTED_PROXIES');
+    if (is_string($envProxies) && trim($envProxies) !== '') {
+        $proxyList = array_merge((array) $proxyList, array_filter(array_map('trim', explode(',', $envProxies))));
+    }
+    if (getenv('RENDER') !== false) {
+        $proxyList[] = 'private';
+    }
 
-    $config['trusted_proxies'] = array_values(array_filter((array) $proxyList, static function ($value): bool {
-        return is_string($value) && filter_var($value, FILTER_VALIDATE_IP) !== false;
-    }));
+    $config['trusted_proxies'] = array_values(array_unique(array_filter((array) $proxyList, static function ($value): bool {
+        return is_string($value) && ($value === '*' || $value === 'private' || filter_var($value, FILTER_VALIDATE_IP) !== false);
+    })));
 
     return $config;
 }
@@ -130,23 +140,54 @@ const RECAPTCHA_TEST_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe';
 
 try {
     $conn = mysqli_init();
-    $dbHost = (string) $appConfig['db_host'];
-    $dbPort = 3306;
+    $dbHost = (string) ($appConfig['db_host'] ?? 'localhost');
+    $dbPort = (int) ($appConfig['db_port'] ?? 0);
     if (str_contains($dbHost, ':')) {
         $parts = explode(':', $dbHost, 2);
         $dbHost = $parts[0];
         $dbPort = (int) $parts[1];
     }
+    if ($dbPort <= 0) {
+        $dbPort = str_contains($dbHost, 'tidbcloud.com') ? 4000 : 3306;
+    }
     if ($dbHost === 'localhost' && $dbPort !== 3306) {
         $dbHost = '127.0.0.1';
     }
+
+    $isTiDB = str_contains($dbHost, 'tidbcloud.com');
+    $useSSL = (bool) ($appConfig['db_ssl'] ?? false) || $isTiDB;
+    $flags = 0;
+
+    if ($useSSL) {
+        $flags |= MYSQLI_CLIENT_SSL;
+        $sslCa = (string) ($appConfig['db_ssl_ca'] ?? '');
+        if ($sslCa === '' || !is_file($sslCa)) {
+            $systemCas = [
+                '/etc/ssl/certs/ca-certificates.crt',
+                '/etc/pki/tls/certs/ca-bundle.crt',
+                '/etc/ssl/ca-bundle.pem',
+            ];
+            foreach ($systemCas as $caCandidate) {
+                if (is_file($caCandidate)) {
+                    $sslCa = $caCandidate;
+                    break;
+                }
+            }
+        }
+        if ($sslCa !== '' && is_file($sslCa)) {
+            mysqli_ssl_set($conn, null, null, $sslCa, null, null);
+        }
+    }
+
     mysqli_real_connect(
         $conn,
         $dbHost,
         (string) $appConfig['db_user'],
         (string) $appConfig['db_password'],
         (string) $appConfig['db_name'],
-        $dbPort
+        $dbPort,
+        null,
+        $flags
     );
     $conn->set_charset('utf8mb4');
 } catch (Throwable $exception) {
@@ -164,10 +205,26 @@ foreach ([APP_SESSION_ROOT, APP_RATE_LIMIT_ROOT, APP_SECURITY_ROOT, APP_AUDIT_RO
     }
 }
 
+function is_trusted_proxy_ip(string $ip): bool
+{
+    if (in_array('*', APP_TRUSTED_PROXIES, true)) {
+        return true;
+    }
+    if (in_array($ip, APP_TRUSTED_PROXIES, true)) {
+        return true;
+    }
+    if (in_array('private', APP_TRUSTED_PROXIES, true)) {
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function forwarded_proto_is_https(): bool
 {
     $remoteAddr = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
-    if (!in_array($remoteAddr, APP_TRUSTED_PROXIES, true)) {
+    if (!is_trusted_proxy_ip($remoteAddr)) {
         return false;
     }
 
@@ -407,7 +464,7 @@ function get_client_ip(): string
         $remoteAddr = 'unknown';
     }
 
-    if (!in_array($remoteAddr, APP_TRUSTED_PROXIES, true)) {
+    if (!is_trusted_proxy_ip($remoteAddr)) {
         return $remoteAddr;
     }
 
@@ -921,18 +978,39 @@ function backup_compress_directory_to_zip(string $sourceDir, string $destination
         return false;
     }
 
-    // Sử dụng PowerShell để nén (Hỗ trợ tốt trên Windows mà không cần ZipArchive extension)
-    $cmd = sprintf(
-        'powershell -Command "Compress-Archive -Path %s -DestinationPath %s -Force"',
-        escapeshellarg($sourceDir . DIRECTORY_SEPARATOR . '*'),
-        escapeshellarg($destinationZip)
-    );
+    if (class_exists('ZipArchive')) {
+        $zip = new ZipArchive();
+        if ($zip->open($destinationZip, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            $files = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($sourceDir, RecursiveDirectoryIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::LEAVES_ONLY
+            );
+            foreach ($files as $file) {
+                if (!$file->isDir()) {
+                    $filePath = $file->getRealPath();
+                    $relativePath = substr($filePath, strlen($sourceDir) + 1);
+                    $zip->addFile($filePath, str_replace('\\', '/', $relativePath));
+                }
+            }
+            $zip->close();
+            return is_file($destinationZip);
+        }
+    }
 
-    $output = [];
-    $returnVar = 0;
-    @exec($cmd, $output, $returnVar);
+    // Fallback trên Windows nếu môi trường chưa cài ZipArchive
+    if (DIRECTORY_SEPARATOR === '\\') {
+        $cmd = sprintf(
+            'powershell -Command "Compress-Archive -Path %s -DestinationPath %s -Force"',
+            escapeshellarg($sourceDir . DIRECTORY_SEPARATOR . '*'),
+            escapeshellarg($destinationZip)
+        );
+        $output = [];
+        $returnVar = 0;
+        @exec($cmd, $output, $returnVar);
+        return $returnVar === 0 && is_file($destinationZip);
+    }
 
-    return $returnVar === 0 && is_file($destinationZip);
+    return false;
 }
 
 function create_system_backup(mysqli $conn, string $trigger = 'manual'): array

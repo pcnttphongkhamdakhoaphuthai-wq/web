@@ -1,0 +1,39 @@
+# ==============================================================================
+# .dockerignore - Hospital Web Support
+# Loai tru cac tep khong can thiet khi build Docker image
+# ==============================================================================
+
+# Version control & IDE metadata
+.git
+.gitignore
+.vscode
+.claude
+.sixth
+
+# Archives & Large files
+hospital_full_ALL.zip
+tools/cloudflared.exe
+tools/
+
+# Database dumps & SQL
+*.sql
+
+# Secrets & Local credentials
+*.secrets.php
+hospital_hosting.secrets.php
+hospital_full_ALL.secrets.php
+
+# Backups & Dynamic runtime logs
+*.bak
+storage/backups/*
+logs/*
+
+# Docker & PaaS deployment files
+Dockerfile
+.dockerignore
+render.yaml
+
+# Local administrative scripts & audit reports
+*.ps1
+*.bat
+security_audit_report.md
