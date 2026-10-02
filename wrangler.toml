@@ -1,19 +1,11 @@
 # ==============================================================================
-# Cloudflare Workers & Static Assets Configuration
-# Dịch vụ: web (Workers & Pages)
+# Cloudflare Workers Static Assets Configuration
+# Dịch vụ: web (Phòng khám đa khoa Phú Thái)
 # ==============================================================================
 
 name = "web"
-main = "worker.mjs"
-compatibility_date = "2026-10-02"
+compatibility_date = "2024-09-23"
 
-# Phân phối toàn bộ giao diện tĩnh từ thư mục dist/ tại Cloudflare Edge CDN
+# Phân phối trực tiếp toàn bộ giao diện tĩnh từ thư mục dist/ tại Cloudflare Edge CDN
 [assets]
 directory = "./dist"
-binding = "ASSETS"
-run_worker_first = false
-
-# Biến môi trường kết nối trực tiếp đến hệ thống Backend Render
-[vars]
-BACKEND_ORIGIN = "https://conghotrophongkhamphuthai.io.vn"
-BACKEND_FALLBACK = "https://web-iewr.onrender.com"
