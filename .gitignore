@@ -1,0 +1,82 @@
+# ==============================================================================
+# BẢO MẬT BẮT BUỘC (Tuân thủ Phần 3 & Phần 12 Workspace Rules)
+# Tuyệt đối không commit secrets, passwords, API keys, credentials, token
+# ==============================================================================
+*.secrets.php
+hospital_hosting.secrets.php
+hospital_full_ALL.secrets.php
+.env
+.env.*
+*.pem
+*.key
+*.crt
+
+# ==============================================================================
+# CƠ SỞ DỮ LIỆU DUMP CHỨA DỮ LIỆU BỆNH NHÂN (PII) & API KEYS THỰC TẾ
+# ==============================================================================
+*.sql
+!database.sql
+benhvien_support*.sql
+
+# ==============================================================================
+# TỆP TIN SAO LƯU & TỆP TIN TẠM (Tuân thủ Phần 1 Workspace Rules)
+# ==============================================================================
+*.bak
+*.old
+*.tmp
+*.swp
+~*
+scratch/
+
+# ==============================================================================
+# DỮ LIỆU ĐỘNG RUNTIME, AUDIT, SESSIONS, SECURITY LOGS
+# ==============================================================================
+*.log
+logs/*
+!logs/.gitkeep
+debug.log
+
+storage/audit/*
+!storage/audit/.gitkeep
+storage/backups/*
+!storage/backups/.gitkeep
+storage/code_backups/*
+!storage/code_backups/.gitkeep
+storage/encoding_backups/*
+!storage/encoding_backups/.gitkeep
+storage/password_resets/*
+!storage/password_resets/.gitkeep
+storage/rate_limits/*
+!storage/rate_limits/.gitkeep
+storage/results/*
+!storage/results/.gitkeep
+storage/security/*
+!storage/security/.gitkeep
+storage/sessions/*
+!storage/sessions/.gitkeep
+
+# ==============================================================================
+# TỆP TIN TẢI LÊN CỦA NGƯỜI DÙNG & HỒ SƠ BỆNH ÁN (PDF)
+# ==============================================================================
+uploads/*
+!uploads/.htaccess
+!uploads/.gitkeep
+
+# ==============================================================================
+# TỆP TIN NÉN DUNG LƯỢNG LỚN & FILE THỰC THI (BINARIES)
+# ==============================================================================
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.msixbundle
+*.exe
+tools/cloudflared.exe
+
+# ==============================================================================
+# IDE, EDITOR & AGENT CONFIGURATIONS
+# ==============================================================================
+.vscode/
+.idea/
+.claude/
+.sixth/
