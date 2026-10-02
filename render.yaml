@@ -21,15 +21,15 @@ services:
 
       # Thong so ket noi Co so du lieu TiDB Cloud (MySQL Compatible)
       - key: HOSPITAL_DB_HOST
-        sync: false # Nhap host TiDB Cloud tren Dashboard (vi du: gateway01.ap-southeast-1.prod.aws.tidbcloud.com)
+        value: "gateway01.ap-southeast-1.prod.aws.tidbcloud.com"
       - key: HOSPITAL_DB_PORT
-        value: "4000" # Cong mac dinh cua TiDB Cloud la 4000
+        value: "4000"
       - key: HOSPITAL_DB_NAME
         value: "benhvien_support"
       - key: HOSPITAL_DB_USER
-        sync: false # Nhap user TiDB tren Dashboard (vi du: xxx.root)
+        value: "7mi6REnua6JsV4r.root"
       - key: HOSPITAL_DB_PASSWORD
-        sync: false # Nhap mat khau TiDB tren Dashboard
+        value: "IaD5avauzefIXvEs"
       - key: HOSPITAL_DB_SSL
         value: "true"
 
@@ -45,13 +45,13 @@ services:
       - key: HOSPITAL_BACKUP_PATH
         value: "/var/www/html/storage/backups"
 
-      # Cac khoa tich hop API mo rong (Tuy chon)
+      # Cac khoa tich hop API mo rong (AI Chatbot & Turnstile)
       - key: HOSPITAL_GEMINI_API_KEY
-        sync: false
+        value: "AIzaSyC5Oi03Bj5HDq98zZxav7TQugk3sHAxKAI"
       - key: HOSPITAL_TURNSTILE_SITE_KEY
-        sync: false
+        value: "0x4AAAAAADHrpLXjP19BAGlZ"
       - key: HOSPITAL_TURNSTILE_SECRET_KEY
-        sync: false
+        value: "0x4AAAAAADHrpGFJR8lS_WWL0h-V54_tvOY"
 
     # O dia luu tru ben vung (Persistent Disk) danh cho goi Starter tro len
     # (Luu tru cac file uploads, chat_logs, backups khong bi mat khi deploy lai)
