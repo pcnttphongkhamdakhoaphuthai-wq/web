@@ -80,3 +80,5 @@ tools/cloudflared.exe
 .idea/
 .claude/
 .sixth/
+node_modules/
+dist/

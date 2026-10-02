@@ -1,0 +1,9 @@
+{
+  "name": "hospital-web-support",
+  "version": "1.0.0",
+  "description": "Hospital Web Support System - Cloudflare Pages Static Edge Distribution",
+  "private": true,
+  "scripts": {
+    "build": "node build_pages.js"
+  }
+}
