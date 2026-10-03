@@ -157,7 +157,7 @@ button:disabled {
 }
 
 .header-inner {
-  height: 60px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -319,8 +319,8 @@ button:disabled {
   grid-template-columns: minmax(0, 1fr) 420px;
   gap: 32px;
   align-items: center;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 2px;
+  padding-bottom: 2px;
   width: 100%;
 }
 
@@ -467,7 +467,7 @@ button:disabled {
 .login-card {
   background: #ffffff;
   border-radius: 16px;
-  padding: 16px 22px 12px;
+  padding: 12px 20px 10px;
   border: 1px solid #cce0ef;
   box-shadow: 0 4px 6px -1px rgba(8, 45, 86, 0.03),
               0 16px 36px -6px rgba(8, 45, 86, 0.1),
@@ -745,7 +745,7 @@ input[aria-invalid="true"] {
   display: grid;
   grid-template-columns: 1.2fr 1fr 1.3fr;
   gap: 16px;
-  padding: 8px 0;
+  padding: 4px 0;
   border-bottom: 1px solid #eef4f8;
 }
 
@@ -1291,7 +1291,7 @@ tr:hover td { background: #f8fbfe; }
   color: #072e56;
 }
 .admin-alert-item textarea {
-  min-height: 60px;
+  min-height: 56px;
   width: 100%;
   margin-top: 6px;
 }
@@ -1328,7 +1328,7 @@ tr:hover td { background: #f8fbfe; }
     width: calc(100% - 32px);
   }
   .header-inner {
-  height: 60px;
+  height: 56px;
   }
   .brand-symbol {
   position: relative;
@@ -1359,13 +1359,13 @@ tr:hover td { background: #f8fbfe; }
   grid-template-columns: minmax(0, 1fr) 420px;
   gap: 32px;
   align-items: center;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 2px;
+  padding-bottom: 2px;
   }
   .login-card {
   background: #ffffff;
   border-radius: 16px;
-  padding: 16px 22px 12px;
+  padding: 12px 20px 10px;
   }
   .intro {
     order: 1;
@@ -1395,7 +1395,7 @@ tr:hover td { background: #f8fbfe; }
   .login-card {
   background: #ffffff;
   border-radius: 16px;
-  padding: 16px 22px 12px;
+  padding: 12px 20px 10px;
   }
   .intro h1 {
     font-size: 24px;
