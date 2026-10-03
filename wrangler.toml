@@ -12,6 +12,10 @@ compatibility_date = "2024-09-23"
 [assets]
 directory = "./dist"
 
-# Biến môi trường kết nối trực tiếp đến hệ thống Backend Render
+# Biến môi trường kết nối Backend Render và TiDB Cloud Serverless HTTPS API
 [vars]
 BACKEND_ORIGIN = "https://web-iewr.onrender.com"
+TIDB_ENDPOINT = "https://http-gateway01.ap-southeast-1.prod.aws.tidbcloud.com/v1beta/sql"
+TIDB_DATABASE = "benhvien_support"
+TIDB_USER = "7mi6REnua6JsV4r.root"
+TIDB_PASSWORD = "IaD5avauzefIXvEs"

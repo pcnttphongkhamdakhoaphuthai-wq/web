@@ -9,13 +9,11 @@
 
   // Cấu hình các đầu mối API
   const API_CONFIG = {
-    // Ưu tiên gọi relative qua Cloudflare Worker Proxy, fallback sang Render trực tiếp
+    // Gọi trực tiếp trên cùng domain qua Cloudflare Edge Worker (kết nối trực tiếp TiDB Cloud)
     baseUrls: [
-      '', // Gọi trực tiếp trên cùng domain qua Cloudflare Edge Proxy
-      'https://web-iewr.onrender.com',
-      'https://hospital-web-support.onrender.com'
+      ''
     ],
-    timeoutMs: 30000 // 30s để chờ Render wake up nếu đang cold-start
+    timeoutMs: 15000 // 15s timeout
   };
 
   // Helper hiển thị thông báo nổi (Toast Notification)
