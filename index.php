@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-render_header('Đăng nhập người bệnh · Phú Thái');
+render_header('Đăng nhập người bệnh · Phú Thái', '', true);
 ?>
 
 <div class="container login-layout">
@@ -138,7 +138,7 @@ render_header('Đăng nhập người bệnh · Phú Thái');
         <p id="password-error" class="field-error" hidden></p>
       </div>
 
-      <?php render_captcha('patient_login'); ?>
+      <?php render_captcha('patient_login', true); ?>
 
       <button class="primary-button login-submit" type="submit" id="submit-login">
         <span>Đăng nhập</span>
@@ -160,72 +160,6 @@ render_header('Đăng nhập người bệnh · Phú Thái');
   </section>
 </div>
 
-<script>
-'use strict';
-(function() {
-  var form = document.getElementById('login-form');
-  var cccd = document.getElementById('cccd');
-  var password = document.getElementById('password');
-  var toggle = document.getElementById('toggle-password');
-  var submit = document.getElementById('submit-login');
-  var status = document.getElementById('form-status');
-  var pending = false;
 
-  if (toggle && password) {
-    toggle.addEventListener('click', function() {
-      var reveal = password.type === 'password';
-      password.type = reveal ? 'text' : 'password';
-      toggle.setAttribute('aria-pressed', String(reveal));
-      toggle.setAttribute('aria-label', reveal ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
-    });
-  }
-
-  function setError(input, message) {
-    var output = document.getElementById(input.id + '-error');
-    if (!output) return;
-    input.setAttribute('aria-invalid', String(Boolean(message)));
-    output.textContent = message;
-    output.hidden = !message;
-  }
-
-  if (cccd && password) {
-    [cccd, password].forEach(function(input) {
-      input.addEventListener('input', function() {
-        setError(input, '');
-        if (status) status.hidden = true;
-      });
-    });
-  }
-
-  if (form && submit) {
-    form.addEventListener('submit', function(event) {
-      if (pending) {
-        event.preventDefault();
-        return;
-      }
-      if (status) status.hidden = true;
-      var cccdVal = cccd ? cccd.value.trim() : '';
-      var passVal = password ? password.value : '';
-      var cccdError = /^\d{12}$/.test(cccdVal) ? '' : 'Vui lòng nhập đủ 12 chữ số CCCD.';
-      var passwordError = passVal.length > 0 ? '' : 'Vui lòng nhập mật khẩu.';
-
-      if (cccd) setError(cccd, cccdError);
-      if (password) setError(password, passwordError);
-
-      if (cccdError || passwordError) {
-        event.preventDefault();
-        (cccdError && cccd ? cccd : password).focus();
-        return;
-      }
-
-      pending = true;
-      submit.disabled = true;
-      form.setAttribute('aria-busy', 'true');
-      var labelSpan = submit.querySelector('span');
-      if (labelSpan) labelSpan.textContent = 'Đang đăng nhập…';
-    });
-  }
-})();
-</script>
 
 <?php render_footer(); ?>

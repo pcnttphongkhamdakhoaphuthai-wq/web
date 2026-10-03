@@ -2251,15 +2251,16 @@ function visual_captcha_required(string $context): bool
     ], true);
 }
 
-function render_captcha(string $context): void
+function render_captcha(string $context, bool $compact = false): void
 {
+    $widgetSize = $compact ? 'compact' : 'normal';
     echo '<div class="field captcha-field" style="margin-bottom: 20px;">';
     echo '<input type="text" name="contact_website" tabindex="-1" autocomplete="off" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden" aria-hidden="true">';
     $turnstileSiteKey = turnstile_site_key();
     if ($turnstileSiteKey !== '') {
         echo '<div class="turnstile-wrap" style="margin-bottom: 6px;">';
         echo '<label style="display:block;margin-bottom:8px;font-size:14.5px;font-weight:600;color:var(--ink);">Xác minh an toàn</label>';
-        echo '<div class="cf-turnstile" data-sitekey="' . e($turnstileSiteKey) . '" data-theme="light"></div>';
+        echo '<div class="cf-turnstile" data-sitekey="' . e($turnstileSiteKey) . '" data-theme="light" data-size="' . $widgetSize . '"></div>';
         echo '</div>';
         echo '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
     }
@@ -2267,7 +2268,7 @@ function render_captcha(string $context): void
     if ($siteKey !== '') {
         echo '<div class="recaptcha-wrap" style="margin-bottom: 6px;">';
         echo '<label style="display:block;margin-bottom:8px;font-size:14.5px;font-weight:600;color:var(--ink);">Xác minh an toàn</label>';
-        echo '<div class="g-recaptcha" data-sitekey="' . e($siteKey) . '" data-theme="light"></div>';
+        echo '<div class="g-recaptcha" data-sitekey="' . e($siteKey) . '" data-theme="light" data-size="' . $widgetSize . '"></div>';
         echo '</div>';
         echo '<script src="https://www.google.com/recaptcha/api.js?hl=vi" async defer></script>';
     }
@@ -3724,7 +3725,7 @@ function get_admin_support_chat_notice(mysqli $conn, int $adminId, int $previewL
     ];
 }
 
-function render_header(string $title, string $activeNav = ''): void
+function render_header(string $title, string $activeNav = '', bool $patientLoginPage = false): void
 {
     $isPatient = isset($_SESSION['user_id']);
     $isAdmin = isset($_SESSION['admin_id']);
@@ -3743,9 +3744,15 @@ function render_header(string $title, string $activeNav = ''): void
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap">
   <link rel="icon" href="/logo.png">
   <link rel="stylesheet" href="/assets/style.css?v=3.6">
+  <?php if ($patientLoginPage): ?>
+  <link rel="preload" href="/assets/fonts/roboto-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/roboto-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/patient-login.css?v=<?= (int) filemtime(__DIR__ . '/assets/patient-login.css') ?>">
+  <script src="/assets/patient-login.js?v=<?= (int) filemtime(__DIR__ . '/assets/patient-login.js') ?>" defer></script>
+  <?php endif; ?>
 </head>
-<body>
-<a class="skip-link" href="#login-title">Đến phần đăng nhập</a>
+<body<?= $patientLoginPage ? ' class="patient-login-page"' : '' ?>>
+<a class="skip-link" href="<?= $patientLoginPage ? '#login-title' : '#main-content' ?>"><?= $patientLoginPage ? 'Đến phần đăng nhập' : 'Đến nội dung chính' ?></a>
 
 <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 5c-3-2-6-2-10-1v16c4-1 7-1 10 1 3-2 6-2 10-1V4c-4-1-7-1-10 1zm0 0v16"/></symbol>
@@ -3779,7 +3786,7 @@ function render_header(string $title, string $activeNav = ''): void
         <a class="text-button" href="admin_add_record.php" style="font-weight:700;color:var(--blue);">Quản trị</a>
         <a class="text-button" href="logout.php" style="color:var(--muted);">Đăng xuất</a>
       <?php else: ?>
-        <span class="preview-label">Bản xem trước</span>
+        <span class="preview-label">Cổng người bệnh</span>
       <?php endif; ?>
       <button class="mobile-menu" type="button" aria-label="Mở menu" aria-expanded="false" aria-controls="mobile-navigation"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
     </nav>
