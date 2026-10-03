@@ -3719,78 +3719,71 @@ function render_header(string $title, string $activeNav = ''): void
     $isAdmin = isset($_SESSION['admin_id']);
     $clinicName = site_setting('clinic_name', "Phòng khám đa khoa Phú Thái");
 ?>
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= e($title) ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="/assets/style.css?v=2.3">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Cổng thông tin & dịch vụ người bệnh - Phòng khám đa khoa Phú Thái.">
+  <title><?= e($title) ?></title>
+  <link rel="icon" href="/logo.png">
+  <link rel="stylesheet" href="/assets/style.css?v=3.1">
 </head>
 <body>
+<a class="skip-link" href="#login-title">Đến phần đăng nhập</a>
+
 <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 5c-3-2-6-2-10-1v16c4-1 7-1 10 1 3-2 6-2 10-1V4c-4-1-7-1-10 1zm0 0v16"/></symbol>
-    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h18"/></symbol>
-    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
-    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zm0 0v6h6M8 13h8m-8 4h5"/></symbol>
-    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7zM3 10h18"/></symbol>
-    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a9 9 0 0 1-9 9c-1.7 0-3.3-.5-4.7-1.2L2 22l1.7-5.3A9 9 0 1 1 21 11.5z"/><circle cx="7.5" cy="11" r=".7" fill="currentColor"/><circle cx="12" cy="11" r=".7" fill="currentColor"/><circle cx="16.5" cy="11" r=".7" fill="currentColor"/></symbol>
-    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
-    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
-    <symbol id="i-phone" viewBox="0 0 24 24"><path d="m7 3 3 5-3 3a15 15 0 0 0 6 6l3-3 5 3v3c-9 3-20-8-17-17z"/></symbol>
-    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.5"/></symbol>
-    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
-    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
-    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 .5c0 1.5-2.5 2-2.5 3.5m0 3h.01"/></symbol>
-  </svg>
-<a class="skip-link" href="#main-content">Nhảy tới nội dung chính</a>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 5c-3-2-6-2-10-1v16c4-1 7-1 10 1 3-2 6-2 10-1V4c-4-1-7-1-10 1zm0 0v16"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h18"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zm0 0v6h6M8 13h8m-8 4h5"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7zM3 10h18"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a9 9 0 0 1-9 9c-1.7 0-3.3-.5-4.7-1.2L2 22l1.7-5.3A9 9 0 1 1 21 11.5z"/><circle cx="7.5" cy="11" r=".7" fill="currentColor"/><circle cx="12" cy="11" r=".7" fill="currentColor"/><circle cx="16.5" cy="11" r=".7" fill="currentColor"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="m7 3 3 5-3 3a15 15 0 0 0 6 6l3-3 5 3v3c-9 3-20-8-17-17z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 .5c0 1.5-2.5 2-2.5 3.5m0 3h.01"/></symbol>
+</svg>
 
 <header class="site-header">
-    <div class="container header-inner">
-        <a class="brand" href="index.php" aria-label="Phòng khám đa khoa Phú Thái — cổng người bệnh">
-            <span class="brand-symbol"><img src="/logo.png" alt="Logo Phòng khám Phú Thái" width="1440" height="1744"></span>
-            <span class="brand-copy"><span class="brand-kicker">PHÒNG KHÁM ĐA KHOA</span><strong>Phú Thái</strong></span>
-        </a>
-        <nav class="header-nav" aria-label="Điều hướng chính">
-            <a class="nav-link<?= $activeNav === 'home' ? ' active' : '' ?>" href="index.php">Trang chủ</a>
-            <a class="nav-link<?= $activeNav === 'services' ? ' active' : '' ?>" href="index.php#services">Dịch vụ</a>
-            <a class="nav-link<?= $activeNav === 'doctors' ? ' active' : '' ?>" href="index.php#doctors">Bác sĩ</a>
-            <button type="button" class="text-button guide-nav" data-dialog="guide">Hướng dẫn</button>
-            <button type="button" class="support-button" data-dialog="support"><svg class="icon" aria-hidden="true"><use href="#i-help"/></svg><span>Cần hỗ trợ?</span></button>
-            <?php if ($isPatient): ?>
-                <a class="btn btn-primary btn-sm" href="dashboard.php#records">Kết quả khám</a>
-                <a class="btn btn-light btn-sm" href="dashboard.php"><?= e((string) ($_SESSION['name'] ?? 'Bệnh nhân')) ?></a>
-                <a class="nav-link" href="logout.php">Đăng xuất</a>
-            <?php elseif ($isAdmin): ?>
-                <a class="btn btn-primary btn-sm" href="admin_add_record.php">Quản trị</a>
-                <a class="nav-link" href="logout.php">Đăng xuất</a>
-            <?php else: ?>
-                <a class="btn btn-primary btn-sm" href="login.php?redirect=records">Tra cứu kết quả</a>
-                <a class="btn btn-outline btn-sm" href="login.php">Đăng nhập</a>
-            <?php endif; ?>
-            <button class="mobile-menu" type="button" aria-label="Mở menu" aria-expanded="false" aria-controls="mobile-navigation"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
-        </nav>
-    </div>
-    <nav class="container mobile-navigation" id="mobile-navigation" aria-label="Menu điện thoại" hidden>
-        <a class="nav-link" href="index.php">Trang chủ</a>
-        <a class="nav-link" href="index.php#services">Dịch vụ y tế</a>
-        <a class="nav-link" href="index.php#doctors">Đội ngũ bác sĩ</a>
-        <button type="button" data-dialog="guide">Hướng dẫn sử dụng</button>
-        <button type="button" data-dialog="support">Liên hệ hỗ trợ</button>
-        <button type="button" data-dialog="staff">Dành cho nhân viên</button>
-        <?php if ($isPatient): ?>
-            <a class="nav-link" href="dashboard.php">Hồ sơ cá nhân</a>
-            <a class="nav-link" href="logout.php">Đăng xuất</a>
-        <?php else: ?>
-            <a class="nav-link" href="login.php">Đăng nhập tài khoản</a>
-            <a class="nav-link" href="register.php">Đăng ký người bệnh</a>
-        <?php endif; ?>
+  <div class="container header-inner">
+    <a class="brand" href="index.php" aria-label="Phòng khám đa khoa Phú Thái — cổng người bệnh">
+      <span class="brand-symbol"><img src="/logo.png" alt="Logo Phòng khám Phú Thái" width="1440" height="1744"></span>
+      <span class="brand-copy"><span class="brand-kicker">PHÒNG KHÁM ĐA KHOA</span><strong>Phú Thái</strong></span>
+    </a>
+    <nav class="header-nav" aria-label="Điều hướng chính">
+      <button type="button" class="text-button guide-nav" data-dialog="guide">Hướng dẫn sử dụng</button>
+      <button type="button" class="support-button" data-dialog="support"><svg class="icon" aria-hidden="true"><use href="#i-help"/></svg><span>Cần hỗ trợ?</span></button>
+      <?php if ($isPatient): ?>
+        <a class="text-button" href="dashboard.php" style="font-weight:700;color:var(--blue);"><?= e((string)($_SESSION['name'] ?? 'Bệnh nhân')) ?></a>
+        <a class="text-button" href="logout.php" style="color:var(--muted);">Đăng xuất</a>
+      <?php elseif ($isAdmin): ?>
+        <a class="text-button" href="admin_add_record.php" style="font-weight:700;color:var(--blue);">Quản trị</a>
+        <a class="text-button" href="logout.php" style="color:var(--muted);">Đăng xuất</a>
+      <?php else: ?>
+        <span class="preview-label">Bản xem trước</span>
+      <?php endif; ?>
+      <button class="mobile-menu" type="button" aria-label="Mở menu" aria-expanded="false" aria-controls="mobile-navigation"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
     </nav>
+  </div>
+  <nav class="container mobile-navigation" id="mobile-navigation" aria-label="Menu điện thoại" hidden>
+    <button type="button" data-dialog="guide">Hướng dẫn sử dụng</button>
+    <button type="button" data-dialog="support">Liên hệ hỗ trợ</button>
+    <button type="button" data-dialog="staff">Dành cho nhân viên</button>
+    <?php if ($isPatient): ?>
+      <a class="text-button" href="dashboard.php">Hồ sơ cá nhân</a>
+      <a class="text-button" href="logout.php">Đăng xuất</a>
+    <?php else: ?>
+      <a class="text-button" href="register.php">Đăng ký tài khoản</a>
+      <a class="text-button" href="forgot_password.php">Quên mật khẩu</a>
+    <?php endif; ?>
+  </nav>
 </header>
-<main id="main-content">
+<main class="main-area" id="main-content">
 <?php
     if ($isAdmin) {
         $adminChatLink = (is_root_admin() || admin_can('manage_support_chat')) ? 'admin_accounts.php#recent-chats' : '';
@@ -3806,103 +3799,110 @@ function render_footer(): void
 ?>
 </main>
 <footer class="site-footer">
-    <div class="container footer-main">
-        <div class="footer-brand">
-            <strong><?= e($clinicName) ?></strong>
-            <p>Cổng thông tin & dịch vụ y tế trực tuyến dành cho người bệnh.</p>
-        </div>
-        <div class="footer-contact">
-            <span class="footer-icon"><svg class="icon" aria-hidden="true"><use href="#i-phone"/></svg></span>
-            <div><span>Liên hệ phòng khám</span><a href="tel:<?= preg_replace('/[^0-9]/', '', $hotline) ?>"><?= e($hotline) ?></a></div>
-        </div>
-        <div class="footer-address">
-            <span class="footer-icon"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg></span>
-            <div><span>Địa chỉ phòng khám</span><p><?= e($address) ?></p></div>
-        </div>
+  <div class="container footer-main">
+    <div class="footer-brand">
+      <strong><?= e($clinicName) ?></strong>
+      <p>Cổng hỗ trợ dịch vụ dành cho người bệnh.</p>
     </div>
-    <div class="container footer-bottom">
-        <span>Phú Thái · Cổng dịch vụ người bệnh</span>
-        <div>
-            <button type="button" class="text-button" data-dialog="privacy">Thông tin riêng tư</button>
-            <span class="footer-separator" aria-hidden="true">|</span>
-            <button type="button" class="text-button" data-dialog="staff">Dành cho nhân viên <span aria-hidden="true">↗</span></button>
-        </div>
+    <div class="footer-contact">
+      <span class="footer-icon"><svg class="icon" aria-hidden="true"><use href="#i-phone"/></svg></span>
+      <div><span>Liên hệ phòng khám</span><a href="tel:<?= preg_replace('/[^0-9]/', '', $hotline) ?>"><?= e($hotline) ?></a></div>
     </div>
+    <div class="footer-address">
+      <span class="footer-icon"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg></span>
+      <div><span>Địa chỉ phòng khám</span><p><?= e($address) ?></p></div>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>Phú Thái · Cổng dịch vụ người bệnh</span>
+    <div>
+      <button type="button" class="text-button" data-dialog="privacy">Thông tin riêng tư</button>
+      <span class="footer-separator" aria-hidden="true">|</span>
+      <button type="button" class="text-button" data-dialog="staff">Dành cho nhân viên <span aria-hidden="true">↗</span></button>
+    </div>
+  </div>
 </footer>
 
 <dialog id="info-dialog" aria-labelledby="dialog-title">
-    <div class="dialog-heading">
-        <span class="dialog-eyebrow">PHÚ THÁI · THÔNG TIN</span>
-        <button type="button" class="dialog-close" aria-label="Đóng hướng dẫn"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
-    </div>
-    <h2 id="dialog-title"></h2>
-    <div id="dialog-content"></div>
-    <button type="button" class="btn btn-primary btn-block dialog-done" style="margin-top:20px;">Đã hiểu</button>
+  <div class="dialog-heading">
+    <span class="dialog-eyebrow">PHÚ THÁI · HƯỚNG DẪN</span>
+    <button type="button" class="dialog-close" aria-label="Đóng hướng dẫn"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+  </div>
+  <h2 id="dialog-title"></h2>
+  <div id="dialog-content"></div>
+  <button type="button" class="primary-button dialog-done">Đã hiểu</button>
 </dialog>
 
 <script>
+'use strict';
 (function(){
-  var dialog = document.getElementById("info-dialog");
-  var menu = document.querySelector(".mobile-menu");
-  var navigation = document.getElementById("mobile-navigation");
+  var dialog = document.getElementById('info-dialog');
+  var menu = document.querySelector('.mobile-menu');
+  var navigation = document.getElementById('mobile-navigation');
+  
   function closeMenu() {
     if (!navigation || !menu) return;
     navigation.hidden = true;
-    menu.setAttribute("aria-expanded", "false");
+    menu.setAttribute('aria-expanded', 'false');
   }
+  
   if (menu && navigation) {
-    menu.addEventListener("click", function() {
-      var expanded = menu.getAttribute("aria-expanded") === "true";
-      menu.setAttribute("aria-expanded", expanded ? "false" : "true");
+    menu.addEventListener('click', function() {
+      var expanded = menu.getAttribute('aria-expanded') === 'true';
+      menu.setAttribute('aria-expanded', expanded ? 'false' : 'true');
       navigation.hidden = expanded;
     });
   }
+
   var dialogData = {
     guide: {
-      title: "Hướng dẫn tra cứu kết quả khám",
-      content: "<p>Để tra cứu hồ sơ và kết quả xét nghiệm, quý người bệnh thực hiện theo các bước:</p><ol><li>Nhập số <strong>Căn cước công dân (12 chữ số)</strong> đã đăng ký tại quầy tiếp đón.</li><li>Nhập mật khẩu tài khoản được cấp hoặc tạo khi đăng ký.</li><li>Tại màn hình quản lý, chọn mục <strong>Kết quả khám</strong> để xem chi tiết chẩn đoán, toa thuốc và tải tệp kết quả.</li></ol><p>Nếu chưa có tài khoản hoặc quên mật khẩu, xin vui lòng bấm <a href='register.php'>Đăng ký</a> hoặc gọi tổng đài hỗ trợ.</p>"
+      title: 'Hướng dẫn sử dụng cổng dịch vụ',
+      content: '<p>Cổng người bệnh giúp quý vị chủ động xem kết quả và theo dõi hồ sơ khám tại Phòng khám đa khoa Phú Thái:</p><ol><li><strong>Đăng nhập:</strong> Dùng số CCCD 12 số và mật khẩu tài khoản được cấp hoặc tạo khi đăng ký.</li><li><strong>Xem kết quả:</strong> Xem chẩn đoán, toa thuốc và tải tệp kết quả PDF về máy.</li><li><strong>Cần giúp đỡ:</strong> Gọi hotline phòng khám để được nhân viên tiếp đón hỗ trợ.</li></ol>'
     },
     support: {
-      title: "Trung tâm hỗ trợ người bệnh",
-      content: "<p>Bộ phận Chăm sóc khách hàng Phòng khám đa khoa Phú Thái sẵn sàng hỗ trợ quý vị:</p><p>📞 <strong>Hotline:</strong> <a href='tel:02086289888'>0208 628 9888</a><br>📍 <strong>Địa chỉ:</strong> Xóm Hoà Bình 2, xã Phú Bình, tỉnh Thái Nguyên<br>⏰ <strong>Giờ làm việc:</strong> 07:00 - 17:30 (Tất cả các ngày trong tuần)</p>"
+      title: 'Liên hệ hỗ trợ người bệnh',
+      content: '<p>Bộ phận tiếp đón và chăm sóc khách hàng Phú Thái luôn sẵn sàng lắng nghe quý vị:</p><p>📞 <strong>Hotline:</strong> <a href="tel:02086289888">0208 628 9888</a><br>📍 <strong>Địa chỉ:</strong> Xóm Hoà Bình 2, xã Phú Bình, tỉnh Thái Nguyên<br>✉️ <strong>Email:</strong> <a href="mailto:pkdkphuthai@gmail.com">pkdkphuthai@gmail.com</a><br>⏰ <strong>Giờ làm việc:</strong> 07:00 – 17:30 tất cả các ngày trong tuần</p>'
     },
     privacy: {
-      title: "Chính sách bảo mật hồ sơ y tế",
-      content: "<p>Hồ sơ sức khỏe và kết quả chẩn đoán của quý người bệnh được bảo mật tuyệt đối theo quy định của Bộ Y tế và luật khám chữa bệnh:</p><ul><li>Dữ liệu được mã hóa đường truyền SSL/TLS 256-bit.</li><li>Chỉ người bệnh sở hữu tài khoản CCCD và bác sĩ phụ trách điều trị mới có quyền truy cập.</li><li>Hệ thống áp dụng cơ chế khóa tài khoản tự động khi phát hiện đăng nhập bất thường.</li></ul>"
+      title: 'Thông tin bảo mật & riêng tư',
+      content: '<p>Thông tin khám bệnh và dữ liệu y tế cá nhân của quý người bệnh được bảo mật tuyệt đối:</p><ul><li>Đường truyền dữ liệu được mã hóa SSL/TLS an toàn.</li><li>Chỉ người bệnh sở hữu tài khoản CCCD và bác sĩ điều trị mới có quyền truy cập hồ sơ.</li><li>Hệ thống áp dụng cơ chế tự động khóa tài khoản khi phát hiện truy cập bất thường.</li></ul>'
     },
     staff: {
-      title: "Cổng truy cập nhân viên y tế",
-      content: "<p>Khu vực dành riêng cho Y Bác sĩ và Cán bộ nhân viên Phòng khám:</p><p><a href='admin_login.php' class='btn btn-primary'>Đăng nhập Cổng Quản trị & Nghiệp vụ ↗</a></p>"
+      title: 'Khu vực dành cho nhân viên',
+      content: '<p>Cổng thông tin nghiệp vụ và hồ sơ dành riêng cho Cán bộ, Y Bác sĩ và Nhân viên phòng khám:</p><p><a href="admin_login.php" class="primary-button" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;padding:10px 20px;border-radius:10px;color:#fff;">Đăng nhập Cổng Quản trị ↗</a></p>'
     }
   };
+
   function openDialog(type) {
     if (!dialog || !dialogData[type]) return;
     closeMenu();
-    document.getElementById("dialog-title").textContent = dialogData[type].title;
-    document.getElementById("dialog-content").innerHTML = dialogData[type].content;
-    if (typeof dialog.showModal === "function") {
+    document.getElementById('dialog-title').textContent = dialogData[type].title;
+    document.getElementById('dialog-content').innerHTML = dialogData[type].content;
+    if (typeof dialog.showModal === 'function') {
       dialog.showModal();
     } else {
-      dialog.setAttribute("open", "");
+      dialog.setAttribute('open', '');
     }
   }
-  document.querySelectorAll("[data-dialog]").forEach(function(el) {
-    el.addEventListener("click", function() {
-      openDialog(el.getAttribute("data-dialog"));
+
+  document.querySelectorAll('[data-dialog]').forEach(function(el) {
+    el.addEventListener('click', function() {
+      openDialog(el.getAttribute('data-dialog'));
     });
   });
-  var closeBtn = dialog ? dialog.querySelector(".dialog-close") : null;
-  var doneBtn = dialog ? dialog.querySelector(".dialog-done") : null;
+
+  var closeBtn = dialog ? dialog.querySelector('.dialog-close') : null;
+  var doneBtn = dialog ? dialog.querySelector('.dialog-done') : null;
   function closeDialog() {
     if (dialog) {
-      if (typeof dialog.close === "function") dialog.close();
-      else dialog.removeAttribute("open");
+      if (typeof dialog.close === 'function') dialog.close();
+      else dialog.removeAttribute('open');
     }
   }
-  if (closeBtn) closeBtn.addEventListener("click", closeDialog);
-  if (doneBtn) doneBtn.addEventListener("click", closeDialog);
+  if (closeBtn) closeBtn.addEventListener('click', closeDialog);
+  if (doneBtn) doneBtn.addEventListener('click', closeDialog);
   if (dialog) {
-    dialog.addEventListener("click", function(e) {
+    dialog.addEventListener('click', function(e) {
       var rect = dialog.getBoundingClientRect();
       var inDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height && rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
       if (!inDialog) closeDialog();
@@ -3930,27 +3930,6 @@ function render_flash(): void
 
 function render_hero(string $title, string $subtitle): void
 {
-?>
-<section class="hero">
-    <div class="container hero-inner">
-        <div class="hero-content">
-            <div class="hero-kicker">CỔNG DỊCH VỤ NGƯỜI BỆNH · PHÒNG KHÁM PHÚ THÁI</div>
-            <h1 class="hero-title"><?= e($title) ?></h1>
-            <p class="hero-lead"><?= e($subtitle) ?></p>
-            <div class="hero-badges">
-                <span class="hero-badge"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Tra cứu hồ sơ & đơn thuốc</span>
-                <span class="hero-badge"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Xem kết quả xét nghiệm trực tuyến</span>
-                <span class="hero-badge"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Bảo mật y tế chuẩn Bộ Y tế</span>
-            </div>
-        </div>
-        <div class="hero-card">
-            <h3 style="margin:0 0 12px;font-size:20px;color:var(--ink);">Tra cứu nhanh hồ sơ khám</h3>
-            <p style="font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:20px;">Sử dụng số Căn cước công dân (12 số) đã đăng ký tại phòng khám để xem kết quả xét nghiệm, siêu âm, nội soi và đơn thuốc điện tử.</p>
-            <a href="login.php?redirect=records" class="btn btn-primary btn-block">Bắt đầu tra cứu ngay <svg class="icon" style="width:18px;height:18px;" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-        </div>
-    </div>
-</section>
-<?php
+    // Stub function for backward compatibility
 }
-
 ?>

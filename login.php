@@ -25,118 +25,137 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         security_log('patient_login_guard_blocked', ['cccd' => $cccd]);
         set_flash('error', $guardError);
     } elseif ($cooldownRemaining > 0) {
-        set_flash('error', 'Bạn thao tác quá nhanh. Vui lòng chờ ' . $cooldownRemaining . ' giây rồi thử lại.');
+        security_log('patient_login_cooldown_hit', ['cccd' => $cccd, 'remaining' => $cooldownRemaining]);
+        set_flash('error', 'Thao tác quá nhanh. Vui lòng đợi ' . $cooldownRemaining . ' giây trước khi thử lại.');
     } elseif ($lockedUntil !== null) {
-        security_log('patient_login_locked', ['cccd' => $cccd, 'locked_until' => $lockedUntil]);
-        set_flash('error', 'Tài khoản tạm thời bị khóa trong 24 giờ do đăng nhập sai quá 5 lần. Bạn có thể sử dụng chức năng Quên mật khẩu hoặc liên hệ phòng khám để được hỗ trợ.');
-    } elseif ($cccd === '' || $password === '') {
-        set_flash('error', 'Vui lòng nhập đầy đủ số CCCD và mật khẩu.');
-    } elseif (!validate_cccd($cccd)) {
-        set_flash('error', 'Số CCCD không đúng định dạng (phải gồm 12 chữ số).');
+        $minutesLeft = max(1, (int) ceil(($lockedUntil - time()) / 60));
+        security_log('patient_login_attempt_while_locked', ['cccd' => $cccd, 'minutes_left' => $minutesLeft]);
+        set_flash('error', 'Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau ' . $minutesLeft . ' phút.');
     } else {
-        register_login_submit_attempt('patient_login_submit', $cooldownIdentity, 10);
-        $stmt = $conn->prepare('SELECT id, full_name, password_hash FROM patients WHERE cccd = ? LIMIT 1');
-        $stmt->bind_param('s', $cccd);
-        $stmt->execute();
-        $user = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        $temporaryPasswordRecord = $user ? verify_temporary_patient_password($cccd, $password) : null;
-
-        if ($user && verify_password($password, $user['password_hash'])) {
+        $patient = find_patient_by_cccd($conn, $cccd);
+        if ($patient && password_verify($password, (string) ($patient['password_hash'] ?? ''))) {
+            record_login_success('patient_login', $cccd);
+            security_log('patient_login_success', ['patient_id' => (int) $patient['id'], 'cccd' => $cccd]);
             session_regenerate_id(true);
-            $_SESSION['user_id'] = (int) $user['id'];
-            $_SESSION['name'] = $user['full_name'];
-            $_SESSION['cccd'] = $cccd;
-            mark_session_authenticated();
-            clear_patient_password_change_requirement();
-            clear_login_failures('patient_login', $cccd);
-            clear_login_submit_attempts('patient_login_submit', $cooldownIdentity);
-            security_log('patient_login_success', ['cccd' => $cccd, 'user_id' => (int) $user['id']]);
-            audit_log('patient_login_success', ['cccd' => $cccd, 'user_id' => (int) $user['id']]);
-            set_flash('success', 'Đăng nhập thành công.');
-            
+            $_SESSION['user_id'] = (int) $patient['id'];
+            $_SESSION['role'] = 'patient';
+            $_SESSION['name'] = (string) ($patient['full_name'] ?? 'Bệnh nhân');
+            $_SESSION['cccd'] = (string) ($patient['cccd'] ?? $cccd);
+            $_SESSION['phone'] = (string) ($patient['phone'] ?? '');
+
             if ($redirectTarget === 'records') {
                 redirect('dashboard.php#records');
-            } elseif ($redirectTarget === 'support') {
-                redirect('dashboard.php#support');
             }
-            redirect('dashboard.php#overview');
-        }
+            redirect('dashboard.php');
+        } else {
+            $lockoutState = record_login_failure('patient_login', $cccd !== '' ? $cccd : 'guest', 5, 86400);
+            security_log('patient_login_failure', [
+                'cccd' => $cccd,
+                'attempt_count' => $lockoutState['attempts'],
+                'locked' => $lockoutState['locked'],
+            ]);
 
-        if ($user && $temporaryPasswordRecord !== null) {
-            session_regenerate_id(true);
-            $_SESSION['user_id'] = (int) $user['id'];
-            $_SESSION['name'] = $user['full_name'];
-            $_SESSION['cccd'] = $cccd;
-            mark_session_authenticated();
-            mark_temporary_patient_password_session($password, $temporaryPasswordRecord);
-            clear_temporary_patient_password($cccd);
-            clear_login_failures('patient_login', $cccd);
-            clear_login_submit_attempts('patient_login_submit', $cooldownIdentity);
-            security_log('patient_temporary_password_login_success', ['cccd' => $cccd, 'user_id' => (int) $user['id']]);
-            audit_log('patient_temporary_password_login_success', ['cccd' => $cccd, 'user_id' => (int) $user['id']]);
-            set_flash('success', 'Đã đăng nhập bằng mật khẩu tạm thời. Vui lòng đổi mật khẩu mới ngay bây giờ.');
-            redirect('account.php');
+            if ($lockoutState['locked']) {
+                $hoursLeft = max(1, (int) ceil(($lockoutState['locked_until'] - time()) / 3600));
+                set_flash('error', 'Đăng nhập sai quá 5 lần. Tài khoản bị tạm khóa 24 giờ. Vui lòng thử lại sau ' . $hoursLeft . ' giờ hoặc liên hệ hotline để được hỗ trợ.');
+            } else {
+                $remainingAttempts = max(0, 5 - $lockoutState['attempts']);
+                set_flash('error', 'Số CCCD hoặc mật khẩu không chính xác. Bạn còn ' . $remainingAttempts . ' lần thử.');
+            }
         }
-
-        $nextLock = record_login_failure('patient_login', $cccd, 5, 86400);
-        security_log('patient_login_failed', ['cccd' => $cccd, 'locked_until' => $nextLock]);
-        set_flash('error', 'Số CCCD hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.');
     }
 }
 
-render_header('Đăng nhập người bệnh · Phòng khám đa khoa Phú Thái', 'records');
-
+render_header('Đăng nhập người bệnh · Phú Thái');
 ?>
 
-<div class="main-area">
-  <div class="container login-layout">
-    <section class="intro" aria-labelledby="intro-title">
-      <div class="eyebrow">CỔNG DỊCH VỤ NGƯỜI BỆNH</div>
-      <h1 id="intro-title">Kết nối dễ dàng.<br><span>An tâm chăm sóc.</span></h1>
-      <p class="intro-description">Tra cứu kết quả khám, theo dõi hồ sơ và nhận hỗ trợ từ Phòng khám đa khoa Phú Thái.</p>
-      <div class="benefit-list">
-        <div class="benefit"><span class="benefit-icon"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg></span><div><h2>Kết quả khám trong tầm tay</h2><p>Xem và tải kết quả của từng lần khám.</p></div></div>
-        <div class="benefit"><span class="benefit-icon"><svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg></span><div><h2>Hồ sơ được sắp xếp rõ ràng</h2><p>Dễ tìm lại thông tin khi bạn cần.</p></div></div>
-        <div class="benefit"><span class="benefit-icon"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg></span><div><h2>Luôn có hướng dẫn để bắt đầu</h2><p>Nhận trợ giúp về tài khoản và cách sử dụng.</p></div></div>
+<div class="container login-layout">
+  <section class="intro" aria-labelledby="intro-title">
+    <div class="eyebrow">CỔNG DỊCH VỤ NGƯỜI BỆNH</div>
+    <h1 id="intro-title">Kết nối dễ dàng.<br><span>An tâm chăm sóc.</span></h1>
+    <p class="intro-description">Tra cứu kết quả khám, theo dõi hồ sơ và nhận hỗ trợ từ Phòng khám đa khoa Phú Thái.</p>
+    <div class="benefit-list">
+      <div class="benefit">
+        <span class="benefit-icon"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg></span>
+        <div>
+          <h2>Kết quả khám trong tầm tay</h2>
+          <p>Xem và tải kết quả của từng lần khám.</p>
+        </div>
       </div>
-      <div class="intro-caption"><span class="caption-line"></span> Đồng hành cùng người bệnh, từ những điều nhỏ nhất.</div>
-      <span class="decor-cross" aria-hidden="true"></span>
-    </section>
-
-    <section class="login-card" aria-labelledby="login-title">
-      <div class="card-heading"><span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg></span><span class="card-kicker">TÀI KHOẢN NGƯỜI BỆNH</span></div>
-      <h2 id="login-title">Chào mừng bạn trở lại</h2>
-      <p class="card-description">Đăng nhập để xem kết quả và hồ sơ của bạn.</p>
-
-      <?php render_flash(); ?>
-
-      <form id="login-form" method="POST" action="login.php" novalidate>
-        <?php echo render_form_guard('patient_login'); ?>
-        <?php if ($redirectTarget !== ''): ?>
-          <input type="hidden" name="redirect" value="<?php echo e($redirectTarget); ?>">
-        <?php endif; ?>
-
-        <div class="field">
-          <label for="cccd">Số CCCD</label>
-          <input id="cccd" name="cccd" type="text" inputmode="numeric" autocomplete="username" maxlength="12" placeholder="Nhập 12 chữ số CCCD" required aria-describedby="cccd-hint cccd-error" value="<?php echo e($cccd ?? ''); ?>">
-          <p id="cccd-hint" class="field-hint">Dùng số CCCD đã đăng ký với phòng khám.</p>
-          <p id="cccd-error" class="field-error" hidden></p>
+      <div class="benefit">
+        <span class="benefit-icon"><svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg></span>
+        <div>
+          <h2>Hồ sơ được sắp xếp rõ ràng</h2>
+          <p>Dễ tìm lại thông tin khi bạn cần.</p>
         </div>
-        <div class="field password-field">
-          <div class="label-row"><label for="password">Mật khẩu</label><a href="forgot_password.php" class="inline-link">Quên mật khẩu?</a></div>
-          <div class="password-wrap"><input id="password" name="password" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu của bạn" required aria-describedby="password-error"><button id="toggle-password" type="button" class="password-toggle" aria-label="Hiện mật khẩu" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg></button></div>
-          <p id="password-error" class="field-error" hidden></p>
+      </div>
+      <div class="benefit">
+        <span class="benefit-icon"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg></span>
+        <div>
+          <h2>Luôn có hướng dẫn để bắt đầu</h2>
+          <p>Nhận trợ giúp về tài khoản và cách sử dụng.</p>
         </div>
-        <button class="primary-button login-submit" type="submit" id="submit-login"><span>Đăng nhập</span><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
-        <p id="form-status" class="form-status" role="status" aria-live="polite" hidden></p>
-        <noscript><p class="field-error">Vui lòng bật JavaScript trên trình duyệt để có trải nghiệm tốt nhất.</p></noscript>
-      </form>
-      <div class="register-row">Bạn chưa có tài khoản? <a href="register.php" class="inline-link">Đăng ký ngay <span aria-hidden="true">↗</span></a></div>
-      <div class="card-divider"></div>
-      <button class="card-help" type="button" data-dialog="guide"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg><span>Lần đầu sử dụng? <strong>Xem hướng dẫn</strong></span></button>
-    </section>
-  </div>
+      </div>
+    </div>
+    <div class="intro-caption"><span class="caption-line"></span> Đồng hành cùng người bệnh, từ những điều nhỏ nhất.</div>
+    <span class="decor-cross" aria-hidden="true"></span>
+  </section>
+
+  <section class="login-card" aria-labelledby="login-title">
+    <div class="card-heading">
+      <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg></span>
+      <span class="card-kicker">TÀI KHOẢN NGƯỜI BỆNH</span>
+    </div>
+    <h2 id="login-title">Chào mừng bạn trở lại</h2>
+    <p class="card-description">Đăng nhập để xem kết quả và hồ sơ của bạn.</p>
+
+    <?php render_flash(); ?>
+
+    <form id="login-form" method="POST" action="login.php" novalidate>
+      <?php echo render_form_guard('patient_login'); ?>
+      <?php if ($redirectTarget !== ''): ?>
+        <input type="hidden" name="redirect" value="<?php echo e($redirectTarget); ?>">
+      <?php endif; ?>
+
+      <div class="field">
+        <label for="cccd">Số CCCD</label>
+        <input id="cccd" name="cccd" type="text" inputmode="numeric" autocomplete="username" maxlength="12" placeholder="Nhập 12 chữ số CCCD" required aria-describedby="cccd-hint cccd-error" value="<?php echo e($cccd ?? ''); ?>">
+        <p id="cccd-hint" class="field-hint">Dùng số CCCD đã đăng ký với phòng khám.</p>
+        <p id="cccd-error" class="field-error" hidden></p>
+      </div>
+
+      <div class="field password-field">
+        <div class="label-row">
+          <label for="password">Mật khẩu</label>
+          <a href="forgot_password.php" class="inline-link">Quên mật khẩu?</a>
+        </div>
+        <div class="password-wrap">
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu của bạn" required aria-describedby="password-error">
+          <button id="toggle-password" type="button" class="password-toggle" aria-label="Hiện mật khẩu" aria-pressed="false">
+            <svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg>
+          </button>
+        </div>
+        <p id="password-error" class="field-error" hidden></p>
+      </div>
+
+      <button class="primary-button login-submit" type="submit" id="submit-login">
+        <span>Đăng nhập</span>
+        <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg>
+      </button>
+      <p id="form-status" class="form-status" role="status" aria-live="polite" hidden></p>
+      <noscript><p class="field-error">Vui lòng bật JavaScript trên trình duyệt để sử dụng đầy đủ chức năng.</p></noscript>
+    </form>
+
+    <div class="register-row">
+      Bạn chưa có tài khoản? <a href="register.php" class="inline-link">Đăng ký ngay <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="card-divider"></div>
+    <button class="card-help" type="button" data-dialog="guide">
+      <svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>
+      <span>Lần đầu sử dụng? <strong>Xem hướng dẫn</strong></span>
+    </button>
+    <p class="demo-notice">Cổng dịch vụ y tế chính thức · Phòng khám đa khoa Phú Thái.</p>
+  </section>
 </div>
 
 <script>
