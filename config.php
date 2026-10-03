@@ -2237,6 +2237,11 @@ function visual_captcha_image_src(string $code): string
 
 function visual_captcha_required(string $context): bool
 {
+    // Cơ chế dự phòng thông minh: Nếu đã có Cloudflare Turnstile hoặc Google reCAPTCHA thì ưu tiên, không bắt người bệnh giải captcha ảnh kép
+    if (turnstile_configured() || recaptcha_configured()) {
+        return false;
+    }
+
     return in_array($context, [
         'admin_login',
         'admin_bootstrap',
@@ -2248,28 +2253,34 @@ function visual_captcha_required(string $context): bool
 
 function render_captcha(string $context): void
 {
-    echo '<div class="captcha-block" style="margin-top:12px;">';
+    echo '<div class="field captcha-field" style="margin-bottom: 20px;">';
     echo '<input type="text" name="contact_website" tabindex="-1" autocomplete="off" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden" aria-hidden="true">';
     $turnstileSiteKey = turnstile_site_key();
     if ($turnstileSiteKey !== '') {
-        echo '<div style="margin-bottom:8px;"><label>Xác minh an toàn</label><div class="cf-turnstile" data-sitekey="' . e($turnstileSiteKey) . '" data-theme="light"></div></div>';
+        echo '<div class="turnstile-wrap" style="margin-bottom: 6px;">';
+        echo '<label style="display:block;margin-bottom:8px;font-size:14.5px;font-weight:600;color:var(--ink);">Xác minh an toàn</label>';
+        echo '<div class="cf-turnstile" data-sitekey="' . e($turnstileSiteKey) . '" data-theme="light"></div>';
+        echo '</div>';
         echo '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
     }
     $siteKey = $turnstileSiteKey === '' ? recaptcha_site_key() : '';
     if ($siteKey !== '') {
-        echo '<div style="margin-bottom:8px;"><label>Xác minh an toàn</label><div class="g-recaptcha" data-sitekey="' . e($siteKey) . '" data-theme="light"></div></div>';
+        echo '<div class="recaptcha-wrap" style="margin-bottom: 6px;">';
+        echo '<label style="display:block;margin-bottom:8px;font-size:14.5px;font-weight:600;color:var(--ink);">Xác minh an toàn</label>';
+        echo '<div class="g-recaptcha" data-sitekey="' . e($siteKey) . '" data-theme="light"></div>';
+        echo '</div>';
         echo '<script src="https://www.google.com/recaptcha/api.js?hl=vi" async defer></script>';
     }
     if (visual_captcha_required($context)) {
         $visualCode = visual_captcha_code($context);
         $inputId = 'captcha_' . preg_replace('/[^a-zA-Z0-9_]/', '', $context);
-        echo '<div>';
-        echo '<label for="' . $inputId . '">Mã xác thực hình ảnh <span style="font-size:12px;font-weight:normal;color:#64748b">(phân biệt chữ hoa/thường)</span></label>';
+        echo '<div class="visual-captcha-wrap" style="margin-top: 8px;">';
+        echo '<label for="' . $inputId . '" style="display:block;margin-bottom:8px;font-size:14.5px;font-weight:600;color:var(--ink);">Mã xác thực hình ảnh <span style="font-size:12px;font-weight:normal;color:var(--muted);">(phân biệt chữ hoa/thường)</span></label>';
         echo '<div class="visual-captcha" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
-        echo '<img id="img_' . $inputId . '" src="' . e(visual_captcha_image_src($visualCode)) . '" alt="Hình ảnh chứa 6 ký tự mã xác nhận" width="200" height="52" style="border:1.5px solid var(--border);border-radius:8px;background:#fff;display:block;">';
-        echo '<input id="' . $inputId . '" name="visual_captcha_answer" autocomplete="off" inputmode="text" maxlength="8" placeholder="Nhập 6 ký tự" style="flex:1;min-width:140px;height:50px" aria-label="Mã xác thực gồm 6 ký tự trong ảnh" required>';
+        echo '<img id="img_' . $inputId . '" src="' . e(visual_captcha_image_src($visualCode)) . '" alt="Hình ảnh chứa 6 ký tự mã xác nhận" width="180" height="46" style="border:1.5px solid #b6ccdf;border-radius:10px;background:#fff;display:block;">';
+        echo '<input id="' . $inputId . '" name="visual_captcha_answer" autocomplete="off" inputmode="text" maxlength="8" placeholder="Nhập 6 ký tự" style="flex:1;min-width:130px;height:46px;border:1.5px solid #b6ccdf;border-radius:10px;padding:0 12px;font-size:15px;color:var(--ink);" aria-label="Mã xác thực gồm 6 ký tự trong ảnh" required>';
         echo '</div>';
-        echo '<div style="margin-top:6px;font-size:12px;color:#64748b;">Mã khó đọc? <a href="javascript:location.reload()" style="color:var(--primary);text-decoration:underline;">Tải lại trang để lấy mã mới</a></div>';
+        echo '<div style="margin-top:6px;font-size:12.5px;color:var(--muted);">Mã khó đọc? <a href="javascript:location.reload()" style="color:var(--blue);font-weight:600;text-decoration:underline;">Tải lại trang để lấy mã mới</a></div>';
         echo '</div>';
     }
     echo '</div>';

@@ -138,6 +138,8 @@ render_header('Đăng nhập người bệnh · Phú Thái');
         <p id="password-error" class="field-error" hidden></p>
       </div>
 
+      <?php render_captcha('patient_login'); ?>
+
       <button class="primary-button login-submit" type="submit" id="submit-login">
         <span>Đăng nhập</span>
         <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg>
