@@ -3718,188 +3718,80 @@ function render_header(string $title, string $activeNav = ''): void
     $isPatient = isset($_SESSION['user_id']);
     $isAdmin = isset($_SESSION['admin_id']);
     $clinicName = site_setting('clinic_name', "Phòng khám đa khoa Phú Thái");
+?>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= e($title) ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="/assets/style.css?v=2.3">
+</head>
+<body>
+<svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 5c-3-2-6-2-10-1v16c4-1 7-1 10 1 3-2 6-2 10-1V4c-4-1-7-1-10 1zm0 0v16"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h18"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zm0 0v6h6M8 13h8m-8 4h5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7zM3 10h18"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a9 9 0 0 1-9 9c-1.7 0-3.3-.5-4.7-1.2L2 22l1.7-5.3A9 9 0 1 1 21 11.5z"/><circle cx="7.5" cy="11" r=".7" fill="currentColor"/><circle cx="12" cy="11" r=".7" fill="currentColor"/><circle cx="16.5" cy="11" r=".7" fill="currentColor"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="m7 3 3 5-3 3a15 15 0 0 0 6 6l3-3 5 3v3c-9 3-20-8-17-17z"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 .5c0 1.5-2.5 2-2.5 3.5m0 3h.01"/></symbol>
+  </svg>
+<a class="skip-link" href="#main-content">Nhảy tới nội dung chính</a>
 
-    echo '<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>' . e($title) . '</title>';
-    echo '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
-    echo '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap">';
-    echo '<style>
-        :root {
-            --primary: #0077b6;
-            --primary-hover: #005f92;
-            --secondary: #00b4d8;
-            --surface: #ffffff;
-            --soft: #f0f7fb;
-            --bg: #f8fafc;
-            --bg2: #f1f5f9;
-            --ink: #1e293b;
-            --tx: #1e293b;
-            --tx2: #64748b;
-            --muted: #64748b;
-            --border: #dbe4ec;
-            --ct: #e2e8f0;
-            --shadow: 0 10px 25px rgba(15,35,55,.06);
-            --r: 12px;
-            --radius: 12px;
-            --danger: #b91c1c;
-            --err-tx: #b91c1c;
-            color-scheme: light;
-        }
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body { 
-            margin: 0; 
-            font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: #f8fafc; 
-            color: var(--tx); 
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-        main { flex: 1; }
-        a { color: inherit; text-decoration: none; }
-        
-        /* SITE HEADER */
-        .site-header { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.96); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,.03); }
-        .site-header-inner { max-width: 1180px; margin: 0 auto; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 64px; }
-        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--primary); }
-        .logo-mark { height: 46px; width: auto; max-width: 140px; object-fit: contain; display: block; }
-        .logo-text { font-size: 17px; font-weight: 800; line-height: 1.15; color: #0f3d61; letter-spacing: -0.3px; display: block; }
-        .logo-sub { font-size: 11px; font-weight: 600; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; }
-        
-        .nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .nav-link { padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; color: #334155; transition: all .15s; }
-        .nav-link:hover { color: var(--primary); background: var(--soft); }
-        .nav-link.active { color: var(--primary); font-weight: 700; background: var(--soft); box-shadow: inset 0 -2px 0 var(--primary); }
-        .nav-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600; transition: all .15s; }
-        .nav-btn-primary { background: linear-gradient(135deg, #0077b6, #0096c7); color: #fff!important; box-shadow: 0 4px 12px rgba(0,119,182,.2); }
-        .nav-btn-primary:hover { background: #005f92; transform: translateY(-1px); }
-        .nav-btn-outline { border: 1.5px solid var(--border); color: #334155; background: #fff; }
-        .nav-btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-        .nav-pill { padding: 8px 14px; background: #e0f2fe; color: #0284c7!important; border-radius: 999px; font-size: 13.5px; font-weight: 600; }
-
-        /* CONTAINERS & SECTIONS */
-        .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 48px; }
-        .section { margin-bottom: 36px; }
-        .section-header { margin-bottom: 20px; }
-        .section-title { font-size: 26px; font-weight: 700; color: #0f2942; margin: 0 0 6px; }
-        .section-lead { color: var(--muted); font-size: 15px; margin: 0; }
-        
-        .card { background: var(--surface); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 20px; }
-        .grid { display: grid; gap: 20px; }
-        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-        .grid-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-
-        /* HERO SECTION */
-        .hero { background: linear-gradient(135deg, #0077b6 0%, #0096c7 60%, #48cae4 100%); color: #fff; padding: 48px 20px 56px; }
-        .hero-inner { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0,1.3fr) minmax(300px,.9fr); gap: 32px; align-items: center; }
-        .hero h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.2; margin: 0 0 14px; font-weight: 800; }
-        .hero p { font-size: 16px; line-height: 1.7; opacity: .95; margin: 0 0 24px; max-width: 600px; }
-        .hero-badges { display: flex; gap: 10px; flex-wrap: wrap; }
-        .hero-badge { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); font-size: 13px; font-weight: 600; color: #fff; }
-        .hero-panel { background: rgba(255,255,255,.15); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.25); border-radius: 20px; padding: 24px; }
-        .hero-panel h3 { margin: 0 0 16px; font-size: 18px; font-weight: 700; color: #fff; }
-        .hero-list { display: grid; gap: 10px; }
-        .hero-item { padding: 12px 16px; border-radius: 12px; background: rgba(255,255,255,.12); font-size: 14px; line-height: 1.5; color: #f8fafc; }
-
-        /* BUTTONS & FORMS */
-        button, .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 10px; background: var(--primary); color: #fff; padding: 11px 18px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; text-decoration: none; }
-        button:hover, .btn:hover { background: var(--primary-hover); }
-        .btn-secondary { background: #475569; }
-        .btn-secondary:hover { background: #334155; }
-        .btn-light { background: var(--soft); color: var(--primary); }
-        .btn-light:hover { background: #e0f2fe; }
-        .btn-outline { background: transparent; border: 1.5px solid var(--border); color: #334155; }
-        .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: #fff; }
-        .btn-danger { background: var(--danger); }
-        .btn-danger:hover { background: #991b1b; }
-        
-        label { display: block; font-weight: 600; font-size: 13.5px; color: #334155; margin-bottom: 6px; }
-        input, select, textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font: inherit; font-size: 14.5px; background: #fff; color: var(--tx); transition: border-color .15s, box-shadow .15s; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,119,182,.12); }
-        
-        /* FOOTER */
-        .site-footer { background: #0c2333; color: #cbd5e1; margin-top: auto; font-size: 14px; border-top: 1px solid rgba(255,255,255,.08); }
-        .footer-main { max-width: 1180px; margin: 0 auto; padding: 40px 20px 32px; display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 36px; }
-        .footer-col h4 { color: #fff; font-size: 15px; font-weight: 700; margin: 0 0 14px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .footer-col p { margin: 0 0 10px; line-height: 1.6; }
-        .footer-col a { color: #94a3b8; transition: color .15s; }
-        .footer-col a:hover { color: #38bdf8; }
-        .footer-contact-item { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
-        .footer-bottom { max-width: 1180px; margin: 0 auto; padding: 18px 20px; border-top: 1px solid rgba(255,255,255,.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 12.5px; color: #94a3b8; }
-        .footer-bottom a { color: #cbd5e1; }
-        .footer-bottom a:hover { color: #38bdf8; }
-        .staff-link { color: #94a3b8; font-weight: 500; }
-        .staff-link:hover { color: #f8fafc; }
-
-        /* FLASH MESSAGES */
-        .flash { padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
-        .flash-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .flash-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-
-        /* FLOATING SUPPORT WIDGET (UNIFIED FAB) */
-        .fab-support-container { position: fixed; right: 24px; bottom: 24px; z-index: 9995; }
-        .fab-support-btn { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #0077b6, #0096c7); color: #fff; border: 3px solid #fff; box-shadow: 0 8px 24px rgba(0,119,182,.35); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .2s, box-shadow .2s; }
-        .fab-support-btn:hover { transform: scale(1.06); box-shadow: 0 10px 28px rgba(0,119,182,.45); }
-        .fab-support-btn svg { width: 26px; height: 26px; fill: currentColor; }
-        .fab-support-menu { position: absolute; bottom: 68px; right: 0; width: 260px; background: #fff; border-radius: 16px; box-shadow: 0 14px 36px rgba(15,35,55,.18); border: 1px solid var(--border); padding: 10px; display: none; flex-direction: column; gap: 6px; animation: fabFadeIn .2s ease-out; }
-        .fab-support-menu.active { display: flex; }
-        @keyframes fabFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .fab-support-header { padding: 8px 12px 6px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-        .fab-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #1e293b; font-size: 13.5px; font-weight: 600; transition: background .15s; }
-        .fab-item:hover { background: var(--soft); color: var(--primary); }
-        .fab-item-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; }
-        .fab-item-icon svg { width: 18px; height: 18px; fill: currentColor; }
-        .fab-icon-call { background: #10b981; }
-        .fab-icon-zalo { background: #0068ff; }
-        .fab-icon-msg { background: linear-gradient(135deg, #00b2ff, #9b30ff); }
-        .fab-icon-guide { background: #0284c7; }
-
-        @media (max-width: 900px) {
-            .site-header-inner { padding: 8px 16px; }
-            .hero-inner { grid-template-columns: 1fr; gap: 24px; }
-            .footer-main { grid-template-columns: 1fr; gap: 24px; padding: 32px 16px 24px; }
-        }
-        @media (max-width: 640px) {
-            .logo-text { font-size: 15px; }
-            .logo-mark { height: 38px; }
-            .nav { gap: 4px; }
-            .nav-link { padding: 6px 8px; font-size: 13px; }
-            .nav-btn { padding: 6px 12px; font-size: 12.5px; }
-            .hero { padding: 36px 16px 44px; }
-            .wrap { padding: 16px 16px 36px; }
-            .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
-            .fab-support-container { right: 16px; bottom: 16px; }
-        }
-    </style></head><body>';
-    
-    echo '<header class="site-header"><div class="site-header-inner">';
-    echo '<a class="logo" href="index.php">';
-    echo '<img class="logo-mark" src="' . e(clinic_logo_url()) . '" alt="Logo Phòng khám đa khoa Phú Thái">';
-    echo '<div><span class="logo-text">' . e($clinicName) . '</span><span class="logo-sub">Cổng người bệnh</span></div>';
-    echo '</a>';
-    
-    echo '<nav class="nav">';
-    echo '<a class="nav-link' . ($activeNav === 'home' ? ' active' : '') . '" href="index.php">Trang chủ</a>';
-    echo '<a class="nav-link' . ($activeNav === 'services' ? ' active' : '') . '" href="index.php#services">Dịch vụ</a>';
-    echo '<a class="nav-link' . ($activeNav === 'doctors' ? ' active' : '') . '" href="index.php#doctors">Bác sĩ</a>';
-    echo '<a class="nav-link' . ($activeNav === 'guide' ? ' active' : '') . '" href="resources.php">Hướng dẫn</a>';
-    echo '<a class="nav-link' . ($activeNav === 'support' ? ' active' : '') . '" href="support.php">Hỗ trợ</a>';
-
-    if ($isPatient) {
-        echo '<a class="nav-btn nav-btn-primary" href="dashboard.php#records">Tra cứu kết quả</a>';
-        echo '<a class="nav-pill" href="dashboard.php">' . e((string) ($_SESSION['name'] ?? "Bệnh nhân")) . '</a>';
-        echo '<a class="nav-link" href="logout.php">Đăng xuất</a>';
-    } elseif ($isAdmin) {
-        echo '<a class="nav-pill" href="admin_add_record.php">Quản trị</a>';
-        echo '<a class="nav-link" href="logout.php">Đăng xuất</a>';
-    } else {
-        echo '<a class="nav-btn nav-btn-primary" href="login.php?redirect=records">Tra cứu kết quả</a>';
-        echo '<a class="nav-btn nav-btn-outline" href="login.php">Đăng nhập</a>';
-    }
-    echo '</nav></div></header><main>';
-
+<header class="site-header">
+    <div class="container header-inner">
+        <a class="brand" href="index.php" aria-label="Phòng khám đa khoa Phú Thái — cổng người bệnh">
+            <span class="brand-symbol"><img src="/logo.png" alt="Logo Phòng khám Phú Thái" width="1440" height="1744"></span>
+            <span class="brand-copy"><span class="brand-kicker">PHÒNG KHÁM ĐA KHOA</span><strong>Phú Thái</strong></span>
+        </a>
+        <nav class="header-nav" aria-label="Điều hướng chính">
+            <a class="nav-link<?= $activeNav === 'home' ? ' active' : '' ?>" href="index.php">Trang chủ</a>
+            <a class="nav-link<?= $activeNav === 'services' ? ' active' : '' ?>" href="index.php#services">Dịch vụ</a>
+            <a class="nav-link<?= $activeNav === 'doctors' ? ' active' : '' ?>" href="index.php#doctors">Bác sĩ</a>
+            <button type="button" class="text-button guide-nav" data-dialog="guide">Hướng dẫn</button>
+            <button type="button" class="support-button" data-dialog="support"><svg class="icon" aria-hidden="true"><use href="#i-help"/></svg><span>Cần hỗ trợ?</span></button>
+            <?php if ($isPatient): ?>
+                <a class="btn btn-primary btn-sm" href="dashboard.php#records">Kết quả khám</a>
+                <a class="btn btn-light btn-sm" href="dashboard.php"><?= e((string) ($_SESSION['name'] ?? 'Bệnh nhân')) ?></a>
+                <a class="nav-link" href="logout.php">Đăng xuất</a>
+            <?php elseif ($isAdmin): ?>
+                <a class="btn btn-primary btn-sm" href="admin_add_record.php">Quản trị</a>
+                <a class="nav-link" href="logout.php">Đăng xuất</a>
+            <?php else: ?>
+                <a class="btn btn-primary btn-sm" href="login.php?redirect=records">Tra cứu kết quả</a>
+                <a class="btn btn-outline btn-sm" href="login.php">Đăng nhập</a>
+            <?php endif; ?>
+            <button class="mobile-menu" type="button" aria-label="Mở menu" aria-expanded="false" aria-controls="mobile-navigation"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
+        </nav>
+    </div>
+    <nav class="container mobile-navigation" id="mobile-navigation" aria-label="Menu điện thoại" hidden>
+        <a class="nav-link" href="index.php">Trang chủ</a>
+        <a class="nav-link" href="index.php#services">Dịch vụ y tế</a>
+        <a class="nav-link" href="index.php#doctors">Đội ngũ bác sĩ</a>
+        <button type="button" data-dialog="guide">Hướng dẫn sử dụng</button>
+        <button type="button" data-dialog="support">Liên hệ hỗ trợ</button>
+        <button type="button" data-dialog="staff">Dành cho nhân viên</button>
+        <?php if ($isPatient): ?>
+            <a class="nav-link" href="dashboard.php">Hồ sơ cá nhân</a>
+            <a class="nav-link" href="logout.php">Đăng xuất</a>
+        <?php else: ?>
+            <a class="nav-link" href="login.php">Đăng nhập tài khoản</a>
+            <a class="nav-link" href="register.php">Đăng ký người bệnh</a>
+        <?php endif; ?>
+    </nav>
+</header>
+<main id="main-content">
+<?php
     if ($isAdmin) {
         $adminChatLink = (is_root_admin() || admin_can('manage_support_chat')) ? 'admin_accounts.php#recent-chats' : '';
         echo '<div data-admin-support-endpoint="admin_support_notice.php" data-admin-support-csrf="' . e(csrf_token('admin_support_api')) . '" data-admin-chat-link="' . e($adminChatLink) . '" hidden></div>';
@@ -3910,115 +3802,117 @@ function render_footer(): void
 {
     $clinicName = site_setting('clinic_name', "Phòng khám đa khoa Phú Thái");
     $hotline = site_setting('support_hotline', '0208 628 9888');
-    $hotlineCskh = '0963 485 651';
-    $email = site_setting('support_email', 'pcnttphongkhamdakhoaphuthai@gmail.com');
     $address = site_setting('clinic_address', 'Xóm Hoà Bình 2, xã Phú Bình, tỉnh Thái Nguyên');
-    $googleMapUrl = site_setting('google_maps_url', 'https://maps.google.com/?q=' . urlencode($clinicName . ' ' . $address));
-    $zaloUrl = site_setting('zalo_url', '');
-    $messengerUrl = site_setting('messenger_url', '');
+?>
+</main>
+<footer class="site-footer">
+    <div class="container footer-main">
+        <div class="footer-brand">
+            <strong><?= e($clinicName) ?></strong>
+            <p>Cổng thông tin & dịch vụ y tế trực tuyến dành cho người bệnh.</p>
+        </div>
+        <div class="footer-contact">
+            <span class="footer-icon"><svg class="icon" aria-hidden="true"><use href="#i-phone"/></svg></span>
+            <div><span>Liên hệ phòng khám</span><a href="tel:<?= preg_replace('/[^0-9]/', '', $hotline) ?>"><?= e($hotline) ?></a></div>
+        </div>
+        <div class="footer-address">
+            <span class="footer-icon"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg></span>
+            <div><span>Địa chỉ phòng khám</span><p><?= e($address) ?></p></div>
+        </div>
+    </div>
+    <div class="container footer-bottom">
+        <span>Phú Thái · Cổng dịch vụ người bệnh</span>
+        <div>
+            <button type="button" class="text-button" data-dialog="privacy">Thông tin riêng tư</button>
+            <span class="footer-separator" aria-hidden="true">|</span>
+            <button type="button" class="text-button" data-dialog="staff">Dành cho nhân viên <span aria-hidden="true">↗</span></button>
+        </div>
+    </div>
+</footer>
 
-    echo '</main><footer class="site-footer"><div class="footer-main">';
-    
-    // Cột 1: Thông tin phòng khám
-    echo '<div class="footer-col">';
-    echo '<h4>' . e($clinicName) . '</h4>';
-    echo '<p>Cổng hỗ trợ và chăm sóc sức khỏe người bệnh trực tuyến. Đồng hành cùng người bệnh trong việc tra cứu hồ sơ và kết quả khám chữa bệnh nhanh chóng, an toàn.</p>';
-    echo '<p style="color:#94a3b8;font-size:13px">Giờ tiếp đón: <strong>7:00 – 17:00</strong> (Tất cả các ngày trong tuần)</p>';
-    echo '</div>';
+<dialog id="info-dialog" aria-labelledby="dialog-title">
+    <div class="dialog-heading">
+        <span class="dialog-eyebrow">PHÚ THÁI · THÔNG TIN</span>
+        <button type="button" class="dialog-close" aria-label="Đóng hướng dẫn"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+    </div>
+    <h2 id="dialog-title"></h2>
+    <div id="dialog-content"></div>
+    <button type="button" class="btn btn-primary btn-block dialog-done" style="margin-top:20px;">Đã hiểu</button>
+</dialog>
 
-    // Cột 2: Liên hệ
-    echo '<div class="footer-col">';
-    echo '<h4>Liên hệ phòng khám</h4>';
-    echo '<div class="footer-contact-item"><span>📞</span><div><span>Hotline tư vấn:</span><a href="tel:' . preg_replace('/[^0-9]/', '', $hotline) . '"><strong>' . e($hotline) . '</strong></a></div></div>';
-    echo '<div class="footer-contact-item"><span>🚑</span><div><span>Cấp cứu & CSKH:</span><a href="tel:' . preg_replace('/[^0-9]/', '', $hotlineCskh) . '">' . e($hotlineCskh) . '</a></div></div>';
-    echo '<div class="footer-contact-item"><span>✉️</span><div><span>Email:</span><a href="mailto:' . e($email) . '">' . e($email) . '</a></div></div>';
-    echo '</div>';
-
-    // Cột 3: Địa chỉ & Bản đồ
-    echo '<div class="footer-col">';
-    echo '<h4>Địa chỉ & Chỉ đường</h4>';
-    echo '<p>' . e($address) . '</p>';
-    echo '<div style="margin-top:14px;">';
-    echo '<a class="btn btn-outline" style="border-color:#334155;color:#e2e8f0;background:rgba(255,255,255,.05);" href="' . e($googleMapUrl) . '" target="_blank" rel="noopener">📍 Chỉ đường trên Google Maps ↗</a>';
-    echo '</div>';
-    echo '</div>';
-
-    echo '</div>';
-
-    // Dòng đáy
-    echo '<div class="footer-bottom">';
-    echo '<span>© ' . date('Y') . ' ' . e($clinicName) . ' · Cổng dịch vụ người bệnh</span>';
-    echo '<div>';
-    echo '<a href="resources.php">Hướng dẫn người bệnh</a> · ';
-    echo '<a href="support.php">Liên hệ hỗ trợ</a> · ';
-    echo '<a class="staff-link" href="login.php?role=staff">Dành cho nhân viên ↗</a>';
-    echo '</div>';
-    echo '</div>';
-    echo '</footer>';
-
-    // Nút Hỗ trợ nổi gộp (FAB)
-    echo '<div class="fab-support-container" id="fabSupportWidget">';
-    echo '<div class="fab-support-menu" id="fabSupportMenu" role="menu" aria-label="Menu hỗ trợ">';
-    echo '<div class="fab-support-header">Hỗ trợ & Liên hệ</div>';
-    echo '<a class="fab-item" href="tel:' . preg_replace('/[^0-9]/', '', $hotline) . '">';
-    echo '<span class="fab-item-icon fab-icon-call"><svg viewBox="0 0 24 24"><path d="m7 3 3 5-3 3a15 15 0 0 0 6 6l3-3 5 3v3c-9 3-20-8-17-17z"/></svg></span>';
-    echo '<div><div>Gọi hotline tư vấn</div><small style="color:#64748b;font-weight:normal">' . e($hotline) . '</small></div>';
-    echo '</a>';
-
-    if ($zaloUrl !== '') {
-        echo '<a class="fab-item" href="' . e($zaloUrl) . '" target="_blank" rel="noopener">';
-        echo '<span class="fab-item-icon fab-icon-zalo"><span style="font-size:11px;font-weight:900">Zalo</span></span>';
-        echo '<div><div>Chat qua Zalo</div><small style="color:#64748b;font-weight:normal">Hỗ trợ trực tuyến</small></div>';
-        echo '</a>';
+<script>
+(function(){
+  var dialog = document.getElementById("info-dialog");
+  var menu = document.querySelector(".mobile-menu");
+  var navigation = document.getElementById("mobile-navigation");
+  function closeMenu() {
+    if (!navigation || !menu) return;
+    navigation.hidden = true;
+    menu.setAttribute("aria-expanded", "false");
+  }
+  if (menu && navigation) {
+    menu.addEventListener("click", function() {
+      var expanded = menu.getAttribute("aria-expanded") === "true";
+      menu.setAttribute("aria-expanded", expanded ? "false" : "true");
+      navigation.hidden = expanded;
+    });
+  }
+  var dialogData = {
+    guide: {
+      title: "Hướng dẫn tra cứu kết quả khám",
+      content: "<p>Để tra cứu hồ sơ và kết quả xét nghiệm, quý người bệnh thực hiện theo các bước:</p><ol><li>Nhập số <strong>Căn cước công dân (12 chữ số)</strong> đã đăng ký tại quầy tiếp đón.</li><li>Nhập mật khẩu tài khoản được cấp hoặc tạo khi đăng ký.</li><li>Tại màn hình quản lý, chọn mục <strong>Kết quả khám</strong> để xem chi tiết chẩn đoán, toa thuốc và tải tệp kết quả.</li></ol><p>Nếu chưa có tài khoản hoặc quên mật khẩu, xin vui lòng bấm <a href='register.php'>Đăng ký</a> hoặc gọi tổng đài hỗ trợ.</p>"
+    },
+    support: {
+      title: "Trung tâm hỗ trợ người bệnh",
+      content: "<p>Bộ phận Chăm sóc khách hàng Phòng khám đa khoa Phú Thái sẵn sàng hỗ trợ quý vị:</p><p>📞 <strong>Hotline:</strong> <a href='tel:02086289888'>0208 628 9888</a><br>📍 <strong>Địa chỉ:</strong> Xóm Hoà Bình 2, xã Phú Bình, tỉnh Thái Nguyên<br>⏰ <strong>Giờ làm việc:</strong> 07:00 - 17:30 (Tất cả các ngày trong tuần)</p>"
+    },
+    privacy: {
+      title: "Chính sách bảo mật hồ sơ y tế",
+      content: "<p>Hồ sơ sức khỏe và kết quả chẩn đoán của quý người bệnh được bảo mật tuyệt đối theo quy định của Bộ Y tế và luật khám chữa bệnh:</p><ul><li>Dữ liệu được mã hóa đường truyền SSL/TLS 256-bit.</li><li>Chỉ người bệnh sở hữu tài khoản CCCD và bác sĩ phụ trách điều trị mới có quyền truy cập.</li><li>Hệ thống áp dụng cơ chế khóa tài khoản tự động khi phát hiện đăng nhập bất thường.</li></ul>"
+    },
+    staff: {
+      title: "Cổng truy cập nhân viên y tế",
+      content: "<p>Khu vực dành riêng cho Y Bác sĩ và Cán bộ nhân viên Phòng khám:</p><p><a href='admin_login.php' class='btn btn-primary'>Đăng nhập Cổng Quản trị & Nghiệp vụ ↗</a></p>"
     }
-
-    if ($messengerUrl !== '') {
-        echo '<a class="fab-item" href="' . e($messengerUrl) . '" target="_blank" rel="noopener">';
-        echo '<span class="fab-item-icon fab-icon-msg"><svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.1 2 11.2c0 2.9 1.4 5.5 3.6 7.2v3.6l3.5-1.9c.9.3 1.9.4 2.9.4 5.5 0 10-4.1 10-9.2S17.5 2 12 2zm1 12.4-2.6-2.8-5.1 2.8 5.6-6 2.7 2.8 5-2.8-5.6 6z"/></svg></span>';
-        echo '<div><div>Chat Facebook Messenger</div><small style="color:#64748b;font-weight:normal">Fanpage phòng khám</small></div>';
-        echo '</a>';
+  };
+  function openDialog(type) {
+    if (!dialog || !dialogData[type]) return;
+    closeMenu();
+    document.getElementById("dialog-title").textContent = dialogData[type].title;
+    document.getElementById("dialog-content").innerHTML = dialogData[type].content;
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
     }
-
-    echo '<a class="fab-item" href="support.php">';
-    echo '<span class="fab-item-icon fab-icon-guide"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></span>';
-    echo '<div><div>Hướng dẫn & Báo sự cố</div><small style="color:#64748b;font-weight:normal">Gửi yêu cầu hỗ trợ</small></div>';
-    echo '</a>';
-    echo '</div>';
-
-    echo '<button type="button" class="fab-support-btn" id="fabSupportToggle" aria-expanded="false" aria-label="Mở menu hỗ trợ" title="Hỗ trợ & Liên hệ">';
-    echo '<svg viewBox="0 0 24 24" id="fabIconChat"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>';
-    echo '<svg viewBox="0 0 24 24" id="fabIconClose" style="display:none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
-    echo '</button>';
-    echo '</div>';
-
-    echo '<script>
-    (function(){
-        var btn = document.getElementById("fabSupportToggle");
-        var menu = document.getElementById("fabSupportMenu");
-        var iconChat = document.getElementById("fabIconChat");
-        var iconClose = document.getElementById("fabIconClose");
-        if (!btn || !menu) return;
-        function toggleMenu(open) {
-            var isOpen = open !== undefined ? open : !menu.classList.contains("active");
-            if (isOpen) {
-                menu.classList.add("active");
-                btn.setAttribute("aria-expanded", "true");
-                if (iconChat && iconClose) { iconChat.style.display = "none"; iconClose.style.display = "block"; }
-            } else {
-                menu.classList.remove("active");
-                btn.setAttribute("aria-expanded", "false");
-                if (iconChat && iconClose) { iconChat.style.display = "block"; iconClose.style.display = "none"; }
-            }
-        }
-        btn.addEventListener("click", function(e){ e.stopPropagation(); toggleMenu(); });
-        document.addEventListener("click", function(e){
-            if (!document.getElementById("fabSupportWidget").contains(e.target)) { toggleMenu(false); }
-        });
-        document.addEventListener("keydown", function(e){ if (e.key === "Escape") { toggleMenu(false); } });
-    })();
-    </script>';
-
-    echo '<script src="' . e(asset_url('app.js')) . '"></script></body></html>';
+  }
+  document.querySelectorAll("[data-dialog]").forEach(function(el) {
+    el.addEventListener("click", function() {
+      openDialog(el.getAttribute("data-dialog"));
+    });
+  });
+  var closeBtn = dialog ? dialog.querySelector(".dialog-close") : null;
+  var doneBtn = dialog ? dialog.querySelector(".dialog-done") : null;
+  function closeDialog() {
+    if (dialog) {
+      if (typeof dialog.close === "function") dialog.close();
+      else dialog.removeAttribute("open");
+    }
+  }
+  if (closeBtn) closeBtn.addEventListener("click", closeDialog);
+  if (doneBtn) doneBtn.addEventListener("click", closeDialog);
+  if (dialog) {
+    dialog.addEventListener("click", function(e) {
+      var rect = dialog.getBoundingClientRect();
+      var inDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height && rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
+      if (!inDialog) closeDialog();
+    });
+  }
+})();
+</script>
+</body>
+</html>
+<?php
 }
 
 function render_flash(): void
@@ -4028,30 +3922,35 @@ function render_flash(): void
         return;
     }
 
-    $class = $flash['type'] === 'success' ? 'flash-success' : 'flash-error';
-    echo '<div class="flash ' . $class . '">' . e($flash['message']) . '</div>';
+    $type = $flash['type'] ?? 'error';
+    $class = ($type === 'success') ? 'flash-success' : (($type === 'notice') ? 'flash-notice' : 'flash-error');
+    $icon = ($type === 'success') ? '#i-check' : '#i-help';
+    echo '<div class="flash-message ' . $class . '"><svg class="icon" aria-hidden="true"><use href="' . $icon . '"/></svg><div>' . e($flash['message']) . '</div></div>';
 }
 
 function render_hero(string $title, string $subtitle): void
 {
-    echo '<section class="hero"><div class="hero-inner">';
-    echo '<div>';
-    echo '<h1>' . e($title) . '</h1>';
-    echo '<p>' . e($subtitle) . '</p>';
-    echo '<div class="hero-badges">';
-    echo '<span class="hero-badge">✓ Tra cứu hồ sơ & đơn thuốc</span>';
-    echo '<span class="hero-badge">✓ Xem kết quả xét nghiệm</span>';
-    echo '<span class="hero-badge">✓ Hỗ trợ người bệnh 24/7</span>';
-    echo '</div>';
-    echo '</div>';
-    echo '<div class="hero-panel">';
-    echo '<h3>Dịch vụ trực tuyến</h3>';
-    echo '<div class="hero-list">';
-    echo '<div class="hero-item">Đăng nhập bằng số CCCD đã đăng ký để tra cứu nhanh hồ sơ và kết quả khám.</div>';
-    echo '<div class="hero-item">Xem kết quả chẩn đoán, đơn thuốc và tệp PDF trực tiếp trên điện thoại hoặc máy tính.</div>';
-    echo '<div class="hero-item">Liên hệ bộ phận chăm sóc khách hàng để được hướng dẫn sử dụng và cập nhật thông tin.</div>';
-    echo '</div>';
-    echo '</div>';
-    echo '</div></section>';
+?>
+<section class="hero">
+    <div class="container hero-inner">
+        <div class="hero-content">
+            <div class="hero-kicker">CỔNG DỊCH VỤ NGƯỜI BỆNH · PHÒNG KHÁM PHÚ THÁI</div>
+            <h1 class="hero-title"><?= e($title) ?></h1>
+            <p class="hero-lead"><?= e($subtitle) ?></p>
+            <div class="hero-badges">
+                <span class="hero-badge"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Tra cứu hồ sơ & đơn thuốc</span>
+                <span class="hero-badge"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Xem kết quả xét nghiệm trực tuyến</span>
+                <span class="hero-badge"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Bảo mật y tế chuẩn Bộ Y tế</span>
+            </div>
+        </div>
+        <div class="hero-card">
+            <h3 style="margin:0 0 12px;font-size:20px;color:var(--ink);">Tra cứu nhanh hồ sơ khám</h3>
+            <p style="font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:20px;">Sử dụng số Căn cước công dân (12 số) đã đăng ký tại phòng khám để xem kết quả xét nghiệm, siêu âm, nội soi và đơn thuốc điện tử.</p>
+            <a href="login.php?redirect=records" class="btn btn-primary btn-block">Bắt đầu tra cứu ngay <svg class="icon" style="width:18px;height:18px;" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+    </div>
+</section>
+<?php
 }
+
 ?>

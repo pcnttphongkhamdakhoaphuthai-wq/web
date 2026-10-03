@@ -52,17 +52,15 @@ $address = site_setting('clinic_address', 'Xóm Hoà Bình 2, xã Phú Bình, t�
 render_header('Trung tâm Hỗ trợ & Hướng dẫn người bệnh · ' . $clinicName, 'support');
 ?>
 
-<div class="wrap">
+<div class="wrap" style="padding-top: 24px; padding-bottom: 48px;">
   <!-- TIÊU ĐỀ TRANG HỖ TRỢ -->
-  <section class="section card" style="background:linear-gradient(135deg, #f0f7fb 0%, #ffffff 100%);">
-    <div class="panel-title" style="margin-bottom:0;">
+  <section class="section" style="padding: 24px 0 36px;">
+    <div style="background: linear-gradient(113deg, #eaf7ff 0%, #edf8ff 45%, #e3f3ff 100%); border: 1px solid var(--line); border-radius: 20px; padding: 36px 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
       <div>
-        <div style="font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">
-          TRUNG TÂM TRỢ GIÚP NGƯỜI BỆNH
-        </div>
-        <h1 class="section-title" style="font-size:28px;">Hỗ trợ & Hướng dẫn sử dụng dịch vụ</h1>
-        <p class="section-lead" style="margin-bottom:0;">
-          Giải đáp các thắc mắc về tài khoản người bệnh, quy trình tra cứu kết quả khám, thủ tục BHYT và tiếp nhận yêu cầu hỗ trợ 24/7.
+        <span class="section-kicker">TRUNG TÂM TRỢ GIÚP NGƯỜI BỆNH</span>
+        <h1 style="font-size: 32px; font-weight: 700; color: var(--ink); margin: 0 0 10px;">Hỗ trợ & Hướng dẫn sử dụng dịch vụ</h1>
+        <p style="font-size: 16px; color: var(--muted); margin: 0; max-width: 680px; line-height: 1.6;">
+          Giải đáp thắc mắc về tài khoản người bệnh, quy trình tra cứu hồ sơ kết quả, thủ tục BHYT và tiếp nhận yêu cầu hỗ trợ y tế kịp thời.
         </p>
       </div>
       <div>
@@ -72,124 +70,132 @@ render_header('Trung tâm Hỗ trợ & Hướng dẫn người bệnh · ' . $cl
   </section>
 
   <!-- KÊNH LIÊN HỆ TRỰC TIẾP -->
-  <section class="section">
+  <section class="section" style="padding: 0 0 36px;">
     <div class="grid grid-3">
-      <div class="card" style="margin-bottom:0;border-top:4px solid var(--primary);">
-        <div style="font-size:28px;margin-bottom:10px;">📞</div>
-        <h3 style="font-size:17px;font-weight:700;margin:0 0 6px;">Hotline tư vấn</h3>
-        <p style="font-size:13.5px;color:var(--muted);margin:0 0 12px;">Hỗ trợ chuyên môn y tế và quy trình khám bệnh.</p>
-        <div style="font-size:18px;font-weight:800;color:var(--primary);">
+      <div class="service-card" style="border-top: 4px solid var(--blue);">
+        <div class="service-icon-box">
+          <svg class="icon" aria-hidden="true"><use href="#i-phone"/></svg>
+        </div>
+        <h3 class="service-title">Hotline tiếp đón</h3>
+        <p class="service-desc">Hỗ trợ chuyên môn y tế, đặt lịch hẹn và hướng dẫn thủ tục khám bệnh.</p>
+        <div style="font-size: 20px; font-weight: 700; color: var(--blue); margin-bottom: 4px;">
           <a href="tel:02086289888">0208 628 9888</a>
         </div>
-        <div style="font-size:12px;color:#64748b;margin-top:4px;">Từ 7:00 – 17:00 hàng ngày</div>
+        <div style="font-size: 13px; color: var(--muted);">Từ 07:00 – 17:30 tất cả các ngày trong tuần</div>
       </div>
 
-      <div class="card" style="margin-bottom:0;border-top:4px solid #10b981;">
-        <div style="font-size:28px;margin-bottom:10px;">🚑</div>
-        <h3 style="font-size:17px;font-weight:700;margin:0 0 6px;">Cấp cứu & Chăm sóc khách hàng</h3>
-        <p style="font-size:13.5px;color:var(--muted);margin:0 0 12px;">Đường dây nóng tiếp nhận xử lý sự cố tài khoản khẩn cấp.</p>
-        <div style="font-size:18px;font-weight:800;color:#10b981;">
+      <div class="service-card" style="border-top: 4px solid #16a34a;">
+        <div class="service-icon-box" style="background: #e8f8ed; color: #16a34a;">
+          <svg class="icon" aria-hidden="true"><use href="#i-phone"/></svg>
+        </div>
+        <h3 class="service-title">Cấp cứu & CSKH</h3>
+        <p class="service-desc">Đường dây nóng xử lý sự cố tài khoản và tiếp nhận ca bệnh khẩn cấp.</p>
+        <div style="font-size: 20px; font-weight: 700; color: #16a34a; margin-bottom: 4px;">
           <a href="tel:0963485651">0963 485 651</a>
         </div>
-        <div style="font-size:12px;color:#64748b;margin-top:4px;">Hỗ trợ 24/7 qua điện thoại & Zalo</div>
+        <div style="font-size: 13px; color: var(--muted);">Trực tiếp tiếp nhận cuộc gọi 24/7</div>
       </div>
 
-      <div class="card" style="margin-bottom:0;border-top:4px solid #0284c7;">
-        <div style="font-size:28px;margin-bottom:10px;">✉️</div>
-        <h3 style="font-size:17px;font-weight:700;margin:0 0 6px;">Hòm thư điện tử</h3>
-        <p style="font-size:13.5px;color:var(--muted);margin:0 0 12px;">Tiếp nhận đóng góp ý kiến và phản ánh dịch vụ.</p>
-        <div style="font-size:14px;font-weight:700;color:#0284c7;word-break:break-all;">
+      <div class="service-card" style="border-top: 4px solid #0284c7;">
+        <div class="service-icon-box" style="background: #e0f2fe; color: #0284c7;">
+          <svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg>
+        </div>
+        <h3 class="service-title">Hòm thư điện tử</h3>
+        <p class="service-desc">Tiếp nhận đóng góp ý kiến, phản ánh chất lượng và xác thực hồ sơ.</p>
+        <div style="font-size: 15px; font-weight: 700; color: #0284c7; word-break: break-all; margin-bottom: 4px;">
           <a href="mailto:<?= e($email) ?>"><?= e($email) ?></a>
         </div>
-        <div style="font-size:12px;color:#64748b;margin-top:4px;">Phản hồi trong vòng 24 giờ</div>
+        <div style="font-size: 13px; color: var(--muted);">Phản hồi thư trong vòng 24 giờ làm việc</div>
       </div>
     </div>
   </section>
 
   <!-- BỐ CỤC 2 CỘT: CÂU HỎI THƯỜNG GẶP & BIỂU MẪU GỬI YÊU CẦU -->
-  <div class="grid grid-2" style="align-items:flex-start;">
+  <div class="grid grid-2" style="align-items: flex-start;">
     
     <!-- CỘT 1: CÂU HỎI THƯỜNG GẶP -->
-    <section class="section card" style="margin-bottom:0;">
-      <h2 style="font-size:20px;font-weight:700;color:#0f2942;margin:0 0 16px;">
-        Các sự cố và câu hỏi thường gặp
+    <section class="card" style="border-radius: 18px; padding: 28px;">
+      <h2 style="font-size: 20px; font-weight: 700; color: var(--ink); margin: 0 0 18px;">
+        Các thắc mắc và câu hỏi thường gặp
       </h2>
 
-      <div style="display:grid;gap:14px;">
+      <div style="display: grid; gap: 14px;">
         <!-- Q1 -->
-        <div style="padding:14px 16px;background:var(--soft);border-radius:12px;border:1px solid var(--border);">
-          <h4 style="margin:0 0 6px;color:#0f2942;font-size:15px;">1. Quên mật khẩu hoặc không đăng nhập được?</h4>
-          <p style="margin:0;font-size:13.5px;color:#475569;line-height:1.6;">
-            Quý khách bấm vào liên kết <a href="forgot_password.php" style="color:var(--primary);font-weight:600;text-decoration:underline;">Quên mật khẩu</a> trên trang đăng nhập, điền số CCCD và Email đã đăng ký để nhận mã OTP đặt lại mật khẩu mới. Nếu không nhận được mã, vui lòng gọi hotline <strong>0208 628 9888</strong> để được hỗ trợ cấp lại ngay.
+        <div style="padding: 16px; background: var(--soft); border-radius: 12px; border: 1px solid #cce5f8;">
+          <h4 style="margin: 0 0 6px; color: var(--ink); font-size: 15px;">1. Quên mật khẩu hoặc không đăng nhập được?</h4>
+          <p style="margin: 0; font-size: 14px; color: var(--muted); line-height: 1.6;">
+            Quý khách bấm vào liên kết <a href="forgot_password.php" class="inline-link" style="font-weight: 600;">Quên mật khẩu</a> trên trang đăng nhập, điền số CCCD để nhận mã OTP khôi phục mật khẩu mới. Nếu gặp khó khăn, vui lòng gọi hotline <strong>0208 628 9888</strong> để được hỗ trợ trực tiếp.
           </p>
         </div>
 
         <!-- Q2 -->
-        <div style="padding:14px 16px;background:var(--soft);border-radius:12px;border:1px solid var(--border);">
-          <h4 style="margin:0 0 6px;color:#0f2942;font-size:15px;">2. Chưa có tài khoản hoặc chưa từng khám tại phòng khám?</h4>
-          <p style="margin:0;font-size:13.5px;color:#475569;line-height:1.6;">
-            Quý khách có thể tự tạo tài khoản mới tại trang <a href="register.php" style="color:var(--primary);font-weight:600;text-decoration:underline;">Đăng ký tài khoản</a> bằng số CCCD và thông tin cá nhân. Khi đến khám trực tiếp, nhân viên quầy tiếp đón sẽ đối chiếu hồ sơ để đồng bộ kết quả khám vào tài khoản của quý khách.
+        <div style="padding: 16px; background: var(--soft); border-radius: 12px; border: 1px solid #cce5f8;">
+          <h4 style="margin: 0 0 6px; color: var(--ink); font-size: 15px;">2. Chưa có tài khoản thì đăng ký như thế nào?</h4>
+          <p style="margin: 0; font-size: 14px; color: var(--muted); line-height: 1.6;">
+            Quý khách có thể tự tạo tài khoản tại trang <a href="register.php" class="inline-link" style="font-weight: 600;">Đăng ký tài khoản</a> bằng số CCCD và thông tin liên hệ. Khi đến khám trực tiếp, nhân viên tiếp đón sẽ đối chiếu hồ sơ để đồng bộ toàn bộ lịch sử khám vào tài khoản.
           </p>
         </div>
 
         <!-- Q3 -->
-        <div style="padding:14px 16px;background:var(--soft);border-radius:12px;border:1px solid var(--border);">
-          <h4 style="margin:0 0 6px;color:#0f2942;font-size:15px;">3. Làm thế nào để xem kết quả xét nghiệm và đơn thuốc?</h4>
-          <p style="margin:0;font-size:13.5px;color:#475569;line-height:1.6;">
-            Sau khi đăng nhập thành công bằng số CCCD, hệ thống sẽ đưa quý khách vào mục <strong>Kết quả khám</strong>. Tại đây, quý khách có thể xem tóm tắt chẩn đoán của bác sĩ, danh mục thuốc được kê và nút tải tệp PDF kết quả có đóng dấu điện tử của phòng khám.
+        <div style="padding: 16px; background: var(--soft); border-radius: 12px; border: 1px solid #cce5f8;">
+          <h4 style="margin: 0 0 6px; color: var(--ink); font-size: 15px;">3. Làm thế nào để xem kết quả xét nghiệm và đơn thuốc?</h4>
+          <p style="margin: 0; font-size: 14px; color: var(--muted); line-height: 1.6;">
+            Sau khi đăng nhập thành công bằng số CCCD, hệ thống sẽ chuyển tới trang cá nhân. Quý khách bấm vào mục <strong>Kết quả khám</strong> để xem chi tiết chẩn đoán của bác sĩ, toa thuốc và tải file kết quả PDF về máy.
           </p>
         </div>
 
         <!-- Q4 -->
-        <div style="padding:14px 16px;background:var(--soft);border-radius:12px;border:1px solid var(--border);">
-          <h4 style="margin:0 0 6px;color:#0f2942;font-size:15px;">4. Khám bệnh Bảo hiểm Y tế cần chuẩn bị gì?</h4>
-          <p style="margin:0;font-size:13.5px;color:#475569;line-height:1.6;">
-            Người bệnh chỉ cần mang theo Căn cước công dân gắn chip (đã tích hợp BHYT trên ứng dụng VNeID) hoặc thẻ BHYT giấy còn thời hạn kèm giấy tờ tùy thân có ảnh khi đến làm thủ tục tại quầy tiếp đón.
+        <div style="padding: 16px; background: var(--soft); border-radius: 12px; border: 1px solid #cce5f8;">
+          <h4 style="margin: 0 0 6px; color: var(--ink); font-size: 15px;">4. Khám bệnh Bảo hiểm Y tế cần chuẩn bị gì?</h4>
+          <p style="margin: 0; font-size: 14px; color: var(--muted); line-height: 1.6;">
+            Người bệnh chỉ cần xuất trình Căn cước công dân gắn chip (hoặc ứng dụng VNeID đã tích hợp thẻ BHYT), hoặc thẻ BHYT giấy còn thời hạn kèm giấy tờ tùy thân có ảnh khi làm thủ tục tại quầy tiếp đón.
           </p>
         </div>
       </div>
     </section>
 
     <!-- CỘT 2: BIỂU MẪU TIẾP NHẬN YÊU CẦU -->
-    <section class="section card" style="margin-bottom:0;">
-      <h2 style="font-size:20px;font-weight:700;color:#0f2942;margin:0 0 8px;">
+    <section class="card" style="border-radius: 18px; padding: 28px;">
+      <h2 style="font-size: 20px; font-weight: 700; color: var(--ink); margin: 0 0 8px;">
         Gửi yêu cầu hỗ trợ trực tuyến
       </h2>
-      <p style="font-size:13.5px;color:var(--muted);margin:0 0 20px;">
-        Nếu bạn gặp sự cố khi sử dụng cổng người bệnh, hãy để lại thông tin dưới đây để bộ phận hỗ trợ liên hệ xử lý.
+      <p style="font-size: 14px; color: var(--muted); margin: 0 0 20px;">
+        Nếu quý khách cần hỗ trợ kỹ thuật hoặc có thắc mắc cần giải đáp, hãy gửi thông tin để bộ phận chăm sóc khách hàng liên hệ lại.
       </p>
 
       <?php if ($sentSuccess): ?>
-        <div style="padding:18px 20px;background:#dcfce7;border:1.5px solid #86efac;border-radius:14px;color:#14532d;margin-bottom:20px;">
-          <h3 style="font-size:16px;font-weight:700;margin:0 0 6px;">✓ Yêu cầu của bạn đã được gửi thành công!</h3>
-          <p style="margin:0;font-size:14px;line-height:1.5;">
-            Bộ phận chăm sóc khách hàng của Phòng khám đa khoa Phú Thái đã tiếp nhận thông tin và sẽ liên hệ hỗ trợ bạn qua số điện thoại/email trong thời gian sớm nhất.
-          </p>
+        <div class="flash-message flash-success">
+          <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
+          <div>
+            <strong>Yêu cầu của bạn đã được gửi thành công!</strong>
+            <p style="margin: 4px 0 0; font-size: 13.5px;">Phòng khám đa khoa Phú Thái đã tiếp nhận thông tin và sẽ liên hệ hỗ trợ bạn qua số điện thoại trong thời gian sớm nhất.</p>
+          </div>
         </div>
       <?php else: ?>
 
         <?php if ($errorMessage !== ''): ?>
-          <div style="padding:12px 16px;background:#fee2e2;border:1.5px solid #fca5a5;border-radius:12px;color:#991b1b;margin-bottom:16px;font-size:14px;">
-            <?= e($errorMessage) ?>
+          <div class="flash-message flash-error">
+            <svg class="icon" aria-hidden="true"><use href="#i-help"/></svg>
+            <div><?= e($errorMessage) ?></div>
           </div>
         <?php endif; ?>
 
-        <form method="post" style="display:grid;gap:16px;" id="supportForm">
+        <form method="post" style="display: grid; gap: 16px;" id="supportForm">
           <?php render_form_guard('public_support_request'); ?>
 
-          <div>
+          <div class="field" style="margin-bottom: 0;">
             <label for="full_name">Họ và tên của bạn <span style="color:var(--danger)">*</span></label>
             <input id="full_name" name="full_name" type="text" placeholder="Ví dụ: Nguyễn Văn A" value="<?= e($_POST['full_name'] ?? '') ?>" required>
           </div>
 
-          <div>
+          <div class="field" style="margin-bottom: 0;">
             <label for="contact">Số điện thoại hoặc CCCD <span style="color:var(--danger)">*</span></label>
             <input id="contact" name="contact" type="text" inputmode="numeric" placeholder="Nhập số điện thoại hoặc 12 số CCCD" value="<?= e($_POST['contact'] ?? '') ?>" required>
           </div>
 
-          <div>
+          <div class="field" style="margin-bottom: 0;">
             <label for="category">Vấn đề cần hỗ trợ</label>
-            <select id="category" name="category">
+            <select id="category" name="category" style="width: 100%; height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; background: #fff; font-size: 15px; color: var(--ink);">
               <option value="Lỗi đăng nhập / Mật khẩu">Sự cố đăng nhập hoặc quên mật khẩu</option>
               <option value="Tra cứu kết quả khám">Hỏi về kết quả khám / đơn thuốc</option>
               <option value="Tư vấn khám & Đặt lịch">Tư vấn dịch vụ khám & Đặt lịch hẹn</option>
@@ -198,14 +204,14 @@ render_header('Trung tâm Hỗ trợ & Hướng dẫn người bệnh · ' . $cl
             </select>
           </div>
 
-          <div>
+          <div class="field" style="margin-bottom: 0;">
             <label for="message">Nội dung chi tiết <span style="color:var(--danger)">*</span></label>
-            <textarea id="message" name="message" rows="4" placeholder="Mô tả cụ thể khó khăn hoặc thông tin cần phòng khám hỗ trợ..." required><?= e($_POST['message'] ?? '') ?></textarea>
+            <textarea id="message" name="message" rows="4" placeholder="Mô tả cụ thể khó khăn hoặc thông tin cần phòng khám hỗ trợ..." required style="width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 15px; color: var(--ink);"><?= e($_POST['message'] ?? '') ?></textarea>
           </div>
 
-          <div>
-            <button class="btn" type="submit" id="submitSupportBtn" style="width:100%;height:48px;font-size:15px;">
-              <span id="submitSupportText">Gửi yêu cầu hỗ trợ</span> ➔
+          <div style="margin-top: 8px;">
+            <button class="btn btn-primary btn-block" type="submit" id="submitSupportBtn" style="height: 48px; font-size: 16px;">
+              <span id="submitSupportText">Gửi yêu cầu hỗ trợ</span> <svg class="icon" style="width:18px;height:18px;" aria-hidden="true"><use href="#i-arrow"/></svg>
             </button>
           </div>
         </form>

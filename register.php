@@ -82,118 +82,119 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 render_header('Đăng ký tài khoản người bệnh · Phòng khám đa khoa Phú Thái');
 ?>
-<div class="wrap">
-  <div class="card" style="max-width:540px;margin:32px auto;border-radius:20px;padding:32px;">
-    
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-      <span style="width:36px;height:36px;border-radius:10px;background:var(--soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;">
-        📝
-      </span>
-      <div>
-        <h1 style="font-size:22px;font-weight:800;color:#0f2942;margin:0;">Đăng ký tài khoản người bệnh</h1>
-        <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Phòng khám đa khoa Phú Thái</div>
-      </div>
-    </div>
 
-    <p style="font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 20px;">
-      Tạo tài khoản cá nhân để tra cứu kết quả khám, đơn thuốc và quản lý hồ sơ y tế thuận tiện.
-    </p>
-
-    <?php render_flash(); ?>
-
-    <form method="post" style="display:grid;gap:16px;" id="registerForm" novalidate>
-      <?php render_form_guard('patient_register'); ?>
-
-      <div>
-        <label for="cccd">Số Căn cước công dân (CCCD) <span style="color:var(--danger)">*</span></label>
-        <input id="cccd" 
-               name="cccd" 
-               type="text" 
-               inputmode="numeric" 
-               maxlength="12" 
-               placeholder="Nhập 12 chữ số CCCD" 
-               value="<?= e($_POST['cccd'] ?? '') ?>" 
-               required>
-        <div style="font-size:12px;color:#64748b;margin-top:4px;">Số CCCD sẽ dùng làm tên đăng nhập của bạn.</div>
-      </div>
-
-      <div>
-        <label for="name">Họ và tên của bạn <span style="color:var(--danger)">*</span></label>
-        <input id="name" 
-               name="name" 
-               type="text" 
-               placeholder="Ví dụ: Nguyễn Văn A" 
-               value="<?= e($_POST['name'] ?? '') ?>" 
-               required>
-      </div>
-
-      <div>
-        <label for="phone">Số điện thoại liên hệ <span style="color:var(--danger)">*</span></label>
-        <input id="phone" 
-               name="phone" 
-               type="tel" 
-               inputmode="tel" 
-               maxlength="11" 
-               placeholder="Ví dụ: 0912345678" 
-               value="<?= e($_POST['phone'] ?? '') ?>" 
-               required>
-        <div style="font-size:12px;color:#64748b;margin-top:4px;">Dùng để nhận thông báo và hỗ trợ khi cần thiết.</div>
-      </div>
-
-      <div>
-        <label for="email">Địa chỉ Email <span style="font-weight:normal;color:#64748b">(không bắt buộc)</span></label>
-        <input id="email" 
-               type="email" 
-               name="email" 
-               placeholder="Ví dụ: hoten@gmail.com" 
-               value="<?= e($_POST['email'] ?? '') ?>" 
-               <?= !$emailEnabled ? 'disabled' : '' ?>>
-        <div style="font-size:12px;color:#64748b;margin-top:4px;">Dùng để nhận bản sao kết quả khám điện tử và đặt lại mật khẩu.</div>
-      </div>
-
-      <!-- Checklist yêu cầu mật khẩu hiển thị trước khi người dùng nhập -->
-      <div style="background:#f8fafc;padding:14px 16px;border-radius:12px;border:1px solid var(--border);font-size:12.5px;color:#475569;">
-        <strong style="color:#1e293b;display:block;margin-bottom:6px;">Yêu cầu tạo mật khẩu an toàn:</strong>
-        <div style="display:grid;gap:4px;">
-          <div>• Tối thiểu 8 ký tự</div>
-          <div>• Gồm ít nhất 1 chữ in hoa (A-Z)</div>
-          <div>• Gồm ít nhất 1 chữ in thường (a-z)</div>
-          <div>• Gồm ít nhất 1 chữ số (0-9)</div>
+<div class="main-area" style="min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; padding: 36px 0;">
+  <div class="container">
+    <div class="auth-box">
+      
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 18px;">
+        <span class="card-icon" style="width: 52px; height: 52px;">
+          <svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>
+        </span>
+        <div>
+          <span class="card-kicker">CỔNG DỊCH VỤ NGƯỜI BỆNH</span>
+          <h1 style="font-size: 24px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Đăng ký tài khoản</h1>
         </div>
       </div>
 
-      <div>
-        <label for="password">Mật khẩu <span style="color:var(--danger)">*</span></label>
-        <div class="password-wrap" style="position:relative;">
-          <input id="password" 
-                 type="password" 
-                 name="password" 
-                 minlength="8" 
-                 placeholder="Tạo mật khẩu an toàn" 
-                 style="padding-right:48px;" 
+      <p style="font-size: 14.5px; color: var(--muted); line-height: 1.55; margin: 0 0 20px;">
+        Tạo tài khoản cá nhân để tra cứu kết quả khám bệnh, toa thuốc và theo dõi hồ sơ sức khỏe trực tuyến.
+      </p>
+
+      <?php render_flash(); ?>
+
+      <form method="post" style="display: grid; gap: 16px;" id="registerForm" novalidate>
+        <?php render_form_guard('patient_register'); ?>
+
+        <div class="field" style="margin-bottom: 0;">
+          <label for="cccd">Số Căn cước công dân (CCCD) <span style="color:var(--danger)">*</span></label>
+          <input id="cccd" 
+                 name="cccd" 
+                 type="text" 
+                 inputmode="numeric" 
+                 maxlength="12" 
+                 placeholder="Nhập 12 chữ số CCCD" 
+                 value="<?= e($_POST['cccd'] ?? '') ?>" 
                  required>
-          <button id="togglePwdBtn" 
-                  type="button" 
-                  class="password-toggle" 
-                  aria-label="Hiện mật khẩu" 
-                  style="position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;font-size:18px;color:#64748b;width:40px;height:40px;">
-            👁️
+          <p class="field-hint">Số CCCD sẽ dùng làm tên đăng nhập tài khoản của bạn.</p>
+        </div>
+
+        <div class="field" style="margin-bottom: 0;">
+          <label for="name">Họ và tên của bạn <span style="color:var(--danger)">*</span></label>
+          <input id="name" 
+                 name="name" 
+                 type="text" 
+                 placeholder="Ví dụ: Nguyễn Văn A" 
+                 value="<?= e($_POST['name'] ?? '') ?>" 
+                 required>
+        </div>
+
+        <div class="field" style="margin-bottom: 0;">
+          <label for="phone">Số điện thoại liên hệ <span style="color:var(--danger)">*</span></label>
+          <input id="phone" 
+                 name="phone" 
+                 type="tel" 
+                 inputmode="tel" 
+                 maxlength="11" 
+                 placeholder="Ví dụ: 0912345678" 
+                 value="<?= e($_POST['phone'] ?? '') ?>" 
+                 required>
+          <p class="field-hint">Dùng để nhận thông báo và hỗ trợ cấp lại mật khẩu.</p>
+        </div>
+
+        <div class="field" style="margin-bottom: 0;">
+          <label for="email">Địa chỉ Email <span style="font-weight:normal;color:var(--muted);">(không bắt buộc)</span></label>
+          <input id="email" 
+                 type="email" 
+                 name="email" 
+                 placeholder="Ví dụ: hoten@gmail.com" 
+                 value="<?= e($_POST['email'] ?? '') ?>" 
+                 <?= !$emailEnabled ? 'disabled' : '' ?>>
+          <p class="field-hint">Dùng để nhận kết quả khám điện tử và thông báo bảo mật.</p>
+        </div>
+
+        <!-- Checklist yêu cầu mật khẩu -->
+        <div style="background: var(--soft); padding: 14px 16px; border-radius: 12px; border: 1px solid #cce5f8; font-size: 13px; color: var(--ink);">
+          <strong style="display: block; margin-bottom: 6px; color: var(--blue);">Yêu cầu tạo mật khẩu an toàn:</strong>
+          <div style="display: grid; gap: 4px; color: var(--muted);">
+            <div>• Tối thiểu 8 ký tự</div>
+            <div>• Gồm ít nhất 1 chữ in hoa (A-Z)</div>
+            <div>• Gồm ít nhất 1 chữ in thường (a-z)</div>
+            <div>• Gồm ít nhất 1 chữ số (0-9)</div>
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom: 0;">
+          <label for="password">Mật khẩu tài khoản <span style="color:var(--danger)">*</span></label>
+          <div class="password-wrap">
+            <input id="password" 
+                   type="password" 
+                   name="password" 
+                   minlength="8" 
+                   placeholder="Tạo mật khẩu an toàn" 
+                   required>
+            <button id="togglePwdBtn" 
+                    type="button" 
+                    class="password-toggle" 
+                    aria-label="Hiện mật khẩu">
+              <svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <?php render_captcha('patient_register'); ?>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+          <button class="btn btn-primary btn-block" type="submit" id="submitRegisterBtn" style="height: 48px; font-size: 16px;">
+            <span id="submitRegisterText">Đăng ký tài khoản</span> <svg class="icon" style="width:18px;height:18px;" aria-hidden="true"><use href="#i-arrow"/></svg>
           </button>
+          <div style="text-align: center; font-size: 14px; color: var(--muted); margin-top: 6px;">
+            Đã có tài khoản? <a href="login.php" class="inline-link" style="font-weight: 700;">Đăng nhập ngay ➔</a>
+          </div>
         </div>
-      </div>
+      </form>
 
-      <?php render_captcha('patient_register'); ?>
-
-      <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
-        <button class="btn" type="submit" id="submitRegisterBtn" style="width:100%;height:48px;font-size:15px;font-weight:700;">
-          <span id="submitRegisterText">Đăng ký tài khoản</span> ➔
-        </button>
-        <div style="text-align:center;font-size:13.5px;color:var(--muted);margin-top:6px;">
-          Đã có tài khoản? <a href="login.php" style="color:var(--primary);font-weight:700;">Đăng nhập ngay ➔</a>
-        </div>
-      </div>
-    </form>
-
+    </div>
   </div>
 </div>
 
@@ -205,7 +206,6 @@ render_header('Đăng ký tài khoản người bệnh · Phòng khám đa khoa 
     toggle.addEventListener('click', function() {
       var isPwd = pwd.type === 'password';
       pwd.type = isPwd ? 'text' : 'password';
-      toggle.textContent = isPwd ? '🙈' : '👁️';
       toggle.setAttribute('aria-label', isPwd ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
     });
   }
@@ -218,10 +218,10 @@ render_header('Đăng ký tài khoản người bệnh · Phòng khám đa khoa 
       var cccdVal = document.getElementById('cccd').value.trim();
       var nameVal = document.getElementById('name').value.trim();
       var phoneVal = document.getElementById('phone').value.trim();
-      var pwdVal = pwd.value;
+      var pwdVal = pwd ? pwd.value : '';
       if (cccdVal === '' || nameVal === '' || phoneVal === '' || pwdVal === '') return;
       btn.disabled = true;
-      if (txt) txt.textContent = 'Đang đăng ký…';
+      if (txt) txt.textContent = 'Đang xử lý đăng ký…';
     });
   }
 })();

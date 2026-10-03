@@ -86,276 +86,122 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 render_header('Đăng nhập người bệnh · Phòng khám đa khoa Phú Thái', 'records');
+
 ?>
-<style>
-/* CSS Dành riêng cho layout Đăng nhập chuẩn Demo */
-.login-container { max-width: 1140px; margin: 0 auto; padding: 40px 20px 60px; }
-.login-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(380px, 450px); gap: 48px; align-items: center; }
 
-/* Cột giới thiệu (Bên trái trên máy tính, đẩy xuống dưới trên mobile) */
-.intro { padding-right: 12px; }
-.intro-eyebrow { font-size: 12px; font-weight: 700; color: var(--primary); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 8px; }
-.intro-eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--secondary); display: inline-block; }
-.intro h1 { font-size: clamp(26px, 3.2vw, 36px); font-weight: 800; line-height: 1.25; color: #0f2942; margin: 0 0 16px; letter-spacing: -0.5px; }
-.intro-desc { font-size: 15px; line-height: 1.7; color: var(--muted); margin: 0 0 28px; max-width: 540px; }
-.benefit-list { display: grid; gap: 18px; margin-bottom: 28px; }
-.benefit { display: flex; gap: 16px; align-items: flex-start; }
-.benefit-icon { width: 44px; height: 44px; border-radius: 12px; background: #e0f2fe; color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 20px; }
-.benefit h3 { font-size: 15.5px; font-weight: 700; margin: 0 0 4px; color: #1e293b; }
-.benefit p { font-size: 13.5px; line-height: 1.55; color: var(--muted); margin: 0; }
-.intro-caption { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #64748b; font-style: italic; }
-.caption-line { width: 32px; height: 2px; background: #cbd5e1; display: inline-block; }
-
-/* Thẻ Form Đăng nhập (Bên phải trên máy tính, đưa lên đầu trên mobile) */
-.login-card { background: #ffffff; border-radius: 20px; padding: 32px 32px 28px; box-shadow: 0 12px 32px rgba(15, 35, 55, 0.08); border: 1px solid var(--border); width: 100%; box-sizing: border-box; }
-.card-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-.card-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--soft); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 16px; }
-.card-kicker { font-size: 11.5px; font-weight: 700; color: #0284c7; letter-spacing: 0.8px; text-transform: uppercase; }
-.login-card h2 { font-size: 24px; font-weight: 800; color: #0f2942; margin: 0 0 6px; letter-spacing: -0.3px; }
-.card-description { font-size: 14px; color: var(--muted); margin: 0 0 20px; }
-
-.field { margin-bottom: 18px; }
-.field label { font-size: 13.5px; font-weight: 600; color: #334155; margin-bottom: 6px; display: block; }
-.field-hint { font-size: 12px; color: #64748b; margin: 5px 0 0; line-height: 1.4; }
-.label-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
-.label-row label { margin-bottom: 0; }
-.inline-link { color: var(--primary); font-size: 13px; font-weight: 600; text-decoration: none; border: none; background: none; padding: 0; cursor: pointer; }
-.inline-link:hover { text-decoration: underline; color: var(--primary-hover); }
-
-.password-wrap { position: relative; }
-.password-wrap input { padding-right: 48px; }
-.password-toggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border: none; background: transparent; color: #64748b; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 8px; font-size: 18px; }
-.password-toggle:hover { background: var(--soft); color: var(--primary); }
-
-.login-submit { width: 100%; min-height: 48px; font-size: 15px; font-weight: 700; border-radius: 10px; background: linear-gradient(135deg, #0077b6, #0096c7); color: #fff; box-shadow: 0 4px 14px rgba(0, 119, 182, 0.25); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; border: none; transition: all .15s; margin-top: 8px; }
-.login-submit:hover:not(:disabled) { background: #005f92; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0, 119, 182, 0.35); }
-.login-submit:disabled { opacity: 0.7; cursor: not-allowed; }
-
-.register-row { font-size: 13.5px; color: var(--muted); text-align: center; margin: 18px 0 0; }
-.card-divider { height: 1px; background: var(--border); margin: 20px 0 16px; }
-.card-help { border: none; background: transparent; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; font-size: 13px; color: #64748b; cursor: pointer; padding: 6px 0; }
-.card-help strong { color: var(--primary); font-weight: 600; }
-.card-help:hover strong { text-decoration: underline; }
-.staff-row { margin-top: 10px; text-align: center; font-size: 12px; }
-.staff-row a { color: #94a3b8; }
-.staff-row a:hover { color: var(--primary); }
-
-/* Dialog Modal */
-dialog { border: 1px solid var(--border); padding: 28px; width: min(480px, calc(100% - 32px)); border-radius: 18px; color: var(--tx); box-shadow: 0 20px 60px rgba(15, 35, 55, 0.2); max-height: calc(100dvh - 40px); overflow: auto; }
-dialog::backdrop { background: rgba(15, 35, 55, 0.5); backdrop-filter: blur(3px); }
-.dialog-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; }
-.dialog-eyebrow { font-size: 11px; letter-spacing: 1px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
-.dialog-close { width: 34px; height: 34px; display: grid; place-items: center; border: none; border-radius: 8px; background: var(--soft); color: var(--primary); cursor: pointer; font-size: 16px; }
-dialog h2 { font-size: 20px; font-weight: 700; color: #0f2942; margin: 0 0 12px; }
-#dialog-content { font-size: 14px; line-height: 1.7; color: #475569; }
-#dialog-content ol { padding-left: 20px; margin: 0 0 14px; }
-#dialog-content li { margin-bottom: 8px; }
-#dialog-content a { color: var(--primary); text-decoration: underline; }
-.dialog-done { margin-top: 20px; width: 100%; min-height: 44px; }
-
-/* Responsive Mobile Breakpoint */
-@media (max-width: 860px) {
-  .login-container { padding: 20px 16px 40px; }
-  .login-layout { display: flex; flex-direction: column; gap: 32px; }
-  /* Form đăng nhập đưa lên đầu trên màn hình điện thoại */
-  .login-card { order: 0; padding: 24px 20px 20px; border-radius: 16px; }
-  .intro { order: 1; padding-right: 0; text-align: left; }
-  .intro h1 { font-size: 24px; }
-  .intro-desc { font-size: 14px; margin-bottom: 20px; }
-  .benefit-list { gap: 14px; }
-}
-</style>
-
-<div class="login-container">
-  <div class="login-layout">
-    
-    <!-- CỘT GIỚI THIỆU VÀ QUYỀN LỢI NGƯỜI BỆNH -->
-    <section class="intro" aria-label="Giới thiệu cổng người bệnh">
-      <div class="intro-eyebrow">Phú Thái · Cổng người bệnh</div>
-      <h1>Xem hồ sơ và kết quả khám tiện lợi, an toàn</h1>
-      <p class="intro-desc">Cổng thông tin trực tuyến giúp người bệnh tra cứu kết quả xét nghiệm, chẩn đoán, đơn thuốc và lịch sử khám chữa bệnh bất kỳ lúc nào.</p>
-      
+<div class="main-area">
+  <div class="container login-layout">
+    <section class="intro" aria-labelledby="intro-title">
+      <div class="eyebrow">CỔNG DỊCH VỤ NGƯỜI BỆNH</div>
+      <h1 id="intro-title">Kết nối dễ dàng.<br><span>An tâm chăm sóc.</span></h1>
+      <p class="intro-description">Tra cứu kết quả khám, theo dõi hồ sơ và nhận hỗ trợ từ Phòng khám đa khoa Phú Thái.</p>
       <div class="benefit-list">
-        <div class="benefit">
-          <div class="benefit-icon">📄</div>
-          <div>
-            <h3>Kết quả khám trong tầm tay</h3>
-            <p>Xem trực tiếp kết quả chẩn đoán, xét nghiệm và tải tệp đơn thuốc điện tử an toàn.</p>
-          </div>
-        </div>
-        
-        <div class="benefit">
-          <div class="benefit-icon">📁</div>
-          <div>
-            <h3>Hồ sơ được sắp xếp rõ ràng</h3>
-            <p>Lưu trữ lịch sử khám bệnh qua các đợt, dễ dàng tìm lại thông tin y tế khi tái khám.</p>
-          </div>
-        </div>
-        
-        <div class="benefit">
-          <div class="benefit-icon">💬</div>
-          <div>
-            <h3>Luôn có nhân viên hỗ trợ</h3>
-            <p>Dễ dàng nhận trợ giúp về tài khoản, bảo hiểm y tế và quy trình khám tại phòng khám.</p>
-          </div>
-        </div>
+        <div class="benefit"><span class="benefit-icon"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg></span><div><h2>Kết quả khám trong tầm tay</h2><p>Xem và tải kết quả của từng lần khám.</p></div></div>
+        <div class="benefit"><span class="benefit-icon"><svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg></span><div><h2>Hồ sơ được sắp xếp rõ ràng</h2><p>Dễ tìm lại thông tin khi bạn cần.</p></div></div>
+        <div class="benefit"><span class="benefit-icon"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg></span><div><h2>Luôn có hướng dẫn để bắt đầu</h2><p>Nhận trợ giúp về tài khoản và cách sử dụng.</p></div></div>
       </div>
-      
-      <div class="intro-caption">
-        <span class="caption-line"></span> Đồng hành cùng người bệnh từ những điều nhỏ nhất.
-      </div>
+      <div class="intro-caption"><span class="caption-line"></span> Đồng hành cùng người bệnh, từ những điều nhỏ nhất.</div>
+      <span class="decor-cross" aria-hidden="true"></span>
     </section>
 
-    <!-- FORM ĐĂNG NHẬP (ĐƯA LÊN ĐẦU TRÊN MOBILE) -->
-    <section class="login-card" id="login-form" aria-labelledby="login-title">
-      <div class="card-heading">
-        <span class="card-icon">🔒</span>
-        <span class="card-kicker">TÀI KHOẢN NGƯỜI BỆNH</span>
-      </div>
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="card-heading"><span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg></span><span class="card-kicker">TÀI KHOẢN NGƯỜI BỆNH</span></div>
       <h2 id="login-title">Chào mừng bạn trở lại</h2>
       <p class="card-description">Đăng nhập để xem kết quả và hồ sơ của bạn.</p>
-      
+
       <?php render_flash(); ?>
-      
-      <form method="post" id="patientLoginForm" novalidate>
-        <?php render_form_guard('patient_login'); ?>
-        <input type="hidden" name="redirect" value="<?= e($redirectTarget) ?>">
-        
-        <div class="field">
-          <label for="cccd">Số Căn cước công dân (CCCD)</label>
-          <input id="cccd" 
-                 name="cccd" 
-                 type="text" 
-                 inputmode="numeric" 
-                 autocomplete="username" 
-                 maxlength="12" 
-                 placeholder="Nhập 12 chữ số CCCD" 
-                 value="<?= e($_POST['cccd'] ?? '') ?>" 
-                 required 
-                 aria-describedby="cccd-hint">
-          <p id="cccd-hint" class="field-hint">Dùng số CCCD đã đăng ký trong hồ sơ khám tại phòng khám.</p>
-        </div>
-        
-        <div class="field">
-          <div class="label-row">
-            <label for="password">Mật khẩu</label>
-            <a href="forgot_password.php" class="inline-link">Quên mật khẩu?</a>
-          </div>
-          <div class="password-wrap">
-            <input id="password" 
-                   type="password" 
-                   name="password" 
-                   autocomplete="current-password" 
-                   placeholder="Nhập mật khẩu của bạn" 
-                   required>
-            <button id="togglePasswordBtn" 
-                    type="button" 
-                    class="password-toggle" 
-                    aria-label="Hiện mật khẩu" 
-                    aria-pressed="false" 
-                    title="Hiện/Ẩn mật khẩu">
-              👁️
-            </button>
-          </div>
-        </div>
 
-        <?php render_captcha('patient_login'); ?>
+      <form id="login-form" method="POST" action="login.php" novalidate>
+        <?php echo render_form_guard('patient_login'); ?>
+        <?php if ($redirectTarget !== ''): ?>
+          <input type="hidden" name="redirect" value="<?php echo e($redirectTarget); ?>">
+        <?php endif; ?>
 
-        <button class="login-submit" type="submit" id="submitLoginBtn">
-          <span id="submitLoginText">Đăng nhập</span> ➔
-        </button>
+        <div class="field">
+          <label for="cccd">Số CCCD</label>
+          <input id="cccd" name="cccd" type="text" inputmode="numeric" autocomplete="username" maxlength="12" placeholder="Nhập 12 chữ số CCCD" required aria-describedby="cccd-hint cccd-error" value="<?php echo e($cccd ?? ''); ?>">
+          <p id="cccd-hint" class="field-hint">Dùng số CCCD đã đăng ký với phòng khám.</p>
+          <p id="cccd-error" class="field-error" hidden></p>
+        </div>
+        <div class="field password-field">
+          <div class="label-row"><label for="password">Mật khẩu</label><a href="forgot_password.php" class="inline-link">Quên mật khẩu?</a></div>
+          <div class="password-wrap"><input id="password" name="password" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu của bạn" required aria-describedby="password-error"><button id="toggle-password" type="button" class="password-toggle" aria-label="Hiện mật khẩu" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg></button></div>
+          <p id="password-error" class="field-error" hidden></p>
+        </div>
+        <button class="primary-button login-submit" type="submit" id="submit-login"><span>Đăng nhập</span><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+        <p id="form-status" class="form-status" role="status" aria-live="polite" hidden></p>
+        <noscript><p class="field-error">Vui lòng bật JavaScript trên trình duyệt để có trải nghiệm tốt nhất.</p></noscript>
       </form>
-
-      <div class="register-row">
-        Bạn chưa có tài khoản? <a href="register.php" class="inline-link">Đăng ký ngay ↗</a>
-      </div>
-
+      <div class="register-row">Bạn chưa có tài khoản? <a href="register.php" class="inline-link">Đăng ký ngay <span aria-hidden="true">↗</span></a></div>
       <div class="card-divider"></div>
-
-      <button class="card-help" type="button" id="openGuideBtn">
-        ❓ <span>Lần đầu sử dụng? <strong>Xem hướng dẫn tra cứu</strong></span> ➔
-      </button>
-      
-      <div class="staff-row">
-        <a href="admin_login.php">Dành cho cán bộ nhân viên y tế ↗</a>
-      </div>
+      <button class="card-help" type="button" data-dialog="guide"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg><span>Lần đầu sử dụng? <strong>Xem hướng dẫn</strong></span></button>
     </section>
-
   </div>
 </div>
 
-<!-- MODAL HƯỚNG DẪN DÀNH CHO NGƯỜI BỆNH -->
-<dialog id="info-dialog" aria-labelledby="dialog-title">
-  <div class="dialog-heading">
-    <span class="dialog-eyebrow">PHÚ THÁI · HƯỚNG DẪN NGƯỜI BỆNH</span>
-    <button type="button" class="dialog-close" id="dialogCloseBtn" aria-label="Đóng hướng dẫn">✕</button>
-  </div>
-  <h2 id="dialog-title">Hướng dẫn tra cứu kết quả khám</h2>
-  <div id="dialog-content">
-    <ol>
-      <li><strong>Tài khoản:</strong> Sử dụng số CCCD (12 số) đã khai báo khi làm thủ tục khám tại phòng khám.</li>
-      <li><strong>Mật khẩu:</strong> Nhập mật khẩu đã đăng ký, hoặc mật khẩu tạm thời được cung cấp qua tin nhắn/email.</li>
-      <li><strong>Xem kết quả:</strong> Sau khi đăng nhập, hệ thống sẽ tự động hiển thị đợt khám mới nhất, kết quả chẩn đoán và đơn thuốc điện tử.</li>
-      <li><strong>Quên mật khẩu:</strong> Chọn mục <a href="forgot_password.php">Quên mật khẩu</a> để nhận mã xác thực qua Email/Số điện thoại đã đăng ký.</li>
-    </ol>
-    <p>Nếu gặp khó khăn hoặc cần hỗ trợ tài khoản, quý khách vui lòng liên hệ hotline phòng khám: <a href="tel:02086289888"><strong>0208 628 9888</strong></a> hoặc gửi yêu cầu tại <a href="support.php">Trang hỗ trợ</a>.</p>
-  </div>
-  <button type="button" class="btn btn-light dialog-done" id="dialogDoneBtn">Đã hiểu</button>
-</dialog>
-
 <script>
+'use strict';
 (function() {
-  // Hiện / Ẩn mật khẩu
-  var pwdInput = document.getElementById('password');
-  var toggleBtn = document.getElementById('togglePasswordBtn');
-  if (pwdInput && toggleBtn) {
-    toggleBtn.addEventListener('click', function() {
-      var isPwd = pwdInput.type === 'password';
-      pwdInput.type = isPwd ? 'text' : 'password';
-      toggleBtn.setAttribute('aria-pressed', String(isPwd));
-      toggleBtn.setAttribute('aria-label', isPwd ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
-      toggleBtn.textContent = isPwd ? '🙈' : '👁️';
+  var form = document.getElementById('login-form');
+  var cccd = document.getElementById('cccd');
+  var password = document.getElementById('password');
+  var toggle = document.getElementById('toggle-password');
+  var submit = document.getElementById('submit-login');
+  var status = document.getElementById('form-status');
+  var pending = false;
+
+  if (toggle && password) {
+    toggle.addEventListener('click', function() {
+      var reveal = password.type === 'password';
+      password.type = reveal ? 'text' : 'password';
+      toggle.setAttribute('aria-pressed', String(reveal));
+      toggle.setAttribute('aria-label', reveal ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
     });
   }
 
-  // Ngăn chặn submit lặp và đổi trạng thái nút
-  var loginForm = document.getElementById('patientLoginForm');
-  var submitBtn = document.getElementById('submitLoginBtn');
-  var submitText = document.getElementById('submitLoginText');
-  if (loginForm && submitBtn) {
-    loginForm.addEventListener('submit', function(e) {
-      if (submitBtn.disabled) {
-        e.preventDefault();
+  function setError(input, message) {
+    var output = document.getElementById(input.id + '-error');
+    if (!output) return;
+    input.setAttribute('aria-invalid', String(Boolean(message)));
+    output.textContent = message;
+    output.hidden = !message;
+  }
+
+  if (cccd && password) {
+    [cccd, password].forEach(function(input) {
+      input.addEventListener('input', function() {
+        setError(input, '');
+        if (status) status.hidden = true;
+      });
+    });
+  }
+
+  if (form && submit) {
+    form.addEventListener('submit', function(event) {
+      if (pending) {
+        event.preventDefault();
         return;
       }
-      var cccdVal = document.getElementById('cccd').value.trim();
-      var pwdVal = pwdInput.value;
-      if (cccdVal === '' || pwdVal === '') {
-        return; // Để HTML5 validation hiển thị
-      }
-      submitBtn.disabled = true;
-      if (submitText) {
-        submitText.textContent = 'Đang đăng nhập…';
-      }
-    });
-  }
+      if (status) status.hidden = true;
+      var cccdVal = cccd ? cccd.value.trim() : '';
+      var passVal = password ? password.value : '';
+      var cccdError = /^\d{12}$/.test(cccdVal) ? '' : 'Vui lòng nhập đủ 12 chữ số CCCD.';
+      var passwordError = passVal.length > 0 ? '' : 'Vui lòng nhập mật khẩu.';
 
-  // Dialog hướng dẫn người bệnh
-  var guideBtn = document.getElementById('openGuideBtn');
-  var dialog = document.getElementById('info-dialog');
-  var closeBtn = document.getElementById('dialogCloseBtn');
-  var doneBtn = document.getElementById('dialogDoneBtn');
-  if (guideBtn && dialog) {
-    guideBtn.addEventListener('click', function() {
-      dialog.showModal();
-    });
-    if (closeBtn) closeBtn.addEventListener('click', function() { dialog.close(); });
-    if (doneBtn) doneBtn.addEventListener('click', function() { dialog.close(); });
-    dialog.addEventListener('click', function(e) {
-      var rect = dialog.getBoundingClientRect();
-      if (e.target === dialog && (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom)) {
-        dialog.close();
+      if (cccd) setError(cccd, cccdError);
+      if (password) setError(password, passwordError);
+
+      if (cccdError || passwordError) {
+        event.preventDefault();
+        (cccdError && cccd ? cccd : password).focus();
+        return;
       }
+
+      pending = true;
+      submit.disabled = true;
+      form.setAttribute('aria-busy', 'true');
+      var labelSpan = submit.querySelector('span');
+      if (labelSpan) labelSpan.textContent = 'Đang đăng nhập…';
     });
   }
 })();

@@ -111,132 +111,129 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 render_header('Lấy lại mật khẩu · Phòng khám đa khoa Phú Thái');
 ?>
-<div class="wrap">
-  <div class="card" style="max-width:540px;margin:32px auto;border-radius:20px;padding:32px;">
-    
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-      <span style="width:36px;height:36px;border-radius:10px;background:var(--soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;">
-        🔑
-      </span>
-      <div>
-        <h1 style="font-size:22px;font-weight:800;color:#0f2942;margin:0;">Lấy lại mật khẩu</h1>
-        <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Cổng người bệnh Phú Thái</div>
-      </div>
-    </div>
 
-    <p style="font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 20px;">
-      Nhập số Căn cước công dân để nhận mã xác thực (OTP) qua Email hoặc Số điện thoại đã đăng ký với phòng khám.
-    </p>
-
-    <?php render_flash(); ?>
-
-    <?php if ($step === 'verify'): ?>
-      <!-- BƯỚC 2: NHẬP MÃ OTP VÀ ĐẶT LẠI MẬT KHẨU MỚI -->
-      <?php if ($destMasked !== ''): ?>
-        <div style="padding:12px 16px;background:#f0f7fb;border:1px solid var(--border);border-radius:12px;font-size:13.5px;color:#0284c7;margin-bottom:20px;">
-          Mã xác thực OTP đã được gửi đến: <strong><?= e($destMasked) ?></strong>
+<div class="main-area" style="min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; padding: 36px 0;">
+  <div class="container">
+    <div class="auth-box">
+      
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 18px;">
+        <span class="card-icon" style="width: 52px; height: 52px;">
+          <svg class="icon" aria-hidden="true"><use href="#i-help"/></svg>
+        </span>
+        <div>
+          <span class="card-kicker">CẤP LẠI MẬT KHẨU</span>
+          <h1 style="font-size: 24px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Lấy lại mật khẩu</h1>
         </div>
+      </div>
+
+      <p style="font-size: 14.5px; color: var(--muted); line-height: 1.55; margin: 0 0 20px;">
+        Xác thực số Căn cước công dân để nhận mã OTP khôi phục quyền truy cập hồ sơ khám bệnh.
+      </p>
+
+      <?php render_flash(); ?>
+
+      <?php if ($step === 'verify'): ?>
+        <!-- BƯỚC 2: NHẬP OTP VÀ ĐỔI MẬT KHẨU MỚI -->
+        <form method="post" style="display: grid; gap: 16px;">
+          <?php render_form_guard('forgot_password_verify'); ?>
+          
+          <div class="field" style="margin-bottom: 0;">
+            <label for="cccd">Số Căn cước công dân (CCCD)</label>
+            <input id="cccd" name="cccd" type="text" inputmode="numeric" maxlength="12" value="<?= e($_GET['cccd'] ?? $_POST['cccd'] ?? '') ?>" required readonly style="background: var(--soft); font-weight: 600;">
+          </div>
+
+          <div class="field" style="margin-bottom: 0;">
+            <label for="otp">Mã xác thực OTP (6 chữ số)</label>
+            <input id="otp" name="otp" type="text" inputmode="numeric" maxlength="6" placeholder="Nhập 6 chữ số OTP" required autofocus>
+            <p class="field-hint">Mã OTP có thời hạn hiệu lực trong vòng 10 phút.</p>
+          </div>
+
+          <!-- Checklist quy tắc mật khẩu -->
+          <div style="background: var(--soft); padding: 14px 16px; border-radius: 12px; border: 1px solid #cce5f8; font-size: 13px; color: var(--ink);">
+            <strong style="display: block; margin-bottom: 6px; color: var(--blue);">Yêu cầu mật khẩu mới an toàn:</strong>
+            <div style="display: grid; gap: 4px; color: var(--muted);">
+              <div>• Tối thiểu 8 ký tự</div>
+              <div>• Gồm ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số</div>
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom: 0;">
+            <label for="new_password">Mật khẩu mới</label>
+            <input id="new_password" type="password" name="new_password" minlength="8" placeholder="Nhập mật khẩu mới" required>
+          </div>
+
+          <div class="field" style="margin-bottom: 0;">
+            <label for="confirm_password">Xác nhận lại mật khẩu mới</label>
+            <input id="confirm_password" type="password" name="confirm_password" minlength="8" placeholder="Nhập lại mật khẩu mới" required>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+            <button class="btn btn-primary btn-block" type="submit" style="height: 48px; font-size: 16px;">
+              Xác nhận đổi mật khẩu <svg class="icon" style="width:18px;height:18px;" aria-hidden="true"><use href="#i-arrow"/></svg>
+            </button>
+            
+            <div style="text-align: center; font-size: 13.5px; color: var(--muted); margin-top: 6px;">
+              Chưa nhận được mã? <span id="countdownText" style="color: var(--blue); font-weight: 600;">(chờ 60s)</span>
+              <a id="resendLink" href="forgot_password.php?cccd=<?= urlencode((string)($_GET['cccd'] ?? '')) ?>" style="display: none; color: var(--blue); font-weight: 700; text-decoration: underline;">Gửi lại mã OTP</a>
+            </div>
+          </div>
+        </form>
+
+        <script>
+        (function(){
+          var sec = 60;
+          var cdText = document.getElementById('countdownText');
+          var resend = document.getElementById('resendLink');
+          var timer = setInterval(function(){
+            sec--;
+            if (sec > 0) {
+              if (cdText) cdText.textContent = '(chờ ' + sec + 's)';
+            } else {
+              clearInterval(timer);
+              if (cdText) cdText.style.display = 'none';
+              if (resend) resend.style.display = 'inline';
+            }
+          }, 1000);
+        })();
+        </script>
+
+      <?php else: ?>
+        <!-- BƯỚC 1: NHẬP SỐ CCCD ĐỂ YÊU CẦU OTP -->
+        <form method="post" style="display: grid; gap: 16px;">
+          <?php render_form_guard('forgot_password_request'); ?>
+          
+          <div class="field" style="margin-bottom: 0;">
+            <label for="cccd">Số Căn cước công dân (CCCD)</label>
+            <input id="cccd" name="cccd" type="text" inputmode="numeric" maxlength="12" placeholder="Nhập 12 chữ số CCCD đã đăng ký" value="<?= e($_POST['cccd'] ?? $_GET['cccd'] ?? '') ?>" required autofocus>
+            <p class="field-hint">Dùng số CCCD đã đăng ký trong hồ sơ tại phòng khám.</p>
+          </div>
+
+          <div class="field" style="margin-bottom: 0;">
+            <label for="channel">Phương thức nhận mã xác thực OTP</label>
+            <select id="channel" name="channel" required style="width: 100%; height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; background: #fff; font-size: 15px; color: var(--ink);">
+              <option value="email" <?= !$emailEnabled ? 'disabled' : '' ?>>Gửi qua Email<?= !$emailEnabled ? ' (chưa kích hoạt)' : ' (Khuyến nghị)' ?></option>
+              <option value="phone">Gửi qua tin nhắn Số điện thoại</option>
+            </select>
+          </div>
+
+          <?php render_captcha('forgot_password_request'); ?>
+
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+            <button class="btn btn-primary btn-block" type="submit" style="height: 48px; font-size: 16px;">
+              Gửi mã xác thực OTP <svg class="icon" style="width:18px;height:18px;" aria-hidden="true"><use href="#i-arrow"/></svg>
+            </button>
+            <a class="btn btn-outline btn-block" href="login.php" style="text-align: center;">
+              Quay lại đăng nhập
+            </a>
+          </div>
+        </form>
       <?php endif; ?>
 
-      <form method="post" style="display:grid;gap:16px;" id="verifyOtpForm">
-        <?php render_form_guard('forgot_password_verify'); ?>
-        
-        <div>
-          <label for="cccd">Số CCCD</label>
-          <input id="cccd" name="cccd" type="text" inputmode="numeric" maxlength="12" value="<?= e($_GET['cccd'] ?? $_POST['cccd'] ?? '') ?>" required readonly style="background:#f8fafc;">
-        </div>
+      <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--muted); text-align: center;">
+        Cần trợ giúp trực tiếp? Gọi ngay hotline: <a href="tel:02086289888" style="color: var(--blue); font-weight: 700;">0208 628 9888</a>
+      </div>
 
-        <div>
-          <label for="otp">Mã xác thực OTP (6 chữ số)</label>
-          <input id="otp" name="otp" type="text" inputmode="numeric" maxlength="6" placeholder="Nhập 6 chữ số OTP" required autofocus>
-          <div style="font-size:12px;color:#64748b;margin-top:4px;">Mã có hiệu lực trong vòng 10 phút.</div>
-        </div>
-
-        <!-- Checklist quy tắc mật khẩu -->
-        <div style="background:#f8fafc;padding:14px 16px;border-radius:12px;border:1px solid var(--border);font-size:12.5px;color:#475569;">
-          <strong style="color:#1e293b;display:block;margin-bottom:6px;">Yêu cầu mật khẩu an toàn:</strong>
-          <div style="display:grid;gap:4px;">
-            <div>• Tối thiểu 8 ký tự</div>
-            <div>• Gồm ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số</div>
-          </div>
-        </div>
-
-        <div>
-          <label for="new_password">Mật khẩu mới</label>
-          <input id="new_password" type="password" name="new_password" minlength="8" placeholder="Nhập mật khẩu mới" required>
-        </div>
-
-        <div>
-          <label for="confirm_password">Xác nhận mật khẩu mới</label>
-          <input id="confirm_password" type="password" name="confirm_password" minlength="8" placeholder="Nhập lại mật khẩu mới" required>
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
-          <button class="btn" type="submit" style="width:100%;height:46px;">
-            Xác nhận đổi mật khẩu ➔
-          </button>
-          
-          <div style="text-align:center;font-size:13px;color:#64748b;margin-top:6px;">
-            Chưa nhận được mã? <span id="countdownText" style="color:var(--primary);font-weight:600;">(chờ 60s)</span>
-            <a id="resendLink" href="forgot_password.php?cccd=<?= urlencode((string)($_GET['cccd'] ?? '')) ?>" style="display:none;color:var(--primary);font-weight:700;text-decoration:underline;">Gửi lại mã OTP</a>
-          </div>
-        </div>
-      </form>
-
-      <script>
-      (function(){
-        var sec = 60;
-        var cdText = document.getElementById('countdownText');
-        var resend = document.getElementById('resendLink');
-        var timer = setInterval(function(){
-          sec--;
-          if (sec > 0) {
-            if (cdText) cdText.textContent = '(chờ ' + sec + 's)';
-          } else {
-            clearInterval(timer);
-            if (cdText) cdText.style.display = 'none';
-            if (resend) resend.style.display = 'inline';
-          }
-        }, 1000);
-      })();
-      </script>
-
-    <?php else: ?>
-      <!-- BƯỚC 1: NHẬP SỐ CCCD ĐỂ YÊU CẦU OTP -->
-      <form method="post" style="display:grid;gap:16px;">
-        <?php render_form_guard('forgot_password_request'); ?>
-        
-        <div>
-          <label for="cccd">Số Căn cước công dân (CCCD)</label>
-          <input id="cccd" name="cccd" type="text" inputmode="numeric" maxlength="12" placeholder="Nhập 12 chữ số CCCD đã đăng ký" value="<?= e($_POST['cccd'] ?? $_GET['cccd'] ?? '') ?>" required autofocus>
-          <div style="font-size:12px;color:#64748b;margin-top:4px;">Dùng số CCCD đã đăng ký trong hồ sơ khám chữa bệnh.</div>
-        </div>
-
-        <div>
-          <label for="channel">Phương thức nhận mã xác thực OTP</label>
-          <select id="channel" name="channel" required>
-            <option value="email" <?= !$emailEnabled ? 'disabled' : '' ?>>Gửi qua Email<?= !$emailEnabled ? ' (chưa kích hoạt)' : ' (Khuyến nghị)' ?></option>
-            <option value="phone">Gửi qua tin nhắn Số điện thoại</option>
-          </select>
-        </div>
-
-        <?php render_captcha('forgot_password_request'); ?>
-
-        <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
-          <button class="btn" type="submit" style="width:100%;height:46px;">
-            Gửi mã xác thực OTP ➔
-          </button>
-          <a class="btn btn-outline" href="login.php" style="width:100%;box-sizing:border-box;text-align:center;">
-            Quay lại trang đăng nhập
-          </a>
-        </div>
-      </form>
-    <?php endif; ?>
-
-    <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);font-size:13px;color:#64748b;text-align:center;">
-      Cần hỗ trợ trực tiếp? Gọi ngay hotline: <a href="tel:02086289888" style="color:var(--primary);font-weight:700;">0208 628 9888</a>
     </div>
-
   </div>
 </div>
 <?php render_footer(); ?>

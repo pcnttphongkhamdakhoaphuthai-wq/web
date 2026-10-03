@@ -3,44 +3,40 @@ declare(strict_types=1);
 
 require_once 'config.php';
 
-$clinic = site_settings([
-    'clinic_name' => 'Phòng khám đa khoa Phú Thái',
-    'clinic_intro' => 'Đồng hành chăm sóc sức khỏe toàn diện cho người bệnh với hệ thống tra cứu hồ sơ và kết quả khám tiện lợi, an toàn.',
-    'clinic_mission' => 'Mang đến dịch vụ y tế chất lượng cao, tận tâm, tối ưu hóa thời gian chờ đợi và hỗ trợ người bệnh theo dõi sức khỏe liên tục.',
-    'clinic_facility' => 'Trang thiết bị hiện đại: máy siêu âm màu 4D, hệ thống xét nghiệm tự động, máy điện tim kỹ thuật số và khu khám khang trang, sạch sẽ.',
-    'clinic_services' => "Khám nội tổng quát\nSiêu âm tổng quát & tim mạch\nXét nghiệm huyết học, sinh hóa\nĐiện tim vi tính\nTư vấn và quản lý bệnh mạn tính",
-    'clinic_support' => 'Đội ngũ nhân viên y tế sẵn sàng hướng dẫn người bệnh từ khâu tiếp đón, làm thủ tục đến tra cứu kết quả trực tuyến.',
-    'support_hotline' => '0208 628 9888',
-    'support_email' => 'pcnttphongkhamdakhoaphuthai@gmail.com',
-    'clinic_address' => 'Xóm Hoà Bình 2, xã Phú Bình, tỉnh Thái Nguyên',
-    'google_maps_url' => 'https://maps.google.com/?q=' . urlencode('Phòng khám đa khoa Phú Thái Xóm Hoà Bình 2, xã Phú Bình, tỉnh Thái Nguyên'),
-    'chatbot_intro' => 'Trợ lý AI hỗ trợ giải đáp nhanh các câu hỏi thường gặp về thủ tục khám, bảng giá dịch vụ và chính sách BHYT.',
-]);
+$clinic = [
+    'clinic_name' => site_setting('clinic_name', 'Phòng khám đa khoa Phú Thái'),
+    'clinic_intro' => site_setting(
+        'clinic_intro',
+        'Phòng khám đa khoa Phú Thái cung cấp dịch vụ thăm khám, chẩn đoán hình ảnh và xét nghiệm chất lượng cao. Cổng thông tin người bệnh hỗ trợ tra cứu kết quả khám bệnh, lịch sử xét nghiệm và đơn thuốc trực tuyến an toàn, bảo mật.'
+    ),
+    'clinic_address' => site_setting('clinic_address', 'Xóm Hoà Bình 2, xã Phú Bình, tỉnh Thái Nguyên'),
+    'support_hotline' => site_setting('support_hotline', '0208 628 9888'),
+    'support_email' => site_setting('support_email', 'pkdkphuthai@gmail.com'),
+    'google_maps_url' => site_setting('google_maps_url', 'https://maps.app.goo.gl/yM4YQ'),
+];
 
-$cacheFile = APP_RUNTIME_ROOT . DIRECTORY_SEPARATOR . 'homepage_data.json';
+// Cơ chế Cache nhẹ 180s cho dữ liệu trang chủ
 $homeData = null;
-if (is_file($cacheFile) && (time() - (int) filemtime($cacheFile) < 180)) {
-    $raw = @file_get_contents($cacheFile);
-    if ($raw !== false && $raw !== '') {
+$cacheHomeFile = APP_RUNTIME_ROOT . '/homepage_data.json';
+if (is_file($cacheHomeFile) && (time() - filemtime($cacheHomeFile) < 180)) {
+    $raw = @file_get_contents($cacheHomeFile);
+    if ($raw !== false) {
         $homeData = json_decode($raw, true);
     }
 }
 
 if (!is_array($homeData)) {
-    $doctorsRes = $conn->query('SELECT id, name, title, department, specialties, bio, photo_path FROM doctors ORDER BY id ASC');
-    $doctorsList = $doctorsRes ? $doctorsRes->fetch_all(MYSQLI_ASSOC) : [];
-    $quickRepliesList = get_active_quick_replies(6);
-    $newsPostsList = get_recent_news_posts(3, true);
-    $customerResourcesList = get_customer_resources(3, true);
-
+    $doctors = get_active_doctors();
+    $quickReplies = get_active_quick_replies(12);
+    $newsPosts = get_published_news_posts(3);
+    $customerResources = get_published_customer_resources(3);
     $homeData = [
-        'doctors' => $doctorsList,
-        'quickReplies' => $quickRepliesList,
-        'newsPosts' => $newsPostsList,
-        'customerResources' => $customerResourcesList,
+        'doctors' => $doctors,
+        'quickReplies' => $quickReplies,
+        'newsPosts' => $newsPosts,
+        'customerResources' => $customerResources,
     ];
-
-    @file_put_contents($cacheFile, json_encode($homeData, JSON_UNESCAPED_UNICODE));
+    @file_put_contents($cacheHomeFile, json_encode($homeData, JSON_UNESCAPED_UNICODE));
 }
 
 $doctors = $homeData['doctors'] ?? [];
@@ -49,165 +45,186 @@ $newsPosts = $homeData['newsPosts'] ?? [];
 $customerResources = $homeData['customerResources'] ?? [];
 $appointmentsEnabled = appointments_enabled();
 
-render_header('Phòng khám đa khoa Phú Thái - Trang chủ', 'home');
+render_header('Phòng khám đa khoa Phú Thái - Cổng thông tin & dịch vụ người bệnh', 'home');
 render_hero('Phòng khám đa khoa Phú Thái', $clinic['clinic_intro']);
 ?>
 
 <div class="wrap">
-  <!-- KHU VỰC DỊCH VỤ TRỰC TUYẾN GỘP NHẤT QUÁN -->
+  <!-- KHU VỰC DỊCH VỤ TRỰC TUYẾN DÀNH CHO NGƯỜI BỆNH -->
   <section class="section" id="services">
     <div class="section-header">
-      <h2 class="section-title">Dịch vụ trực tuyến dành cho người bệnh</h2>
-      <p class="section-lead">Hệ thống tiện ích số giúp người bệnh chủ động theo dõi sức khỏe và kết quả điều trị mọi lúc, mọi nơi.</p>
+      <span class="section-kicker">TIỆN ÍCH SỐ NGƯỜI BỆNH</span>
+      <h2 class="section-title">Dịch vụ trực tuyến tại Phòng khám</h2>
+      <p class="section-lead">Chủ động tra cứu kết quả khám, theo dõi hồ sơ bệnh án và nhận hướng dẫn y tế thuận tiện ngay trên điện thoại hoặc máy tính.</p>
     </div>
 
     <div class="grid grid-4">
       <!-- Dịch vụ 1: Tra cứu kết quả -->
-      <article class="card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between;">
-        <div>
-          <div style="width:48px;height:48px;border-radius:12px;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;">
-            📄
-          </div>
-          <h3 style="font-size:17px;font-weight:700;margin:0 0 8px;color:#0f2942;">Tra cứu kết quả khám</h3>
-          <p style="font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 16px;">
-            Xem chi tiết kết quả chẩn đoán, xét nghiệm, đơn thuốc điện tử và tải tệp hồ sơ PDF lưu về máy.
-          </p>
+      <article class="service-card">
+        <div class="service-icon-box">
+          <svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>
         </div>
-        <div>
+        <h3 class="service-title">Tra cứu kết quả khám</h3>
+        <p class="service-desc">
+          Xem và tải kết quả chẩn đoán hình ảnh, siêu âm, xét nghiệm máu và đơn thuốc điện tử an toàn, bảo mật.
+        </p>
+        <div class="service-action">
           <?php if (isset($_SESSION['user_id'])): ?>
-            <a class="btn btn-light" style="width:100%;box-sizing:border-box;" href="dashboard.php#records">Xem kết quả ngay ➔</a>
+            <a class="btn btn-primary btn-block" href="dashboard.php#records">Xem kết quả ngay <svg class="icon" style="width:16px;height:16px;" aria-hidden="true"><use href="#i-arrow"/></svg></a>
           <?php else: ?>
-            <a class="btn btn-light" style="width:100%;box-sizing:border-box;" href="login.php?redirect=records">Tra cứu kết quả ➔</a>
+            <a class="btn btn-primary btn-block" href="login.php?redirect=records">Tra cứu kết quả <svg class="icon" style="width:16px;height:16px;" aria-hidden="true"><use href="#i-arrow"/></svg></a>
           <?php endif; ?>
         </div>
       </article>
 
-      <!-- Dịch vụ 2: Đặt lịch khám -->
-      <article class="card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between;">
-        <div>
-          <div style="width:48px;height:48px;border-radius:12px;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;">
-            📅
-          </div>
-          <h3 style="font-size:17px;font-weight:700;margin:0 0 8px;color:#0f2942;">Đăng ký lịch khám</h3>
-          <p style="font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 16px;">
-            <?php if ($appointmentsEnabled): ?>
-              Chủ động chọn bác sĩ và thời gian khám phù hợp để được tiếp đón chu đáo không phải chờ đợi.
-            <?php else: ?>
-              Đặt lịch online đang bảo trì. Quý khách vui lòng gọi hotline <strong>0208 628 9888</strong> để được xếp lịch nhanh nhất.
-            <?php endif; ?>
-          </p>
+      <!-- Dịch vụ 2: Đăng ký lịch khám -->
+      <article class="service-card">
+        <div class="service-icon-box">
+          <svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>
         </div>
-        <div>
+        <h3 class="service-title">Đăng ký lịch khám</h3>
+        <p class="service-desc">
           <?php if ($appointmentsEnabled): ?>
-            <a class="btn btn-light" style="width:100%;box-sizing:border-box;" href="book_appointment.php">Đặt lịch khám ➔</a>
+            Chủ động chọn bác sĩ và thời gian khám thuận tiện, giảm thiểu thời gian chờ đợi tại quầy tiếp đón.
           <?php else: ?>
-            <a class="btn btn-light" style="width:100%;box-sizing:border-box;" href="tel:02086289888">Gọi hotline đặt lịch 📞</a>
+            Hệ thống đặt lịch trực tuyến đang bảo trì. Quý khách vui lòng gọi tổng đài tiếp đón để được hỗ trợ nhanh nhất.
+          <?php endif; ?>
+        </p>
+        <div class="service-action">
+          <?php if ($appointmentsEnabled): ?>
+            <a class="btn btn-secondary btn-block" href="book_appointment.php">Đặt lịch hẹn <svg class="icon" style="width:16px;height:16px;" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          <?php else: ?>
+            <a class="btn btn-secondary btn-block" href="tel:02086289888"><svg class="icon" style="width:16px;height:16px;" aria-hidden="true"><use href="#i-phone"/></svg> 0208 628 9888</a>
           <?php endif; ?>
         </div>
       </article>
 
       <!-- Dịch vụ 3: Hồ sơ sức khỏe cá nhân -->
-      <article class="card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between;">
-        <div>
-          <div style="width:48px;height:48px;border-radius:12px;background:#dcfce7;color:#16a34a;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;">
-            📁
-          </div>
-          <h3 style="font-size:17px;font-weight:700;margin:0 0 8px;color:#0f2942;">Hồ sơ bệnh án điện tử</h3>
-          <p style="font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 16px;">
-            Lưu trữ lịch sử khám bệnh qua các đợt, hỗ trợ bác sĩ theo dõi diễn tiến sức khỏe khi tái khám.
-          </p>
+      <article class="service-card">
+        <div class="service-icon-box">
+          <svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg>
         </div>
-        <div>
+        <h3 class="service-title">Hồ sơ bệnh án điện tử</h3>
+        <p class="service-desc">
+          Lưu trữ lịch sử khám bệnh qua từng đợt, giúp bác sĩ dễ dàng theo dõi diễn tiến sức khỏe trong các lần tái khám.
+        </p>
+        <div class="service-action">
           <?php if (isset($_SESSION['user_id'])): ?>
-            <a class="btn btn-light" style="width:100%;box-sizing:border-box;" href="dashboard.php#overview">Xem hồ sơ ➔</a>
+            <a class="btn btn-outline btn-block" href="dashboard.php">Mở hồ sơ của tôi</a>
           <?php else: ?>
-            <a class="btn btn-light" style="width:100%;box-sizing:border-box;" href="login.php">Đăng nhập tài khoản ➔</a>
+            <a class="btn btn-outline btn-block" href="login.php">Đăng nhập tài khoản</a>
           <?php endif; ?>
         </div>
       </article>
 
-      <!-- Dịch vụ 4: Hướng dẫn & Hỗ trợ công khai -->
-      <article class="card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between;">
-        <div>
-          <div style="width:48px;height:48px;border-radius:12px;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;">
-            💡
-          </div>
-          <h3 style="font-size:17px;font-weight:700;margin:0 0 8px;color:#0f2942;">Hướng dẫn & Trợ giúp</h3>
-          <p style="font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 16px;">
-            Quy trình khám, cách tra cứu kết quả, xử lý sự cố tài khoản và thông tin liên hệ phòng khám.
-          </p>
+      <!-- Dịch vụ 4: Hướng dẫn & Hỗ trợ y tế -->
+      <article class="service-card">
+        <div class="service-icon-box">
+          <svg class="icon" aria-hidden="true"><use href="#i-help"/></svg>
         </div>
-        <div>
-          <a class="btn btn-light" style="width:100%;box-sizing:border-box;" href="support.php">Xem hướng dẫn ➔</a>
+        <h3 class="service-title">Hướng dẫn & Trợ giúp</h3>
+        <p class="service-desc">
+          Xem quy trình khám bệnh, chuẩn bị xét nghiệm, cấp lại mật khẩu và liên hệ bộ phận hỗ trợ khách hàng.
+        </p>
+        <div class="service-action">
+          <a class="btn btn-light btn-block" href="support.php">Xem hướng dẫn chi tiết</a>
         </div>
       </article>
     </div>
   </section>
 
   <!-- KHU VỰC HƯỚNG DẪN BẢO HIỂM Y TẾ (BHYT) THỰC TẾ -->
-  <section class="section card" id="bhyt" style="background:linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);border-color:#bbf7d0;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-      <span style="font-size:24px;">🏥</span>
-      <div>
-        <h2 style="font-size:20px;font-weight:700;color:#166534;margin:0;">Hướng dẫn khám chữa bệnh Bảo hiểm Y tế (BHYT)</h2>
-        <p style="font-size:13.5px;color:#15803d;margin:2px 0 0;">Quyền lợi và thủ tục khám chữa bệnh BHYT tại Phòng khám đa khoa Phú Thái</p>
-      </div>
+  <section class="section" id="bhyt" style="padding-top: 12px;">
+    <div class="section-header">
+      <span class="section-kicker">CHÍNH SÁCH BHYT</span>
+      <h2 class="section-title">Khám chữa bệnh Bảo hiểm Y tế (BHYT)</h2>
+      <p class="section-lead">Phòng khám đa khoa Phú Thái tiếp nhận và thực hiện khám chữa bệnh BHYT đúng tuyến và thông tuyến theo quy định của Bảo hiểm Xã hội Việt Nam.</p>
     </div>
-    <div class="grid grid-3" style="margin-top:16px;">
-      <div style="padding:14px;background:#fff;border-radius:12px;border:1px solid #dcfce7;">
-        <h4 style="margin:0 0 6px;color:#14532d;font-size:14.5px;">1. Giấy tờ cần chuẩn bị</h4>
-        <p style="font-size:13px;color:#475569;margin:0;line-height:1.6;">Xuất trình Căn cước công dân gắn chip hoặc ứng dụng VNeID (đã tích hợp thẻ BHYT), hoặc thẻ BHYT giấy còn hạn sử dụng kèm giấy tờ tùy thân có ảnh.</p>
+
+    <div class="grid grid-3">
+      <div class="bhyt-box">
+        <div class="bhyt-box-header">
+          <div class="bhyt-box-icon"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg></div>
+          <h3 class="bhyt-box-title">1. Giấy tờ cần chuẩn bị</h3>
+        </div>
+        <div class="bhyt-box-content">
+          <ul>
+            <li>Căn cước công dân gắn chip hoặc ứng dụng VNeID (đã tích hợp thẻ BHYT).</li>
+            <li>Thẻ BHYT giấy còn thời hạn kèm giấy tờ tùy thân có dán ảnh.</li>
+            <li>Giấy chuyển tuyến khám chữa bệnh BHYT (nếu thuộc diện chuyển tuyến).</li>
+          </ul>
+        </div>
       </div>
-      <div style="padding:14px;background:#fff;border-radius:12px;border:1px solid #dcfce7;">
-        <h4 style="margin:0 0 6px;color:#14532d;font-size:14.5px;">2. Quyền lợi hưởng BHYT</h4>
-        <p style="font-size:13px;color:#475569;margin:0;line-height:1.6;">Người bệnh được thanh toán đầy đủ các danh mục khám bệnh, xét nghiệm, siêu âm và thuốc điều trị thuộc phạm vi chi trả theo quy định hiện hành của Bộ Y tế.</p>
+
+      <div class="bhyt-box">
+        <div class="bhyt-box-header">
+          <div class="bhyt-box-icon"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></div>
+          <h3 class="bhyt-box-title">2. Quyền lợi chi trả BHYT</h3>
+        </div>
+        <div class="bhyt-box-content">
+          <ul>
+            <li>Người bệnh được hưởng đầy đủ quyền lợi BHYT đối với công khám, xét nghiệm, siêu âm, nội soi, chụp X-quang.</li>
+            <li>Danh mục thuốc điều trị được bảo hiểm chi trả theo đúng quy định hiện hành của Bộ Y tế.</li>
+            <li>Thủ tục nhanh gọn, minh bạch chi phí công khai tại quầy viện phí.</li>
+          </ul>
+        </div>
       </div>
-      <div style="padding:14px;background:#fff;border-radius:12px;border:1px solid #dcfce7;">
-        <h4 style="margin:0 0 6px;color:#14532d;font-size:14.5px;">3. Hỗ trợ chuyển tuyến</h4>
-        <p style="font-size:13px;color:#475569;margin:0;line-height:1.6;">Trong trường hợp bệnh lý cần điều trị chuyên sâu, phòng khám thực hiện thủ tục chuyển tuyến lên bệnh viện tuyến trên nhanh chóng, đảm bảo quyền lợi liên tục.</p>
+
+      <div class="bhyt-box">
+        <div class="bhyt-box-header">
+          <div class="bhyt-box-icon"><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></div>
+          <h3 class="bhyt-box-title">3. Hỗ trợ chuyển tuyến</h3>
+        </div>
+        <div class="bhyt-box-content">
+          <ul>
+            <li>Đối với các ca bệnh lý cần điều trị chuyên sâu, phòng khám hỗ trợ làm thủ tục chuyển viện tuyến trên kịp thời.</li>
+            <li>Bảo toàn tối đa quyền lợi bảo hiểm liên tục của người bệnh.</li>
+            <li>Có đội ngũ nhân viên hướng dẫn chi tiết từng bước hồ sơ chuyển tuyến.</li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ĐỘI NGŨ BÁC SĨ (TÁCH VAI TRÒ ADMIN KHỎI CHUYÊN KHOA) -->
+  <!-- ĐỘI NGŨ Y BÁC SĨ (TÁCH VAI TRÒ ADMIN KHỎI CHUYÊN KHOA) -->
   <section class="section" id="doctors">
     <div class="section-header">
+      <span class="section-kicker">ĐỘI NGŨ CHUYÊN MÔN</span>
       <h2 class="section-title">Đội ngũ y bác sĩ phụ trách</h2>
-      <p class="section-lead">Các bác sĩ giàu kinh nghiệm, chuyên môn vững vàng, luôn tận tâm vì sức khỏe người bệnh.</p>
+      <p class="section-lead">Các bác sĩ giàu kinh nghiệm, chuyên môn sâu, luôn tận tâm đồng hành vì sức khỏe người bệnh.</p>
     </div>
+
     <div class="grid grid-2">
       <?php foreach ($doctors as $doctor): 
         $dept = trim((string) ($doctor['department'] ?? ''));
-        // Sửa triệt để lỗi "Khoa: Administrator" (Mục 9)
         if ($dept === '' || strcasecmp($dept, 'Administrator') === 0 || strcasecmp($dept, 'Admin') === 0) {
             $dept = 'Khoa Khám bệnh & Nội tổng quát';
         }
       ?>
-        <article class="card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between;">
-          <div style="display:flex;gap:18px;align-items:flex-start;">
-            <img class="doctor-photo" 
-                 src="<?= e(doctor_photo_url($doctor['photo_path'] ?? null)) ?>" 
-                 alt="<?= e($doctor['name']) ?>" 
-                 loading="lazy" 
-                 width="92" 
-                 height="92" 
-                 style="width:92px;height:92px;border-radius:16px;object-fit:cover;border:1.5px solid var(--border);flex-shrink:0;">
-            <div style="flex:1;">
-              <h3 style="font-size:18px;font-weight:700;color:#0f2942;margin:0 0 4px;"><?= e($doctor['name']) ?></h3>
+        <article class="doctor-card" style="align-items: stretch; text-align: left;">
+          <div style="display: flex; gap: 20px; align-items: flex-start;">
+            <div class="doctor-avatar-wrap" style="flex: none; width: 92px; height: 92px; margin-bottom: 0;">
+              <img class="doctor-avatar" 
+                   src="<?= e(doctor_photo_url($doctor['photo_path'] ?? null)) ?>" 
+                   alt="<?= e($doctor['name']) ?>" 
+                   loading="lazy" 
+                   width="92" 
+                   height="92">
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <h3 class="doctor-name" style="margin-bottom: 4px;"><?= e($doctor['name']) ?></h3>
               <?php if (!empty($doctor['title'])): ?>
-                <div style="color:var(--primary);font-size:13.5px;font-weight:600;margin-bottom:6px;"><?= e($doctor['title']) ?></div>
+                <div style="color: var(--blue); font-size: 13.5px; font-weight: 600; margin-bottom: 6px;"><?= e($doctor['title']) ?></div>
               <?php endif; ?>
-              <div style="display:inline-block;padding:4px 10px;background:#f0f7fb;color:#0284c7;border-radius:6px;font-size:12.5px;font-weight:600;">
-                Chuyên khoa: <?= e($dept) ?>
-              </div>
+              <span class="doctor-dept">Chuyên khoa: <?= e($dept) ?></span>
             </div>
           </div>
           <?php if (!empty($doctor['specialties'])): ?>
-            <div style="margin-top:12px;font-size:13px;color:#475569;">
+            <div style="margin-top: 14px; font-size: 13.5px; color: var(--text);">
               <strong>Lĩnh vực chuyên môn:</strong> <?= e($doctor['specialties']) ?>
             </div>
           <?php endif; ?>
-          <p style="margin:10px 0 0;font-size:13.5px;color:var(--muted);line-height:1.6;">
+          <p class="doctor-schedule" style="margin-top: 8px;">
             <?= nl2br(e($doctor['bio'] !== '' ? $doctor['bio'] : 'Bác sĩ phụ trách thăm khám, tư vấn phác đồ điều trị và theo dõi sức khỏe cho người bệnh.')) ?>
           </p>
         </article>
@@ -215,76 +232,59 @@ render_hero('Phòng khám đa khoa Phú Thái', $clinic['clinic_intro']);
     </div>
   </section>
 
-  <!-- TRỢ LÝ TƯ VẤN THÔNG TIN TỰ ĐỘNG (GẮN NHÃN MINH HỌA RÕ RÀNG) -->
+  <!-- TRỢ LÝ HỎI ĐÁP Y TẾ & THÔNG TIN TIỆN ÍCH -->
   <section class="section" id="chatbot" style="padding: 0;">
     <div style="
-      background: linear-gradient(135deg, #0f3d61 0%, #0077b6 60%, #0096c7 100%);
+      background: linear-gradient(115deg, #072e56 0%, #005fa0 100%);
       border-radius: 20px;
       padding: 40px 36px;
-      position: relative;
-      overflow: hidden;
       color: #fff;
+      box-shadow: 0 12px 30px rgba(0, 95, 160, 0.16);
     ">
-      <div style="display:flex;align-items:center;gap:36px;flex-wrap:wrap;position:relative;z-index:1;">
+      <div style="display:flex;align-items:center;gap:36px;flex-wrap:wrap;">
         <div style="flex:1;min-width:280px;">
-          <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:20px;padding:5px 14px;margin-bottom:14px;">
-            <span style="font-size:12.5px;font-weight:600;color:#e0f2fe;">🤖 Trợ lý giải đáp tự động (Ví dụ minh họa & Tư vấn thông tin)</span>
+          <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:6px 14px;margin-bottom:14px;">
+            <svg class="icon" style="width:16px;height:16px;color:#e7f5ff;" aria-hidden="true"><use href="#i-chat"/></svg>
+            <span style="font-size:13px;font-weight:600;color:#e7f5ff;">Hỏi đáp y tế & Hướng dẫn khám</span>
           </div>
 
-          <h2 style="font-size:clamp(22px, 3vw, 30px);font-weight:800;margin:0 0 12px;line-height:1.3;">
-            Hỏi đáp thông tin y tế & Thủ tục phòng khám
+          <h2 style="font-size:clamp(22px, 3vw, 32px);font-weight:700;margin:0 0 12px;line-height:1.25;">
+            Thông tin y tế & Thủ tục phòng khám
           </h2>
-          <p style="color:rgba(255,255,255,0.9);font-size:14.5px;line-height:1.65;margin:0 0 20px;max-width:560px;">
-            Tìm hiểu nhanh về bảng giá khám, hướng dẫn chuẩn bị trước khi xét nghiệm máu, quy trình chuyển tuyến BHYT và các câu hỏi thường gặp.
+          <p style="color:rgba(255,255,255,0.9);font-size:15px;line-height:1.6;margin:0 0 24px;max-width:560px;">
+            Tìm hiểu nhanh về chuẩn bị trước khi xét nghiệm máu, quy trình thanh toán BHYT và thời gian làm việc của các chuyên khoa tại Phòng khám Phú Thái.
           </p>
-
-          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
-            <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:#f0f9ff;">
-              <span>✓</span> <span>Tra cứu thủ tục hành chính và bảo hiểm y tế</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:#f0f9ff;">
-              <span>✓</span> <span>Tham khảo thời gian làm việc và bảng giá các gói khám</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:#f0f9ff;">
-              <span>✓</span> <span>Hệ thống phản hồi tức thì, hỗ trợ 24/7</span>
-            </div>
-          </div>
-
+          
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            <a href="support.php" style="background:#fff;color:#0077b6;padding:11px 22px;border-radius:10px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(0,0,0,0.15);">
-              Xem hỏi đáp & Hướng dẫn ➔
-            </a>
-            <a href="tel:02086289888" style="background:rgba(255,255,255,0.15);color:#fff;padding:11px 20px;border-radius:10px;font-weight:600;font-size:14px;border:1px solid rgba(255,255,255,0.3);display:inline-flex;align-items:center;gap:6px;">
-              📞 Hotline 0208 628 9888
-            </a>
+            <a href="support.php" class="btn" style="background:#ffffff;color:#005fa0 !important;font-weight:700;">Xem trung tâm trợ giúp</a>
+            <a href="tel:02086289888" class="btn" style="background:rgba(255,255,255,0.2);color:#ffffff !important;border:1px solid rgba(255,255,255,0.4);"><svg class="icon" style="width:16px;height:16px;" aria-hidden="true"><use href="#i-phone"/></svg> Gọi tư vấn: 0208 628 9888</a>
           </div>
         </div>
 
-        <!-- Khung chat minh họa -->
-        <div style="flex:0 0 auto;width:min(320px, 100%);">
-          <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.22);border-radius:16px;padding:18px;backdrop-filter:blur(10px);">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.15);">
-              <div style="width:32px;height:32px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#0077b6;font-size:16px;">
-                💬
-              </div>
+        <div style="flex:1;min-width:280px;max-width:440px;">
+          <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:16px;padding:20px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+              <span style="width:36px;height:36px;border-radius:50%;background:#ffffff;display:grid;place-items:center;color:#005fa0;">
+                <svg class="icon" style="width:20px;height:20px;" aria-hidden="true"><use href="#i-chat"/></svg>
+              </span>
               <div>
-                <div style="color:#fff;font-weight:700;font-size:13px;">Trợ lý tư vấn Phú Thái</div>
-                <div style="color:#e0f2fe;font-size:11px;">Minh họa câu hỏi thường gặp</div>
+                <div style="color:#fff;font-weight:700;font-size:14px;">Câu hỏi thường gặp</div>
+                <div style="color:#e0f2fe;font-size:12px;">Giải đáp nhanh cho người bệnh</div>
               </div>
             </div>
             
-            <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;">
-              <div style="background:rgba(255,255,255,0.2);padding:9px 12px;border-radius:12px 12px 12px 4px;color:#fff;">
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+              <div style="background:rgba(255,255,255,0.18);padding:10px 14px;border-radius:12px 12px 12px 4px;color:#fff;">
                 Thời gian làm việc của phòng khám như thế nào?
               </div>
-              <div style="background:#fff;color:#1e293b;padding:9px 12px;border-radius:12px 12px 4px 12px;line-height:1.45;">
-                Phòng khám làm việc từ <strong>7:00 đến 17:00</strong> tất cả các ngày trong tuần (kể cả Thứ 7 và Chủ Nhật).
+              <div style="background:#ffffff;color:#082d56;padding:10px 14px;border-radius:12px 12px 4px 12px;line-height:1.5;">
+                Phòng khám tiếp nhận khám bệnh từ <strong>07:00 đến 17:30</strong> tất cả các ngày trong tuần (kể cả Thứ 7 và Chủ Nhật).
               </div>
-              <div style="background:rgba(255,255,255,0.2);padding:9px 12px;border-radius:12px 12px 12px 4px;color:#fff;">
-                Tôi có cần nhịn ăn trước khi xét nghiệm máu không?
+              <div style="background:rgba(255,255,255,0.18);padding:10px 14px;border-radius:12px 12px 12px 4px;color:#fff;">
+                Có cần nhịn ăn trước khi làm xét nghiệm máu không?
               </div>
-              <div style="background:#fff;color:#1e293b;padding:9px 12px;border-radius:12px 12px 4px 12px;line-height:1.45;">
-                Quý khách nên nhịn ăn từ 6-8 tiếng trước khi làm xét nghiệm đường huyết, mỡ máu hoặc chức năng gan.
+              <div style="background:#ffffff;color:#082d56;padding:10px 14px;border-radius:12px 12px 4px 12px;line-height:1.5;">
+                Quý người bệnh nên nhịn ăn từ 6 - 8 tiếng trước khi làm xét nghiệm đường huyết, mỡ máu hoặc chức năng gan thận.
               </div>
             </div>
           </div>
@@ -298,23 +298,27 @@ render_hero('Phòng khám đa khoa Phú Thái', $clinic['clinic_intro']);
     <section class="section" id="resources">
       <div class="section-header" style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:12px;">
         <div>
+          <span class="section-kicker">CẨM NANG Y TẾ</span>
           <h2 class="section-title">Hướng dẫn dành cho người bệnh</h2>
-          <p class="section-lead">Tài liệu và chỉ dẫn hữu ích giúp người bệnh chuẩn bị tốt nhất trước khi đến khám.</p>
+          <p class="section-lead">Tài liệu và chỉ dẫn hữu ích giúp người bệnh chuẩn bị tốt nhất trước khi đến thăm khám.</p>
         </div>
         <a class="btn btn-outline" href="resources.php">Xem tất cả hướng dẫn ➔</a>
       </div>
       <div class="grid grid-3">
         <?php foreach ($customerResources as $resource): ?>
-          <article class="card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between;">
+          <article class="service-card" style="justify-content: space-between;">
             <div>
-              <h3 style="font-size:16px;font-weight:700;color:#0f2942;margin:0 0 8px;"><?= e($resource['title']) ?></h3>
+              <div class="service-icon-box" style="margin-bottom: 14px;">
+                <svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>
+              </div>
+              <h3 class="service-title" style="font-size: 17px;"><?= e($resource['title']) ?></h3>
               <?php if (!empty($resource['description'])): ?>
-                <p style="font-size:13.5px;color:var(--muted);line-height:1.6;margin:0 0 14px;"><?= nl2br(e($resource['description'])) ?></p>
+                <p class="service-desc"><?= nl2br(e($resource['description'])) ?></p>
               <?php endif; ?>
             </div>
             <?php if (!empty($resource['resource_url'])): ?>
-              <div>
-                <a class="btn btn-light" style="width:100%;box-sizing:border-box;" href="<?= e($resource['resource_url']) ?>" target="_blank" rel="noopener">Xem chi tiết ↗</a>
+              <div class="service-action">
+                <a class="btn btn-light btn-block" href="<?= e($resource['resource_url']) ?>" target="_blank" rel="noopener">Xem chi tiết ↗</a>
               </div>
             <?php endif; ?>
           </article>
@@ -328,65 +332,86 @@ render_hero('Phòng khám đa khoa Phú Thái', $clinic['clinic_intro']);
     <section class="section" id="news">
       <div class="section-header" style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:12px;">
         <div>
+          <span class="section-kicker">TIN TỨC & THÔNG BÁO</span>
           <h2 class="section-title">Tin tức y tế & Hoạt động</h2>
-          <p class="section-lead">Thông tin sức khỏe định kỳ và thông báo từ Phòng khám đa khoa Phú Thái.</p>
+          <p class="section-lead">Cập nhật thông tin sức khỏe định kỳ và hoạt động cộng đồng từ Phòng khám đa khoa Phú Thái.</p>
         </div>
-        <a class="btn btn-outline" href="news.php">Xem tất cả tin ➔</a>
+        <a class="btn btn-outline" href="news.php">Xem tất cả tin tức ➔</a>
       </div>
       <div class="grid grid-3">
         <?php foreach ($newsPosts as $post): ?>
-          <article class="card" style="margin-bottom:0;">
+          <article class="service-card" style="padding: 20px;">
             <?php render_news_media($post); ?>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;"><?= e(date('d/m/Y', strtotime((string) $post['created_at']))) ?></div>
-            <h3 style="font-size:16px;font-weight:700;color:#0f2942;margin:0 0 8px;"><?= e($post['title']) ?></h3>
-            <p style="font-size:13.5px;color:var(--muted);line-height:1.6;margin:0;"><?= nl2br(e((string) ($post['excerpt'] ?: $post['body']))) ?></p>
+            <div style="font-size:12px;color:var(--muted);margin: 10px 0 6px;"><?= e(date('d/m/Y', strtotime((string) $post['created_at']))) ?></div>
+            <h3 class="service-title" style="font-size: 17px; margin-bottom: 8px;"><?= e($post['title']) ?></h3>
+            <p class="service-desc" style="font-size: 14px;"><?= nl2br(e((string) ($post['excerpt'] ?: $post['body']))) ?></p>
           </article>
         <?php endforeach; ?>
       </div>
     </section>
   <?php endif; ?>
 
-  <!-- THÔNG TIN LIÊN HỆ & BẢN ĐỒ CHỈ ĐƯỜNG -->
-  <section class="section card" style="background:#fff;border-radius:18px;">
-    <div class="grid grid-2" style="align-items:center;">
-      <div>
-        <h2 style="font-size:22px;font-weight:800;color:#0f2942;margin:0 0 10px;">Liên hệ Phòng khám đa khoa Phú Thái</h2>
-        <p style="font-size:14.5px;color:var(--muted);margin:0 0 20px;line-height:1.6;">
-          Phòng khám hân hạnh được đồng hành và chăm sóc sức khỏe của bạn và gia đình. Hãy liên hệ với chúng tôi bất cứ khi nào bạn cần hỗ trợ y tế.
-        </p>
-        
-        <div style="display:grid;gap:12px;font-size:14px;color:#334155;">
-          <div>📍 <strong>Địa chỉ:</strong> <?= e($clinic['clinic_address']) ?></div>
-          <div>📞 <strong>Hotline tư vấn:</strong> <a href="tel:02086289888" style="color:var(--primary);font-weight:700;">0208 628 9888</a></div>
-          <div>🚑 <strong>Cấp cứu & CSKH:</strong> <a href="tel:0963485651" style="color:var(--primary);font-weight:700;">0963 485 651</a></div>
-          <div>✉️ <strong>Email:</strong> <a href="mailto:<?= e($clinic['support_email']) ?>" style="color:var(--primary);"><?= e($clinic['support_email']) ?></a></div>
-          <div>⏰ <strong>Giờ làm việc:</strong> 7:00 – 17:00 (Tất cả các ngày trong tuần)</div>
-        </div>
-
-        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
-          <a class="btn" href="<?= e($clinic['google_maps_url']) ?>" target="_blank" rel="noopener">
-            📍 Chỉ đường trên Google Maps ↗
-          </a>
-          <a class="btn btn-outline" href="support.php">
-            Gửi yêu cầu hỗ trợ ➔
-          </a>
-        </div>
-      </div>
-
-      <div style="background:var(--soft);border-radius:14px;padding:24px;border:1px solid var(--border);text-align:center;">
-        <div style="font-size:36px;margin-bottom:10px;">🏥</div>
-        <h3 style="font-size:18px;font-weight:700;color:#0f2942;margin:0 0 8px;">Cổng dịch vụ người bệnh trực tuyến</h3>
-        <p style="font-size:13.5px;color:var(--muted);line-height:1.6;margin:0 0 18px;">
-          Đăng nhập ngay để xem hồ sơ bệnh án và nhận thông báo kết quả khám mới nhất một cách bảo mật và an toàn.
-        </p>
-        <?php if (isset($_SESSION['user_id'])): ?>
-          <a class="btn" style="width:100%;box-sizing:border-box;" href="dashboard.php">Đến khu vực người bệnh ➔</a>
-        <?php else: ?>
-          <div style="display:flex;gap:10px;justify-content:center;">
-            <a class="btn" href="login.php" style="flex:1;">Đăng nhập</a>
-            <a class="btn btn-outline" href="register.php" style="flex:1;">Đăng ký</a>
+  <!-- THÔNG TIN LIÊN HỆ & CHỈ ĐƯỜNG -->
+  <section class="section" style="padding-top: 12px; margin-bottom: 36px;">
+    <div style="background:#ffffff;border:1px solid var(--line);border-radius:20px;padding:36px;box-shadow:0 6px 20px rgba(8,45,86,0.04);">
+      <div class="grid grid-2" style="align-items:center;">
+        <div>
+          <span class="section-kicker">LIÊN HỆ PHÒNG KHÁM</span>
+          <h2 style="font-size:26px;font-weight:700;color:var(--ink);margin:0 0 12px;">Phòng khám đa khoa Phú Thái</h2>
+          <p style="font-size:15px;color:var(--muted);margin:0 0 22px;line-height:1.6;">
+            Phòng khám luôn sẵn lòng lắng nghe và hỗ trợ quý người bệnh. Quý vị có thể liên hệ với chúng tôi bất cứ lúc nào qua các kênh dưới đây:
+          </p>
+          
+          <div style="display:grid;gap:14px;font-size:15px;color:var(--ink);">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <svg class="icon" style="color:var(--blue);width:20px;height:20px;" aria-hidden="true"><use href="#i-pin"/></svg>
+              <span><strong>Địa chỉ:</strong> <?= e($clinic['clinic_address']) ?></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <svg class="icon" style="color:var(--blue);width:20px;height:20px;" aria-hidden="true"><use href="#i-phone"/></svg>
+              <span><strong>Hotline tiếp đón:</strong> <a href="tel:02086289888" style="color:var(--blue);font-weight:700;">0208 628 9888</a></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <svg class="icon" style="color:var(--blue);width:20px;height:20px;" aria-hidden="true"><use href="#i-phone"/></svg>
+              <span><strong>Cấp cứu 24/7 & CSKH:</strong> <a href="tel:0963485651" style="color:var(--blue);font-weight:700;">0963 485 651</a></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <svg class="icon" style="color:var(--blue);width:20px;height:20px;" aria-hidden="true"><use href="#i-chat"/></svg>
+              <span><strong>Email:</strong> <a href="mailto:<?= e($clinic['support_email']) ?>" style="color:var(--blue);"><?= e($clinic['support_email']) ?></a></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <svg class="icon" style="color:var(--blue);width:20px;height:20px;" aria-hidden="true"><use href="#i-check"/></svg>
+              <span><strong>Giờ làm việc:</strong> 07:00 – 17:30 (Tất cả các ngày trong tuần)</span>
+            </div>
           </div>
-        <?php endif; ?>
+
+          <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
+            <a class="btn btn-primary" href="<?= e($clinic['google_maps_url']) ?>" target="_blank" rel="noopener">
+              <svg class="icon" style="width:16px;height:16px;" aria-hidden="true"><use href="#i-pin"/></svg> Chỉ đường trên Google Maps ↗
+            </a>
+            <a class="btn btn-outline" href="support.php">
+              Trung tâm hỗ trợ người bệnh ➔
+            </a>
+          </div>
+        </div>
+
+        <div style="background:var(--soft);border-radius:18px;padding:32px 28px;border:1px solid #c8e4fa;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#ffffff;margin:0 auto 16px;display:grid;place-items:center;color:var(--blue);box-shadow:0 4px 12px rgba(0,95,160,0.1);">
+            <svg class="icon" style="width:32px;height:32px;" aria-hidden="true"><use href="#i-folder"/></svg>
+          </div>
+          <h3 style="font-size:20px;font-weight:700;color:var(--ink);margin:0 0 10px;">Tra cứu hồ sơ y tế trực tuyến</h3>
+          <p style="font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 22px;">
+            Đăng nhập bằng số Căn cước công dân để xem kết quả xét nghiệm, lịch sử khám bệnh và nhận kết quả nhanh chóng, chính xác.
+          </p>
+          <?php if (isset($_SESSION['user_id'])): ?>
+            <a class="btn btn-primary btn-block" href="dashboard.php">Đến khu vực cá nhân <svg class="icon" style="width:16px;height:16px;" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          <?php else: ?>
+            <div style="display:flex;gap:12px;justify-content:center;">
+              <a class="btn btn-primary" href="login.php" style="flex:1;">Đăng nhập</a>
+              <a class="btn btn-outline" href="register.php" style="flex:1;">Đăng ký</a>
+            </div>
+          <?php endif; ?>
+        </div>
       </div>
     </div>
   </section>
