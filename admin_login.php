@@ -109,45 +109,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 render_header('Đăng nhập quản trị');
 ?>
-<div class="card" style="max-width:520px;margin:40px auto;">
-  <h1><?= $bootstrapRequired ? 'Khởi tạo admin gốc' : 'Đăng nhập quản trị' ?></h1>
-  <p class="muted">
-    <?= $bootstrapRequired
-      ? 'Hệ thống chưa có tài khoản admin. Hãy tạo admin gốc đầu tiên ngay trên giao diện này thay vì chèn trực tiếp vào SQL.'
-      : 'Dùng tài khoản quản trị hoặc tài khoản nhân viên đã được phân quyền để xử lý kết quả cho bệnh nhân.' ?>
-  </p>
-  <?php render_flash(); ?>
-  <form method="post" class="grid">
-    <?php render_form_guard($bootstrapRequired ? 'admin_bootstrap' : 'admin_login'); ?>
-    <?php if ($bootstrapRequired): ?>
-    <div>
-      <label for="full_name">Họ tên admin gốc</label>
-      <input id="full_name" name="full_name" value="<?= e($_POST['full_name'] ?? '') ?>" required>
-    </div>
-    <div>
-      <label for="department">Bộ phận</label>
-      <input id="department" name="department" value="<?= e($_POST['department'] ?? '') ?>">
-    </div>
-    <?php endif; ?>
-    <div>
-      <label for="username">Tên đăng nhập</label>
-      <input id="username" name="username" value="<?= e($_POST['username'] ?? '') ?>" required>
-    </div>
-    <div>
-      <label for="password">Mật khẩu</label>
-      <input id="password" type="password" name="password" required>
-    </div>
-    <?php if ($bootstrapRequired): ?>
-    <div>
-      <label for="confirm_password">Xác nhận mật khẩu</label>
-      <input id="confirm_password" type="password" name="confirm_password" required>
-    </div>
-    <?php endif; ?>
-    <?php render_captcha($bootstrapRequired ? 'admin_bootstrap' : 'admin_login'); ?>
-    <div class="actions">
-      <button type="submit"><?= $bootstrapRequired ? 'Tạo admin gốc' : 'Đăng nhập' ?></button>
-      <a class="btn btn-secondary" href="login.php">Về trang bệnh nhân</a>
-    </div>
-  </form>
+<div class="wrap" style="padding: 40px 0; min-height: calc(100vh - 220px); display: flex; align-items: center; justify-content: center;">
+  <div class="card" style="width: 100%; max-width: 480px; margin: 0 auto;">
+    <h1><?= $bootstrapRequired ? 'Khởi tạo admin gốc' : 'Đăng nhập quản trị' ?></h1>
+    <p class="muted">
+      <?= $bootstrapRequired
+        ? 'Hệ thống chưa có tài khoản admin. Hãy tạo admin gốc đầu tiên ngay trên giao diện này thay vì chèn trực tiếp vào SQL.'
+        : 'Dùng tài khoản quản trị hoặc tài khoản nhân viên đã được phân quyền để xử lý kết quả cho bệnh nhân.' ?>
+    </p>
+    <?php render_flash(); ?>
+    <form method="post" class="grid">
+      <?php render_form_guard($bootstrapRequired ? 'admin_bootstrap' : 'admin_login'); ?>
+      <?php if ($bootstrapRequired): ?>
+      <div>
+        <label for="full_name">Họ tên admin gốc</label>
+        <input id="full_name" name="full_name" value="<?= e($_POST['full_name'] ?? '') ?>" required>
+      </div>
+      <div>
+        <label for="department">Bộ phận</label>
+        <input id="department" name="department" value="<?= e($_POST['department'] ?? '') ?>">
+      </div>
+      <?php endif; ?>
+      <div>
+        <label for="username">Tên đăng nhập</label>
+        <input id="username" name="username" value="<?= e($_POST['username'] ?? '') ?>" required>
+      </div>
+      <div>
+        <label for="password">Mật khẩu</label>
+        <input id="password" type="password" name="password" required>
+      </div>
+      <?php if ($bootstrapRequired): ?>
+      <div>
+        <label for="confirm_password">Xác nhận mật khẩu</label>
+        <input id="confirm_password" type="password" name="confirm_password" required>
+      </div>
+      <?php endif; ?>
+      <?php render_captcha($bootstrapRequired ? 'admin_bootstrap' : 'admin_login'); ?>
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+        <button type="submit" class="btn btn-primary" style="height: 48px; font-size: 16px; width: 100%;"><?= $bootstrapRequired ? 'Tạo admin gốc' : 'Đăng nhập' ?></button>
+        <a class="btn btn-secondary" href="login.php" style="width: 100%; text-align: center; height: 44px;">Về trang bệnh nhân</a>
+      </div>
+    </form>
+  </div>
 </div>
 <?php render_footer(); ?>

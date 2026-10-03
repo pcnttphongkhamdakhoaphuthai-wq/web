@@ -12,11 +12,11 @@ $currentPath = current_request_path();
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  padding: 6px;
+  padding: 8px 12px;
   background: #fff;
-  border-radius: 100px;
+  border-radius: 16px;
   border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  box-shadow: 0 4px 16px rgba(8, 45, 86, 0.05);
   align-items: center;
 }
 
@@ -24,8 +24,8 @@ $currentPath = current_request_path();
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 22px;
-  border-radius: 100px;
+  padding: 10px 18px;
+  border-radius: 10px;
   border: none;
   font-size: 14px;
   font-weight: 500;
