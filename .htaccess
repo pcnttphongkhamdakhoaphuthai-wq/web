@@ -48,7 +48,7 @@ RedirectMatch 403 ^/(admin_accounts_tabs|dashboard_tabs|tools)/.*$
 
 # 7. Kích hoạt nén GZIP tăng tốc độ tải trang
 <IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json image/svg+xml application/x-font-woff font/woff font/woff2
 </IfModule>
 
 # 8. Cấu hình đường dẫn đẹp (Pretty URLs)

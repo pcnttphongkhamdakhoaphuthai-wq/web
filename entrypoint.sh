@@ -54,14 +54,23 @@ for asset_dir in doctor_photos branding news_media; do
     fi
 done
 
-# 4. Phân quyền thư mục cho user www-data (Apache)
+# 4. Phân quyền thư mục cho user www-data (Apache) - Tối ưu khởi động nhanh
 echo "[ENTRYPOINT] Setting permissions for web server user (www-data)..."
-chown -R www-data:www-data /var/www/html/storage \
-                           /var/www/html/logs \
-                           /var/www/html/assets
+chown www-data:www-data /var/www/html/storage /var/www/html/logs /var/www/html/assets 2>/dev/null || true
+chown -R www-data:www-data /var/www/html/storage/sessions \
+                           /var/www/html/storage/rate_limits \
+                           /var/www/html/storage/results \
+                           /var/www/html/storage/chat_logs \
+                           /var/www/html/storage/uploads \
+                           /var/www/html/logs 2>/dev/null || true
 
-chmod -R 777 /var/www/html/storage \
-             /var/www/html/logs
+chmod 775 /var/www/html/storage /var/www/html/logs /var/www/html/assets 2>/dev/null || true
+chmod -R 775 /var/www/html/storage/sessions \
+             /var/www/html/storage/rate_limits \
+             /var/www/html/storage/results \
+             /var/www/html/storage/chat_logs \
+             /var/www/html/storage/uploads \
+             /var/www/html/logs 2>/dev/null || true
 
 # 5. Khởi chạy Apache Foreground
 echo "[ENTRYPOINT] Starting Apache web server..."

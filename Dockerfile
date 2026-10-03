@@ -51,10 +51,13 @@ RUN { \
         echo '<IfModule mpm_prefork_module>'; \
         echo '    StartServers             2'; \
         echo '    MinSpareServers          2'; \
-        echo '    MaxSpareServers          4'; \
-        echo '    MaxRequestWorkers        15'; \
+        echo '    MaxSpareServers          3'; \
+        echo '    MaxRequestWorkers        8'; \
         echo '    MaxConnectionsPerChild   1000'; \
         echo '</IfModule>'; \
+        echo 'KeepAlive On'; \
+        echo 'MaxKeepAliveRequests 100'; \
+        echo 'KeepAliveTimeout 2'; \
     } > /etc/apache2/conf-available/hospital-app.conf \
     && a2enconf hospital-app
 
@@ -63,15 +66,16 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && { \
         echo 'upload_max_filesize = 64M'; \
         echo 'post_max_size = 64M'; \
-        echo 'memory_limit = 256M'; \
-        echo 'max_execution_time = 120'; \
+        echo 'memory_limit = 128M'; \
+        echo 'max_execution_time = 60'; \
         echo 'date.timezone = Asia/Ho_Chi_Minh'; \
         echo 'expose_php = Off'; \
         echo 'opcache.enable = 1'; \
-        echo 'opcache.memory_consumption = 128'; \
-        echo 'opcache.interned_strings_buffer = 8'; \
-        echo 'opcache.max_accelerated_files = 10000'; \
-        echo 'opcache.revalidate_freq = 2'; \
+        echo 'opcache.memory_consumption = 32'; \
+        echo 'opcache.interned_strings_buffer = 4'; \
+        echo 'opcache.max_accelerated_files = 2000'; \
+        echo 'opcache.revalidate_freq = 0'; \
+        echo 'opcache.validate_timestamps = 0'; \
     } > "$PHP_INI_DIR/conf.d/custom-hospital.ini"
 
 # 6. Thiết lập thư mục làm việc DocumentRoot

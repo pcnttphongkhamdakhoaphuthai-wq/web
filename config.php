@@ -178,9 +178,10 @@ try {
         }
     }
 
+    $connectHost = (!str_starts_with($dbHost, 'p:') && $dbHost !== '127.0.0.1' && $dbHost !== 'localhost') ? ('p:' . $dbHost) : $dbHost;
     mysqli_real_connect(
         $conn,
-        $dbHost,
+        $connectHost,
         (string) $appConfig['db_user'],
         (string) $appConfig['db_password'],
         (string) $appConfig['db_name'],
@@ -198,10 +199,11 @@ try {
     exit;
 }
 
-foreach ([APP_SESSION_ROOT, APP_RATE_LIMIT_ROOT, APP_SECURITY_ROOT, APP_AUDIT_ROOT, APP_RESET_ROOT, APP_ADMIN_NOTICE_ROOT, APP_RESULTS_ROOT, APP_PUBLIC_ASSETS_ROOT, APP_DOCTOR_PHOTO_ROOT, APP_BRANDING_ROOT, APP_NEWS_MEDIA_ROOT] as $dir) {
-    if (!is_dir($dir)) {
-        if (!@mkdir($dir, 0777, true) && !is_dir($dir)) {
-            error_log('[hospital_runtime] Khong the tao thu muc runtime: ' . $dir);
+if (!defined('APP_DIRS_INITIALIZED')) {
+    define('APP_DIRS_INITIALIZED', true);
+    foreach ([APP_SESSION_ROOT, APP_RATE_LIMIT_ROOT, APP_SECURITY_ROOT, APP_AUDIT_ROOT, APP_RESET_ROOT, APP_ADMIN_NOTICE_ROOT, APP_RESULTS_ROOT, APP_PUBLIC_ASSETS_ROOT, APP_DOCTOR_PHOTO_ROOT, APP_BRANDING_ROOT, APP_NEWS_MEDIA_ROOT] as $dir) {
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
         }
     }
 }
@@ -2718,6 +2720,18 @@ function get_all_site_settings_cached(): array
         return $cache;
     }
 
+    $cacheFile = APP_RUNTIME_PATH . '/site_settings_cache.json';
+    if (is_file($cacheFile) && (time() - filemtime($cacheFile) < 600)) {
+        $json = @file_get_contents($cacheFile);
+        if ($json !== false) {
+            $data = json_decode($json, true);
+            if (is_array($data) && !empty($data)) {
+                $cache = $data;
+                return $cache;
+            }
+        }
+    }
+
     global $conn;
     $cache = [];
     try {
@@ -2727,6 +2741,9 @@ function get_all_site_settings_cached(): array
                 $cache[(string) $row['setting_key']] = (string) $row['setting_value'];
             }
             $result->free();
+        }
+        if (!empty($cache)) {
+            @file_put_contents($cacheFile, json_encode($cache, JSON_UNESCAPED_UNICODE), LOCK_EX);
         }
     } catch (Throwable $exception) {
         log_internal_error('fetch_site_settings_failed', $exception);
@@ -2782,6 +2799,7 @@ function save_site_settings(array $settings): void
     }
 
     $stmt->close();
+    @unlink(APP_RUNTIME_PATH . '/site_settings_cache.json');
 }
 
 function get_active_quick_replies(int $limit = 12): array

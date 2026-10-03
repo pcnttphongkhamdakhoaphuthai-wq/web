@@ -1,6 +1,0 @@
-# Cloudflare Pages _redirects configuration
-/dashboard*  https://conghotrophongkhamphuthai.io.vn/dashboard:splat  302
-/admin_*  https://conghotrophongkhamphuthai.io.vn/admin_:splat  302
-/account*  https://conghotrophongkhamphuthai.io.vn/account:splat  302
-/download_*  https://conghotrophongkhamphuthai.io.vn/download_:splat  302
-/logout.php  https://conghotrophongkhamphuthai.io.vn/logout.php  302
