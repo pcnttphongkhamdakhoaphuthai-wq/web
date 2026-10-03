@@ -99,6 +99,7 @@ if (($appConfig['db_user'] ?? '') === '') {
 }
 
 define('APP_RUNTIME_ROOT', rtrim((string) $appConfig['runtime_path'], "\\/"));
+define('APP_RUNTIME_PATH', APP_RUNTIME_ROOT);
 define('APP_RESULTS_ROOT', APP_RUNTIME_ROOT . DIRECTORY_SEPARATOR . 'results');
 define('APP_RATE_LIMIT_ROOT', APP_RUNTIME_ROOT . DIRECTORY_SEPARATOR . 'rate_limits');
 define('APP_SECURITY_ROOT', APP_RUNTIME_ROOT . DIRECTORY_SEPARATOR . 'security');
@@ -178,10 +179,9 @@ try {
         }
     }
 
-    $connectHost = (!str_starts_with($dbHost, 'p:') && $dbHost !== '127.0.0.1' && $dbHost !== 'localhost') ? ('p:' . $dbHost) : $dbHost;
     mysqli_real_connect(
         $conn,
-        $connectHost,
+        $dbHost,
         (string) $appConfig['db_user'],
         (string) $appConfig['db_password'],
         (string) $appConfig['db_name'],
@@ -2724,7 +2724,7 @@ function get_all_site_settings_cached(): array
         return $cache;
     }
 
-    $cacheFile = APP_RUNTIME_PATH . '/site_settings_cache.json';
+    $cacheFile = APP_RUNTIME_ROOT . '/site_settings_cache.json';
     if (is_file($cacheFile) && (time() - filemtime($cacheFile) < 600)) {
         $json = @file_get_contents($cacheFile);
         if ($json !== false) {
@@ -2803,7 +2803,7 @@ function save_site_settings(array $settings): void
     }
 
     $stmt->close();
-    @unlink(APP_RUNTIME_PATH . '/site_settings_cache.json');
+    @unlink(APP_RUNTIME_ROOT . '/site_settings_cache.json');
 }
 
 function get_active_quick_replies(int $limit = 12): array
