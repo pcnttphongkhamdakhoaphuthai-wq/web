@@ -130,6 +130,9 @@
         // Kiểm tra xem phản hồi có phải JSON không
         const contentType = response.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
+          if (response.status === 404 || response.status === 502 || response.status === 503) {
+            throw new Error('Máy chủ dữ liệu hiện chưa sẵn sàng hoặc đang khởi động lại (HTTP ' + response.status + '). Vui lòng thử lại sau giây lát.');
+          }
           throw new Error('Máy chủ phản hồi định dạng không hợp lệ');
         }
 
@@ -145,12 +148,17 @@
     clearTimeout(coldStartTimer);
     if (loadingToast) loadingToast.remove();
 
+    let friendlyError = lastError?.message || 'Không thể kết nối đến máy chủ xử lý dữ liệu.';
+    if (friendlyError === 'Failed to fetch' || friendlyError.includes('NetworkError') || friendlyError.includes('Load failed')) {
+      friendlyError = 'Không thể kết nối đến máy chủ Backend (Render). Vui lòng kiểm tra trạng thái máy chủ dữ liệu hoặc thử lại sau.';
+    }
+
     return {
       status: 0,
       ok: false,
       data: {
         success: false,
-        error: lastError?.message || 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại đường truyền.'
+        error: friendlyError
       }
     };
   }

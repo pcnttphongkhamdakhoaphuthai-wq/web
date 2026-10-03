@@ -25,6 +25,26 @@ export default {
         forwardReq.headers.set('X-Forwarded-Proto', 'https');
 
         const response = await fetch(forwardReq);
+
+        // Bắt lỗi khi máy chủ Render chưa bật hoặc báo no-server
+        if (response.headers.get('x-render-routing') === 'no-server' || response.status === 502 || response.status === 503) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Máy chủ dữ liệu trên Render hiện chưa khởi chạy hoặc đang tạm nghỉ. Vui lòng bật lại dịch vụ trên Render Dashboard và thử lại sau ít giây.',
+              detail: 'Backend origin unreachable: ' + backendOrigin
+            }),
+            {
+              status: 503,
+              headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Access-Control-Allow-Origin': url.origin,
+                'Access-Control-Allow-Credentials': 'true'
+              }
+            }
+          );
+        }
+
         const newHeaders = new Headers(response.headers);
         newHeaders.set('Access-Control-Allow-Origin', url.origin);
         newHeaders.set('Access-Control-Allow-Credentials', 'true');
