@@ -28,9 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!validate_phone_number($phone)) {
         set_flash('error', 'Số điện thoại không hợp lệ.');
     } elseif ($email !== '' && !$emailEnabled) {
-        set_flash('error', 'Hệ thống chưa bật trường Gmail cho bệnh nhân.');
+        set_flash('error', 'Hệ thống chưa bật trường Email cho bệnh nhân.');
     } elseif ($email !== '' && !validate_email_address($email)) {
-        set_flash('error', 'Gmail không hợp lệ.');
+        set_flash('error', 'Địa chỉ Email không hợp lệ.');
     } else {
         if ($emailEnabled) {
             $stmt = $conn->prepare('SELECT id FROM patients WHERE (phone = ? OR (? <> "" AND email = ?)) AND id <> ? LIMIT 1');
@@ -155,7 +155,7 @@ render_header('Quản lý tài khoản');
           <input id="phone" name="phone" maxlength="15" value="<?= e($patient['phone'] ?? '') ?>" required>
         </div>
         <div>
-          <label for="email">Gmail<?= !$emailEnabled ? ' (chưa sẵn sàng)' : '' ?></label>
+          <label for="email">Địa chỉ Email<?= !$emailEnabled ? ' (chưa sẵn sàng)' : '' ?></label>
           <input id="email" type="email" name="email" value="<?= e($patient['email'] ?? '') ?>" <?= !$emailEnabled ? 'disabled' : '' ?>>
         </div>
         <div>

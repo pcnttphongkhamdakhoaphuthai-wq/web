@@ -2248,24 +2248,28 @@ function visual_captcha_required(string $context): bool
 
 function render_captcha(string $context): void
 {
-    echo '<div>';
+    echo '<div class="captcha-block" style="margin-top:12px;">';
     echo '<input type="text" name="contact_website" tabindex="-1" autocomplete="off" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden" aria-hidden="true">';
-    echo '<label>Xác minh chống bot</label>';
     $turnstileSiteKey = turnstile_site_key();
     if ($turnstileSiteKey !== '') {
-        echo '<div class="cf-turnstile" data-sitekey="' . e($turnstileSiteKey) . '" data-theme="light"></div>';
+        echo '<div style="margin-bottom:8px;"><label>Xác minh an toàn</label><div class="cf-turnstile" data-sitekey="' . e($turnstileSiteKey) . '" data-theme="light"></div></div>';
         echo '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
     }
     $siteKey = $turnstileSiteKey === '' ? recaptcha_site_key() : '';
     if ($siteKey !== '') {
-        echo '<div class="g-recaptcha" data-sitekey="' . e($siteKey) . '" data-theme="light"></div>';
+        echo '<div style="margin-bottom:8px;"><label>Xác minh an toàn</label><div class="g-recaptcha" data-sitekey="' . e($siteKey) . '" data-theme="light"></div></div>';
         echo '<script src="https://www.google.com/recaptcha/api.js?hl=vi" async defer></script>';
     }
     if (visual_captcha_required($context)) {
         $visualCode = visual_captcha_code($context);
-        echo '<div class="visual-captcha">';
-        echo '<img src="' . e(visual_captcha_image_src($visualCode)) . '" alt="Mã captcha ảnh" width="216" height="58">';
-        echo '<input name="visual_captcha_answer" autocomplete="off" inputmode="text" maxlength="8" placeholder="Nhập mã trong ảnh" required>';
+        $inputId = 'captcha_' . preg_replace('/[^a-zA-Z0-9_]/', '', $context);
+        echo '<div>';
+        echo '<label for="' . $inputId . '">Mã xác thực hình ảnh <span style="font-size:12px;font-weight:normal;color:#64748b">(phân biệt chữ hoa/thường)</span></label>';
+        echo '<div class="visual-captcha" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
+        echo '<img id="img_' . $inputId . '" src="' . e(visual_captcha_image_src($visualCode)) . '" alt="Hình ảnh chứa 6 ký tự mã xác nhận" width="200" height="52" style="border:1.5px solid var(--border);border-radius:8px;background:#fff;display:block;">';
+        echo '<input id="' . $inputId . '" name="visual_captcha_answer" autocomplete="off" inputmode="text" maxlength="8" placeholder="Nhập 6 ký tự" style="flex:1;min-width:140px;height:50px" aria-label="Mã xác thực gồm 6 ký tự trong ảnh" required>';
+        echo '</div>';
+        echo '<div style="margin-top:6px;font-size:12px;color:#64748b;">Mã khó đọc? <a href="javascript:location.reload()" style="color:var(--primary);text-decoration:underline;">Tải lại trang để lấy mã mới</a></div>';
         echo '</div>';
     }
     echo '</div>';
@@ -3709,97 +3713,193 @@ function get_admin_support_chat_notice(mysqli $conn, int $adminId, int $previewL
     ];
 }
 
-function render_header(string $title): void
+function render_header(string $title, string $activeNav = ''): void
 {
     $isPatient = isset($_SESSION['user_id']);
     $isAdmin = isset($_SESSION['admin_id']);
-    $clinicName = site_setting('clinic_name', "PH\u{00D2}NG KH\u{00C1}M \u{0110}A KHOA PH\u{00DA} TH\u{00C1}I");
+    $clinicName = site_setting('clinic_name', "Phòng khám đa khoa Phú Thái");
 
     echo '<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>' . e($title) . '</title>';
     echo '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
-    echo '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" media="print" onload="this.media=\'all\'">';
-    echo '<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap"></noscript>';
+    echo '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap">';
     echo '<style>
         :root {
             --primary: #0077b6;
+            --primary-hover: #005f92;
             --secondary: #00b4d8;
-            --surface: #fff;
-            --soft: #f1faff;
-            --ink: #1f2d3d;
-            --muted: #667085;
-            --border: #d7e4ef;
-            --shadow: 0 18px 40px rgba(10,37,64,.08);
-            
-            /* New Design Tokens */
+            --surface: #ffffff;
+            --soft: #f0f7fb;
             --bg: #f8fafc;
             --bg2: #f1f5f9;
+            --ink: #1e293b;
             --tx: #1e293b;
             --tx2: #64748b;
+            --muted: #64748b;
+            --border: #dbe4ec;
             --ct: #e2e8f0;
+            --shadow: 0 10px 25px rgba(15,35,55,.06);
             --r: 12px;
+            --radius: 12px;
+            --danger: #b91c1c;
             --err-tx: #b91c1c;
-            
             color-scheme: light;
         }
         * { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
         body { 
             margin: 0; 
-            font-family: "Be Vietnam Pro", Segoe UI, Tahoma, sans-serif; 
-            background: linear-gradient(180deg, #eef8fd 0, #f8fbfd 160px, #f4f8fb 100%); 
+            font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: #f8fafc; 
             color: var(--tx); 
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            line-height: 1.6;
         }
         main { flex: 1; }
-        a{color:inherit}.site-header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);box-shadow:0 3px 18px rgba(0,0,0,.05)}
-        .site-header-inner{max-width:1180px;margin:0 auto;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:20px}
-        .logo{display:flex;align-items:center;gap:12px;font-size:22px;font-weight:800;color:var(--primary);text-decoration:none}.logo-mark{width:156px;height:86px;object-fit:contain;display:block}.logo-text{display:block;line-height:1.1}.nav{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.nav a{text-decoration:none;color:#334155;font-weight:500}.nav a:hover{color:var(--primary)}.nav-pill{padding:10px 14px;background:var(--soft);border-radius:999px}
-        .hero{background:linear-gradient(125deg,#0077b6 0,#00b4d8 55%,#73dff3 100%);color:#fff;padding:72px 20px 90px}.hero-inner{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);gap:30px;align-items:center}
-        .hero h1{font-size:clamp(34px,5vw,52px);line-height:1.08;margin:0 0 14px}.hero p{font-size:18px;line-height:1.7;max-width:640px;margin:0 0 22px}.hero-badges{display:flex;gap:12px;flex-wrap:wrap}.hero-badge{padding:10px 14px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.14);border-radius:999px}
-        .hero-panel{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:24px;padding:24px;box-shadow:0 18px 32px rgba(0,0,0,.12)}.hero-panel h3{margin:0 0 12px}.hero-list{display:grid;gap:12px}.hero-item{padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.14)}
-        .wrap{max-width:1180px;margin:-42px auto 0;padding:0 20px 50px;position:relative}.section{margin-bottom:28px}.section-title{font-size:30px;margin:0 0 10px}.section-lead{color:var(--muted);max-width:760px;line-height:1.7;margin:0 0 24px}
-        .card{background:var(--surface);border-radius:24px;padding:26px;box-shadow:var(--shadow);margin-bottom:20px;border:1px solid rgba(215,228,239,.7)}.grid{display:grid;gap:18px}.grid-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}.grid-3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.grid-4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-        .service-card{background:linear-gradient(180deg,#fff 0,#f8fcff 100%);border:1px solid var(--border);border-radius:22px;padding:24px;box-shadow:var(--shadow)}.service-icon{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,#0077b6,#00b4d8);color:#fff;font-size:24px;margin-bottom:16px}
-        .service-card h3{margin:0 0 8px;font-size:20px}.service-card p{margin:0;color:var(--muted);line-height:1.7}
-        .panel-title{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}h1,h2,h3{margin-top:0}
-        label{display:block;font-weight:600;margin-bottom:7px}input,select,textarea{width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:14px;font:inherit;background:#fff}input:focus,select:focus,textarea:focus{outline:none;border-color:var(--secondary);box-shadow:0 0 0 4px rgba(0,180,216,.12)}.staff-login-link{margin-top:-4px}.staff-login-link a{color:#64748b;text-decoration:underline;font-weight:500}.staff-login-link a:hover{color:var(--primary)}.visual-captcha{display:grid;grid-template-columns:190px minmax(0,1fr);gap:12px;align-items:center;margin-top:12px}.visual-captcha img{display:block;width:190px;height:58px;border:1px solid #0891b2;background:#fff;object-fit:contain}.visual-captcha input{min-width:0}
-        textarea{min-height:120px;resize:vertical}.search-box{display:flex;gap:10px;padding:10px;border-radius:999px;background:#fff;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.45)}.search-box input{border:none;padding:10px 14px;background:transparent}.search-box input:focus{box-shadow:none}
-        button,.btn{display:inline-block;border:none;border-radius:14px;background:linear-gradient(135deg,#0077b6,#0096c7);color:#fff;padding:12px 18px;font:inherit;font-weight:600;text-decoration:none;cursor:pointer;box-shadow:0 12px 24px rgba(0,119,182,.18)}
-        .btn-secondary{background:#475569;box-shadow:none}.btn-light{background:#eaf7ff;color:#0369a1;box-shadow:none}.actions{display:flex;gap:10px;flex-wrap:wrap}
-        .dashboard-layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:24px}.sidebar{background:var(--surface);border-radius:24px;padding:24px;box-shadow:var(--shadow);border:1px solid rgba(215,228,239,.7);height:fit-content}.sidebar-nav a{display:block;padding:13px 14px;margin-bottom:10px;text-decoration:none;border-radius:14px;background:#fff;color:#2f3d4a}.sidebar-nav a:hover,.sidebar-nav a.active{background:var(--soft);color:var(--primary)}
-        .metric-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:18px 0 24px}.metric{padding:18px;border-radius:18px;background:linear-gradient(180deg,#fff,#f8fcff);border:1px solid var(--border)}.metric strong{display:block;font-size:30px;color:var(--primary);margin-bottom:6px}
-        table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:14px 12px;border-bottom:1px solid #edf2f7;text-align:left;vertical-align:top}th{background:var(--soft);color:#24425c}
-        .flash{padding:14px 16px;border-radius:16px;margin-bottom:18px}.flash-success{background:#dcfce7;color:#166534}.flash-error{background:#fee2e2;color:#991b1b}.muted{color:var(--muted)}.badge{display:inline-flex;align-items:center;padding:7px 12px;border-radius:999px;background:#eaf7ff;color:#0369a1;font-size:13px;font-weight:700;margin:4px 6px 0 0}.chat-box{display:grid;gap:12px}.chat-thread{display:grid;gap:12px;max-height:420px;overflow-y:auto;overflow-x:hidden;padding-right:4px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}.chat-message{padding:14px 16px;border-radius:18px;background:#f8fbff;border:1px solid var(--border)}.chat-message.patient{background:#e0f2fe;border-color:#7dd3fc}.chat-message.bot{background:#f8fafc;border-color:#cbd5e1}.chat-message strong{display:block;margin-bottom:6px}.quick-replies{display:flex;gap:10px;flex-wrap:wrap}.quick-replies button{box-shadow:none;padding:10px 14px}.inline-form{display:inline}.empty-state{padding:16px;border-radius:18px;background:#f8fafc;border:1px dashed var(--border)}.text-sm{font-size:13px}.doctor-meta{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 14px}.doctor-meta span{padding:8px 12px;border-radius:999px;background:#eef8fd;color:#075985;font-size:13px;font-weight:600}.doctor-photo{width:92px;height:92px;border-radius:24px;object-fit:cover;border:1px solid var(--border);box-shadow:var(--shadow);background:#f8fafc}.doctor-card-head{display:flex;align-items:flex-start;gap:18px}.danger-btn{background:#b91c1c;box-shadow:none}.danger-btn:hover{background:#991b1b}.map-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.announcement-card{background:linear-gradient(180deg,#fff7ed,#ffffff);border:1px solid #fed7aa}.announcement-card h3{margin-bottom:8px}.admin-alert-toast{position:fixed;top:92px;right:22px;z-index:90;width:min(420px,calc(100vw - 28px));padding:18px 18px 16px;border-radius:22px;background:linear-gradient(135deg,#fff1f2,#ffffff);border:1px solid #fda4af;box-shadow:0 24px 50px rgba(15,23,42,.18)}.admin-alert-toast h3{margin:0 0 8px;color:#9f1239}.admin-alert-list{display:grid;gap:10px;margin:14px 0;max-height:min(56vh,520px);overflow:auto;padding-right:4px}.admin-alert-item{padding:12px 14px;border-radius:16px;background:#fff;border:1px solid #fecdd3}.admin-alert-item strong{display:block;margin-bottom:4px}.admin-alert-item textarea{min-height:88px}.floating-chat{position:fixed;right:22px;bottom:22px;z-index:70;display:grid;justify-items:end;gap:12px}.floating-chat-nudge{position:relative;width:min(330px,calc(100vw - 44px));animation:chatPop .22s ease-out}.floating-chat-nudge[hidden]{display:none}.floating-chat-nudge-body{border:0;background:transparent;padding:0;display:flex;align-items:flex-end;gap:10px;text-align:left;cursor:pointer}.floating-chat-avatar{width:54px;height:54px;border-radius:999px;background:linear-gradient(135deg,#0077b6,#00b4d8);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;border:3px solid #fff;box-shadow:0 14px 28px rgba(15,23,42,.18);flex:0 0 auto}.floating-chat-bubble{position:relative;display:grid;gap:4px;max-width:250px;padding:13px 16px;border-radius:10px;background:#0b83b7;color:#fff;box-shadow:0 16px 34px rgba(15,23,42,.22);font-size:14px;line-height:1.28}.floating-chat-bubble:after{content:\"\";position:absolute;left:20px;bottom:-9px;border-width:10px 9px 0 0;border-style:solid;border-color:#0b83b7 transparent transparent transparent}.floating-chat-bubble strong{font-size:13px}.floating-chat-nudge-close{position:absolute;right:-7px;top:-9px;width:22px;height:22px;border:0;border-radius:999px;background:#0b83b7;color:#fff;font-size:18px;line-height:20px;font-weight:800;cursor:pointer;box-shadow:0 8px 16px rgba(15,23,42,.2)}.floating-chat.has-new-message .floating-chat-launcher{animation:chatPulse 1.2s ease-in-out infinite}.file-dialog-active .floating-chat-nudge,.file-dialog-active .floating-chat-launcher{animation:none!important;transition:none!important;transform:none!important}.floating-chat-panel{width:min(400px,calc(100vw - 28px));height:min(78vh,760px);display:none;background:#fff;border:1px solid rgba(215,228,239,.85);border-radius:24px;box-shadow:0 26px 60px rgba(15,23,42,.22);overflow:hidden}.floating-chat.open .floating-chat-panel{display:flex;flex-direction:column}.floating-chat-launcher{min-width:64px;min-height:64px;border-radius:999px;padding:0 22px;display:inline-flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#0077b6,#00b4d8);box-shadow:0 18px 36px rgba(0,119,182,.35)}@keyframes chatPulse{0%,100%{transform:translateY(0);box-shadow:0 18px 36px rgba(0,119,182,.35)}50%{transform:translateY(-4px);box-shadow:0 24px 44px rgba(0,119,182,.5)}}@keyframes chatPop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}.floating-chat-header{padding:18px 20px;background:linear-gradient(135deg,#0077b6,#00b4d8);color:#fff;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.floating-chat-body{padding:16px 16px 18px;display:flex;flex-direction:column;gap:14px;background:#fbfdff;min-height:0;flex:1 1 auto;overflow:hidden}.floating-chat .quick-replies{flex:0 0 auto;max-height:126px;overflow:auto;padding-right:4px}.floating-chat .chat-thread{flex:1 1 auto;min-height:0;max-height:none;padding-right:6px}.floating-chat form.grid{flex:0 0 auto;margin-top:auto}.floating-chat textarea{min-height:110px}.floating-chat-close{background:rgba(255,255,255,.2);box-shadow:none;padding:8px 12px}.floating-chat-min{font-size:14px;opacity:.92}.floating-chat-count{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border-radius:999px;background:#fff;color:#0077b6;font-size:12px;font-weight:800}.floating-chat-link{display:none}
-        .footer{background:#003049;color:#fff;margin-top:40px}.footer-inner{max-width:1180px;margin:0 auto;padding:26px 20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
-        @media (max-width:1100px){.hero-inner{grid-template-columns:1fr}.wrap{margin-top:0}.hero{padding-bottom:42px}}
-        @media (max-width:900px){.hero-inner,.dashboard-layout{grid-template-columns:1fr}.wrap{margin-top:0}.site-header-inner{padding:16px}.nav{gap:12px}.logo-mark{width:112px;height:68px}}
-        @media (max-width:640px){.hero{padding:56px 16px 74px}.wrap{padding:0 16px 40px}.card,.service-card,.sidebar{padding:20px}.search-box{flex-direction:column;border-radius:22px}.search-box button,.btn{width:auto}.logo{gap:10px}.logo-mark{width:88px;height:54px}.logo-text{font-size:18px}.visual-captcha{grid-template-columns:1fr}.admin-alert-toast{top:76px;right:14px;width:calc(100vw - 28px)}.floating-chat{right:14px;bottom:14px}.floating-chat-panel{height:min(82vh,700px)}.floating-chat-launcher{padding:0 18px}.floating-chat textarea{min-height:92px}}
-        .admin-tabs { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; border: none; padding-bottom: 0px; }
-        .admin-tabs .tab-btn { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: var(--ink); border: 1px solid var(--border); padding: 12px 20px; font-weight: 600; cursor: pointer; border-radius: 12px; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .admin-tabs .tab-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); box-shadow: 0 6px 12px rgba(0,0,0,0.08); }
-        .admin-tabs .tab-btn.active { color: #fff; background: linear-gradient(135deg, #0077b6, #00b4d8); border-color: transparent; box-shadow: 0 6px 16px rgba(0, 119, 182, 0.25); }
-        .admin-tabs .tab-btn svg { width: 18px; height: 18px; fill: currentColor; }
-        .tab-content { display: none; }
-        .tab-content.tab-active { display: block; }
+        a { color: inherit; text-decoration: none; }
+        
+        /* SITE HEADER */
+        .site-header { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.96); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,.03); }
+        .site-header-inner { max-width: 1180px; margin: 0 auto; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 64px; }
+        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--primary); }
+        .logo-mark { height: 46px; width: auto; max-width: 140px; object-fit: contain; display: block; }
+        .logo-text { font-size: 17px; font-weight: 800; line-height: 1.15; color: #0f3d61; letter-spacing: -0.3px; display: block; }
+        .logo-sub { font-size: 11px; font-weight: 600; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; }
+        
+        .nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .nav-link { padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; color: #334155; transition: all .15s; }
+        .nav-link:hover { color: var(--primary); background: var(--soft); }
+        .nav-link.active { color: var(--primary); font-weight: 700; background: var(--soft); box-shadow: inset 0 -2px 0 var(--primary); }
+        .nav-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600; transition: all .15s; }
+        .nav-btn-primary { background: linear-gradient(135deg, #0077b6, #0096c7); color: #fff!important; box-shadow: 0 4px 12px rgba(0,119,182,.2); }
+        .nav-btn-primary:hover { background: #005f92; transform: translateY(-1px); }
+        .nav-btn-outline { border: 1.5px solid var(--border); color: #334155; background: #fff; }
+        .nav-btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        .nav-pill { padding: 8px 14px; background: #e0f2fe; color: #0284c7!important; border-radius: 999px; font-size: 13.5px; font-weight: 600; }
+
+        /* CONTAINERS & SECTIONS */
+        .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 48px; }
+        .section { margin-bottom: 36px; }
+        .section-header { margin-bottom: 20px; }
+        .section-title { font-size: 26px; font-weight: 700; color: #0f2942; margin: 0 0 6px; }
+        .section-lead { color: var(--muted); font-size: 15px; margin: 0; }
+        
+        .card { background: var(--surface); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 20px; }
+        .grid { display: grid; gap: 20px; }
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+        .grid-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+        /* HERO SECTION */
+        .hero { background: linear-gradient(135deg, #0077b6 0%, #0096c7 60%, #48cae4 100%); color: #fff; padding: 48px 20px 56px; }
+        .hero-inner { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0,1.3fr) minmax(300px,.9fr); gap: 32px; align-items: center; }
+        .hero h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.2; margin: 0 0 14px; font-weight: 800; }
+        .hero p { font-size: 16px; line-height: 1.7; opacity: .95; margin: 0 0 24px; max-width: 600px; }
+        .hero-badges { display: flex; gap: 10px; flex-wrap: wrap; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); font-size: 13px; font-weight: 600; color: #fff; }
+        .hero-panel { background: rgba(255,255,255,.15); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.25); border-radius: 20px; padding: 24px; }
+        .hero-panel h3 { margin: 0 0 16px; font-size: 18px; font-weight: 700; color: #fff; }
+        .hero-list { display: grid; gap: 10px; }
+        .hero-item { padding: 12px 16px; border-radius: 12px; background: rgba(255,255,255,.12); font-size: 14px; line-height: 1.5; color: #f8fafc; }
+
+        /* BUTTONS & FORMS */
+        button, .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 10px; background: var(--primary); color: #fff; padding: 11px 18px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; text-decoration: none; }
+        button:hover, .btn:hover { background: var(--primary-hover); }
+        .btn-secondary { background: #475569; }
+        .btn-secondary:hover { background: #334155; }
+        .btn-light { background: var(--soft); color: var(--primary); }
+        .btn-light:hover { background: #e0f2fe; }
+        .btn-outline { background: transparent; border: 1.5px solid var(--border); color: #334155; }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: #fff; }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #991b1b; }
+        
+        label { display: block; font-weight: 600; font-size: 13.5px; color: #334155; margin-bottom: 6px; }
+        input, select, textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font: inherit; font-size: 14.5px; background: #fff; color: var(--tx); transition: border-color .15s, box-shadow .15s; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,119,182,.12); }
+        
+        /* FOOTER */
+        .site-footer { background: #0c2333; color: #cbd5e1; margin-top: auto; font-size: 14px; border-top: 1px solid rgba(255,255,255,.08); }
+        .footer-main { max-width: 1180px; margin: 0 auto; padding: 40px 20px 32px; display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 36px; }
+        .footer-col h4 { color: #fff; font-size: 15px; font-weight: 700; margin: 0 0 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .footer-col p { margin: 0 0 10px; line-height: 1.6; }
+        .footer-col a { color: #94a3b8; transition: color .15s; }
+        .footer-col a:hover { color: #38bdf8; }
+        .footer-contact-item { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
+        .footer-bottom { max-width: 1180px; margin: 0 auto; padding: 18px 20px; border-top: 1px solid rgba(255,255,255,.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 12.5px; color: #94a3b8; }
+        .footer-bottom a { color: #cbd5e1; }
+        .footer-bottom a:hover { color: #38bdf8; }
+        .staff-link { color: #94a3b8; font-weight: 500; }
+        .staff-link:hover { color: #f8fafc; }
+
+        /* FLASH MESSAGES */
+        .flash { padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
+        .flash-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .flash-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+        /* FLOATING SUPPORT WIDGET (UNIFIED FAB) */
+        .fab-support-container { position: fixed; right: 24px; bottom: 24px; z-index: 9995; }
+        .fab-support-btn { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #0077b6, #0096c7); color: #fff; border: 3px solid #fff; box-shadow: 0 8px 24px rgba(0,119,182,.35); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .2s, box-shadow .2s; }
+        .fab-support-btn:hover { transform: scale(1.06); box-shadow: 0 10px 28px rgba(0,119,182,.45); }
+        .fab-support-btn svg { width: 26px; height: 26px; fill: currentColor; }
+        .fab-support-menu { position: absolute; bottom: 68px; right: 0; width: 260px; background: #fff; border-radius: 16px; box-shadow: 0 14px 36px rgba(15,35,55,.18); border: 1px solid var(--border); padding: 10px; display: none; flex-direction: column; gap: 6px; animation: fabFadeIn .2s ease-out; }
+        .fab-support-menu.active { display: flex; }
+        @keyframes fabFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .fab-support-header { padding: 8px 12px 6px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        .fab-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #1e293b; font-size: 13.5px; font-weight: 600; transition: background .15s; }
+        .fab-item:hover { background: var(--soft); color: var(--primary); }
+        .fab-item-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; }
+        .fab-item-icon svg { width: 18px; height: 18px; fill: currentColor; }
+        .fab-icon-call { background: #10b981; }
+        .fab-icon-zalo { background: #0068ff; }
+        .fab-icon-msg { background: linear-gradient(135deg, #00b2ff, #9b30ff); }
+        .fab-icon-guide { background: #0284c7; }
+
+        @media (max-width: 900px) {
+            .site-header-inner { padding: 8px 16px; }
+            .hero-inner { grid-template-columns: 1fr; gap: 24px; }
+            .footer-main { grid-template-columns: 1fr; gap: 24px; padding: 32px 16px 24px; }
+        }
+        @media (max-width: 640px) {
+            .logo-text { font-size: 15px; }
+            .logo-mark { height: 38px; }
+            .nav { gap: 4px; }
+            .nav-link { padding: 6px 8px; font-size: 13px; }
+            .nav-btn { padding: 6px 12px; font-size: 12.5px; }
+            .hero { padding: 36px 16px 44px; }
+            .wrap { padding: 16px 16px 36px; }
+            .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .fab-support-container { right: 16px; bottom: 16px; }
+        }
     </style></head><body>';
+    
     echo '<header class="site-header"><div class="site-header-inner">';
-    echo "<a class=\"logo\" href=\"index.php\"><img class=\"logo-mark\" src=\"" . e(clinic_logo_url()) . "\" alt=\"Logo ph\u{00F2}ng kh\u{00E1}m\"><span class=\"logo-text\">" . e($clinicName) . "</span></a>";
+    echo '<a class="logo" href="index.php">';
+    echo '<img class="logo-mark" src="' . e(clinic_logo_url()) . '" alt="Logo Phòng khám đa khoa Phú Thái">';
+    echo '<div><span class="logo-text">' . e($clinicName) . '</span><span class="logo-sub">Cổng người bệnh</span></div>';
+    echo '</a>';
+    
     echo '<nav class="nav">';
-    echo "<a href=\"index.php\">Trang ch\u{1EE7}</a>";
-    if (appointments_enabled()) {
-        echo "<a href=\"book_appointment.php\">\u{0110}\u{1EB7}t l\u{1ECB}ch</a>";
-    }
-    echo "<a href=\"dashboard.php#records\">K\u{1EBF}t qu\u{1EA3}</a><a href=\"news.php\">Tin t\u{1EE9}c</a><a href=\"resources.php\">T\u{01B0} li\u{1EC7}u</a><a href=\"dashboard.php#support\">H\u{1ED7} tr\u{1EE3}</a>";
+    echo '<a class="nav-link' . ($activeNav === 'home' ? ' active' : '') . '" href="index.php">Trang chủ</a>';
+    echo '<a class="nav-link' . ($activeNav === 'services' ? ' active' : '') . '" href="index.php#services">Dịch vụ</a>';
+    echo '<a class="nav-link' . ($activeNav === 'doctors' ? ' active' : '') . '" href="index.php#doctors">Bác sĩ</a>';
+    echo '<a class="nav-link' . ($activeNav === 'guide' ? ' active' : '') . '" href="resources.php">Hướng dẫn</a>';
+    echo '<a class="nav-link' . ($activeNav === 'support' ? ' active' : '') . '" href="support.php">Hỗ trợ</a>';
+
     if ($isPatient) {
-        echo "<a class=\"nav-pill\" href=\"dashboard.php\">" . e((string) ($_SESSION['name'] ?? "B\u{1EC7}nh nh\u{00E2}n")) . "</a><a href=\"logout.php\">\u{0110}\u{0103}ng xu\u{1EA5}t</a>";
+        echo '<a class="nav-btn nav-btn-primary" href="dashboard.php#records">Tra cứu kết quả</a>';
+        echo '<a class="nav-pill" href="dashboard.php">' . e((string) ($_SESSION['name'] ?? "Bệnh nhân")) . '</a>';
+        echo '<a class="nav-link" href="logout.php">Đăng xuất</a>';
     } elseif ($isAdmin) {
-        echo "<a class=\"nav-pill\" href=\"admin_add_record.php\">Qu\u{1EA3}n tr\u{1ECB}</a><a href=\"admin_profile.php\">T\u{00E0}i kho\u{1EA3}n</a><a href=\"logout.php\">\u{0110}\u{0103}ng xu\u{1EA5}t</a>";
+        echo '<a class="nav-pill" href="admin_add_record.php">Quản trị</a>';
+        echo '<a class="nav-link" href="logout.php">Đăng xuất</a>';
     } else {
-        echo "<a href=\"login.php#login-form\">\u{0110}\u{0103}ng nh\u{1EAD}p</a>";
+        echo '<a class="nav-btn nav-btn-primary" href="login.php?redirect=records">Tra cứu kết quả</a>';
+        echo '<a class="nav-btn nav-btn-outline" href="login.php">Đăng nhập</a>';
     }
     echo '</nav></div></header><main>';
+
     if ($isAdmin) {
         $adminChatLink = (is_root_admin() || admin_can('manage_support_chat')) ? 'admin_accounts.php#recent-chats' : '';
         echo '<div data-admin-support-endpoint="admin_support_notice.php" data-admin-support-csrf="' . e(csrf_token('admin_support_api')) . '" data-admin-chat-link="' . e($adminChatLink) . '" hidden></div>';
@@ -3808,57 +3908,115 @@ function render_header(string $title): void
 
 function render_footer(): void
 {
-    $clinicName = site_setting('clinic_name', "Ph\u{00F2}ng kh\u{00E1}m \u{0111}a khoa Ph\u{00FA} Th\u{00E1}i");
-    $hotline = site_setting('support_hotline', '1900 0000');
-    $email = site_setting('support_email', 'congnghethongtin247@gmail.com');
-    $address = site_setting('clinic_address', '');
-    $googleMapUrl = site_setting('google_maps_url', '');
-    $appleMapUrl = site_setting('apple_maps_url', '');
-    $zaloUrl      = site_setting('zalo_url', '');
+    $clinicName = site_setting('clinic_name', "Phòng khám đa khoa Phú Thái");
+    $hotline = site_setting('support_hotline', '0208 628 9888');
+    $hotlineCskh = '0963 485 651';
+    $email = site_setting('support_email', 'pcnttphongkhamdakhoaphuthai@gmail.com');
+    $address = site_setting('clinic_address', 'Xóm Hoà Bình 2, xã Phú Bình, tỉnh Thái Nguyên');
+    $googleMapUrl = site_setting('google_maps_url', 'https://maps.google.com/?q=' . urlencode($clinicName . ' ' . $address));
+    $zaloUrl = site_setting('zalo_url', '');
     $messengerUrl = site_setting('messenger_url', '');
-    echo '</main><footer class="footer"><div class="footer-inner"><div>Hotline: ' . e($hotline) . ' | Email: ' . e($email);
-    if ($address !== '') {
-        echo "<br>\u{0110}\u{1ECB}a ch\u{1EC9}: " . e($address);
-        if ($googleMapUrl !== '' || $appleMapUrl !== '') {
-            echo '<div class="map-links">';
-            if ($googleMapUrl !== '') {
-                echo '<a class="btn btn-light" href="' . e($googleMapUrl) . '" target="_blank" rel="noopener">Google Maps</a>';
-            }
-            if ($appleMapUrl !== '') {
-                echo '<a class="btn btn-light" href="' . e($appleMapUrl) . '" target="_blank" rel="noopener">Apple Maps</a>';
-            }
-            echo '</div>';
-        }
+
+    echo '</main><footer class="site-footer"><div class="footer-main">';
+    
+    // Cột 1: Thông tin phòng khám
+    echo '<div class="footer-col">';
+    echo '<h4>' . e($clinicName) . '</h4>';
+    echo '<p>Cổng hỗ trợ và chăm sóc sức khỏe người bệnh trực tuyến. Đồng hành cùng người bệnh trong việc tra cứu hồ sơ và kết quả khám chữa bệnh nhanh chóng, an toàn.</p>';
+    echo '<p style="color:#94a3b8;font-size:13px">Giờ tiếp đón: <strong>7:00 – 17:00</strong> (Tất cả các ngày trong tuần)</p>';
+    echo '</div>';
+
+    // Cột 2: Liên hệ
+    echo '<div class="footer-col">';
+    echo '<h4>Liên hệ phòng khám</h4>';
+    echo '<div class="footer-contact-item"><span>📞</span><div><span>Hotline tư vấn:</span><a href="tel:' . preg_replace('/[^0-9]/', '', $hotline) . '"><strong>' . e($hotline) . '</strong></a></div></div>';
+    echo '<div class="footer-contact-item"><span>🚑</span><div><span>Cấp cứu & CSKH:</span><a href="tel:' . preg_replace('/[^0-9]/', '', $hotlineCskh) . '">' . e($hotlineCskh) . '</a></div></div>';
+    echo '<div class="footer-contact-item"><span>✉️</span><div><span>Email:</span><a href="mailto:' . e($email) . '">' . e($email) . '</a></div></div>';
+    echo '</div>';
+
+    // Cột 3: Địa chỉ & Bản đồ
+    echo '<div class="footer-col">';
+    echo '<h4>Địa chỉ & Chỉ đường</h4>';
+    echo '<p>' . e($address) . '</p>';
+    echo '<div style="margin-top:14px;">';
+    echo '<a class="btn btn-outline" style="border-color:#334155;color:#e2e8f0;background:rgba(255,255,255,.05);" href="' . e($googleMapUrl) . '" target="_blank" rel="noopener">📍 Chỉ đường trên Google Maps ↗</a>';
+    echo '</div>';
+    echo '</div>';
+
+    echo '</div>';
+
+    // Dòng đáy
+    echo '<div class="footer-bottom">';
+    echo '<span>© ' . date('Y') . ' ' . e($clinicName) . ' · Cổng dịch vụ người bệnh</span>';
+    echo '<div>';
+    echo '<a href="resources.php">Hướng dẫn người bệnh</a> · ';
+    echo '<a href="support.php">Liên hệ hỗ trợ</a> · ';
+    echo '<a class="staff-link" href="login.php?role=staff">Dành cho nhân viên ↗</a>';
+    echo '</div>';
+    echo '</div>';
+    echo '</footer>';
+
+    // Nút Hỗ trợ nổi gộp (FAB)
+    echo '<div class="fab-support-container" id="fabSupportWidget">';
+    echo '<div class="fab-support-menu" id="fabSupportMenu" role="menu" aria-label="Menu hỗ trợ">';
+    echo '<div class="fab-support-header">Hỗ trợ & Liên hệ</div>';
+    echo '<a class="fab-item" href="tel:' . preg_replace('/[^0-9]/', '', $hotline) . '">';
+    echo '<span class="fab-item-icon fab-icon-call"><svg viewBox="0 0 24 24"><path d="m7 3 3 5-3 3a15 15 0 0 0 6 6l3-3 5 3v3c-9 3-20-8-17-17z"/></svg></span>';
+    echo '<div><div>Gọi hotline tư vấn</div><small style="color:#64748b;font-weight:normal">' . e($hotline) . '</small></div>';
+    echo '</a>';
+
+    if ($zaloUrl !== '') {
+        echo '<a class="fab-item" href="' . e($zaloUrl) . '" target="_blank" rel="noopener">';
+        echo '<span class="fab-item-icon fab-icon-zalo"><span style="font-size:11px;font-weight:900">Zalo</span></span>';
+        echo '<div><div>Chat qua Zalo</div><small style="color:#64748b;font-weight:normal">Hỗ trợ trực tuyến</small></div>';
+        echo '</a>';
     }
-    echo "</div><div>" . e($clinicName) . " - C\u{1ED5}ng h\u{1ED7} tr\u{1EE3} d\u{1ECB}ch v\u{1EE5} kh\u{00E1}m ch\u{1EEF}a b\u{1EC7}nh tr\u{1EF1}c tuy\u{1EBF}n</div></div></footer>";
 
-    // Floating Zalo + Messenger bubbles
-    if ($zaloUrl !== '' || $messengerUrl !== '') {
-        echo '<style>
-.social-bubbles{position:fixed;bottom:90px;right:20px;display:flex;flex-direction:column;gap:14px;z-index:9998;}
-.sb{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.3);text-decoration:none;transition:transform .2s,box-shadow .2s;position:relative;border:none;cursor:pointer;}
-.sb:hover{transform:scale(1.1);box-shadow:0 8px 28px rgba(0,0,0,.35);}
-.sb svg{width:40px;height:40px;}
-.sb-zalo{background:#0068ff;}
-.sb-msg{background:linear-gradient(135deg,#00b2ff,#9b30ff);}
-.sb-tip{position:absolute;right:62px;top:50%;transform:translateY(-50%);background:rgba(15,23,42,.85);color:#fff;font-size:12px;font-weight:600;white-space:nowrap;padding:5px 10px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .2s;}
-.sb:hover .sb-tip{opacity:1;}
-</style><div class="social-bubbles">';
-
-        if ($zaloUrl !== '') {
-            echo '<button type="button" data-ext-url="' . e($zaloUrl) . '" class="sb sb-zalo" title="Chat Zalo" aria-label="Chat Zalo">' .
-                 '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><text x="24" y="34" text-anchor="middle" font-size="22" font-weight="900" fill="white" font-family="Arial Black,Arial,sans-serif" letter-spacing="-1">Zalo</text></svg>' .
-                 '</button>';
-        }
-
-        if ($messengerUrl !== '') {
-            echo '<button type="button" data-ext-url="' . e($messengerUrl) . '" class="sb sb-msg" title="Chat Messenger" aria-label="Chat Messenger">' .
-                 '<svg viewBox="0 0 32 32" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M16 2C8.268 2 2 7.82 2 14.91c0 3.862 1.74 7.32 4.504 9.73V30l4.14-2.29A14.86 14.86 0 0016 27.82c7.732 0 14-5.82 14-12.91C30 7.82 23.732 2 16 2zm1.4 17.37l-3.57-3.81-6.97 3.81 7.67-8.14 3.66 3.81 6.88-3.81-7.67 8.14z"/></svg>' .
-                 '</button>';
-        }
-
-        echo '</div><script>document.addEventListener("DOMContentLoaded",function(){document.querySelectorAll("button[data-ext-url]").forEach(function(btn){btn.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();var url=btn.getAttribute("data-ext-url");if(url&&(url.indexOf("http://")==0||url.indexOf("https://")==0)){window.open(url,"_blank","noopener,noreferrer");}},true);});});</script>';
+    if ($messengerUrl !== '') {
+        echo '<a class="fab-item" href="' . e($messengerUrl) . '" target="_blank" rel="noopener">';
+        echo '<span class="fab-item-icon fab-icon-msg"><svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.1 2 11.2c0 2.9 1.4 5.5 3.6 7.2v3.6l3.5-1.9c.9.3 1.9.4 2.9.4 5.5 0 10-4.1 10-9.2S17.5 2 12 2zm1 12.4-2.6-2.8-5.1 2.8 5.6-6 2.7 2.8 5-2.8-5.6 6z"/></svg></span>';
+        echo '<div><div>Chat Facebook Messenger</div><small style="color:#64748b;font-weight:normal">Fanpage phòng khám</small></div>';
+        echo '</a>';
     }
+
+    echo '<a class="fab-item" href="support.php">';
+    echo '<span class="fab-item-icon fab-icon-guide"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></span>';
+    echo '<div><div>Hướng dẫn & Báo sự cố</div><small style="color:#64748b;font-weight:normal">Gửi yêu cầu hỗ trợ</small></div>';
+    echo '</a>';
+    echo '</div>';
+
+    echo '<button type="button" class="fab-support-btn" id="fabSupportToggle" aria-expanded="false" aria-label="Mở menu hỗ trợ" title="Hỗ trợ & Liên hệ">';
+    echo '<svg viewBox="0 0 24 24" id="fabIconChat"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>';
+    echo '<svg viewBox="0 0 24 24" id="fabIconClose" style="display:none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
+    echo '</button>';
+    echo '</div>';
+
+    echo '<script>
+    (function(){
+        var btn = document.getElementById("fabSupportToggle");
+        var menu = document.getElementById("fabSupportMenu");
+        var iconChat = document.getElementById("fabIconChat");
+        var iconClose = document.getElementById("fabIconClose");
+        if (!btn || !menu) return;
+        function toggleMenu(open) {
+            var isOpen = open !== undefined ? open : !menu.classList.contains("active");
+            if (isOpen) {
+                menu.classList.add("active");
+                btn.setAttribute("aria-expanded", "true");
+                if (iconChat && iconClose) { iconChat.style.display = "none"; iconClose.style.display = "block"; }
+            } else {
+                menu.classList.remove("active");
+                btn.setAttribute("aria-expanded", "false");
+                if (iconChat && iconClose) { iconChat.style.display = "block"; iconClose.style.display = "none"; }
+            }
+        }
+        btn.addEventListener("click", function(e){ e.stopPropagation(); toggleMenu(); });
+        document.addEventListener("click", function(e){
+            if (!document.getElementById("fabSupportWidget").contains(e.target)) { toggleMenu(false); }
+        });
+        document.addEventListener("keydown", function(e){ if (e.key === "Escape") { toggleMenu(false); } });
+    })();
+    </script>';
 
     echo '<script src="' . e(asset_url('app.js')) . '"></script></body></html>';
 }
@@ -3876,6 +4034,24 @@ function render_flash(): void
 
 function render_hero(string $title, string $subtitle): void
 {
-    echo "<section class=\"hero\"><div class=\"hero-inner\"><div><h1>" . e($title) . "</h1><p>" . e($subtitle) . "</p><div class=\"hero-badges\"><span class=\"hero-badge\">\u{0110}\u{1EB7}t l\u{1ECB}ch tr\u{1EF1}c tuy\u{1EBF}n</span><span class=\"hero-badge\">Tra c\u{1EE9}u k\u{1EBF}t qu\u{1EA3}</span><span class=\"hero-badge\">H\u{1ED7} tr\u{1EE3} h\u{1ED3} s\u{01A1}</span></div></div><div class=\"hero-panel\"><h3>D\u{1ECB}ch v\u{1EE5} n\u{1ED5}i b\u{1EAD}t</h3><div class=\"hero-list\"><div class=\"hero-item\">\u{0110}\u{0103}ng nh\u{1EAD}p b\u{1EB1}ng CCCD \u{0111}\u{1EC3} tra c\u{1EE9}u l\u{1ECB}ch h\u{1EB9}n v\u{00E0} h\u{1ED3} s\u{01A1} kh\u{00E1}m.</div><div class=\"hero-item\">Xem k\u{1EBF}t qu\u{1EA3} g\u{1EA7}n nh\u{1EA5}t, \u{0111}\u{01A1}n thu\u{1ED1}c v\u{00E0} t\u{1EC7}p PDF tr\u{00EA}n c\u{00F9}ng m\u{1ED9}t m\u{00E0}n h\u{00EC}nh.</div><div class=\"hero-item\">Li\u{00EA}n h\u{1EC7} h\u{1ED7} tr\u{1EE3} \u{0111}\u{1EC3} c\u{1EAD}p nh\u{1EAD}t BHYT, thanh to\u{00E1}n v\u{00E0} h\u{1ED3} s\u{01A1} b\u{1EC7}nh \u{00E1}n.</div></div></div></div></section>";
+    echo '<section class="hero"><div class="hero-inner">';
+    echo '<div>';
+    echo '<h1>' . e($title) . '</h1>';
+    echo '<p>' . e($subtitle) . '</p>';
+    echo '<div class="hero-badges">';
+    echo '<span class="hero-badge">✓ Tra cứu hồ sơ & đơn thuốc</span>';
+    echo '<span class="hero-badge">✓ Xem kết quả xét nghiệm</span>';
+    echo '<span class="hero-badge">✓ Hỗ trợ người bệnh 24/7</span>';
+    echo '</div>';
+    echo '</div>';
+    echo '<div class="hero-panel">';
+    echo '<h3>Dịch vụ trực tuyến</h3>';
+    echo '<div class="hero-list">';
+    echo '<div class="hero-item">Đăng nhập bằng số CCCD đã đăng ký để tra cứu nhanh hồ sơ và kết quả khám.</div>';
+    echo '<div class="hero-item">Xem kết quả chẩn đoán, đơn thuốc và tệp PDF trực tiếp trên điện thoại hoặc máy tính.</div>';
+    echo '<div class="hero-item">Liên hệ bộ phận chăm sóc khách hàng để được hướng dẫn sử dụng và cập nhật thông tin.</div>';
+    echo '</div>';
+    echo '</div>';
+    echo '</div></section>';
 }
 ?>
