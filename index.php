@@ -26,15 +26,17 @@ if (is_file($cacheHomeFile) && (time() - filemtime($cacheHomeFile) < 180)) {
 }
 
 if (!is_array($homeData)) {
-    $doctors = get_active_doctors();
-    $quickReplies = get_active_quick_replies(12);
-    $newsPosts = get_published_news_posts(3);
-    $customerResources = get_published_customer_resources(3);
+    $doctorsRes = $conn->query('SELECT id, name, title, department, specialties, bio, photo_path FROM doctors ORDER BY id ASC');
+    $doctorsList = $doctorsRes ? $doctorsRes->fetch_all(MYSQLI_ASSOC) : [];
+    $quickRepliesList = get_active_quick_replies(6);
+    $newsPostsList = get_recent_news_posts(3, true);
+    $customerResourcesList = get_customer_resources(3, true);
+
     $homeData = [
-        'doctors' => $doctors,
-        'quickReplies' => $quickReplies,
-        'newsPosts' => $newsPosts,
-        'customerResources' => $customerResources,
+        'doctors' => $doctorsList,
+        'quickReplies' => $quickRepliesList,
+        'newsPosts' => $newsPostsList,
+        'customerResources' => $customerResourcesList,
     ];
     @file_put_contents($cacheHomeFile, json_encode($homeData, JSON_UNESCAPED_UNICODE));
 }
