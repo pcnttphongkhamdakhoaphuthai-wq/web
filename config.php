@@ -3727,8 +3727,11 @@ function render_header(string $title, string $activeNav = ''): void
   <meta name="color-scheme" content="light">
   <meta name="description" content="Cổng thông tin & dịch vụ người bệnh - Phòng khám đa khoa Phú Thái.">
   <title><?= e($title) ?></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap">
   <link rel="icon" href="/logo.png">
-  <link rel="stylesheet" href="/assets/style.css?v=3.1">
+  <link rel="stylesheet" href="/assets/style.css?v=3.2">
 </head>
 <body>
 <a class="skip-link" href="#login-title">Đến phần đăng nhập</a>
@@ -3752,7 +3755,7 @@ function render_header(string $title, string $activeNav = ''): void
 <header class="site-header">
   <div class="container header-inner">
     <a class="brand" href="index.php" aria-label="Phòng khám đa khoa Phú Thái — cổng người bệnh">
-      <span class="brand-symbol"><img src="/logo.png" alt="Logo Phòng khám Phú Thái" width="1440" height="1744"></span>
+      <span class="brand-symbol"><img src="/assets/clinic_symbol_sharp.png" alt="Logo Phòng khám Phú Thái" width="78" height="78"></span>
       <span class="brand-copy"><span class="brand-kicker">PHÒNG KHÁM ĐA KHOA</span><strong>Phú Thái</strong></span>
     </a>
     <nav class="header-nav" aria-label="Điều hướng chính">
