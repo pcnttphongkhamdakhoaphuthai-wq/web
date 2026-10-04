@@ -1372,6 +1372,29 @@ function patient_select_sql(
         . ltrim($suffix);
 }
 
+function find_patient_by_cccd(mysqli $conn, string $cccd): ?array
+{
+    $cccd = trim($cccd);
+    if ($cccd === '') {
+        return null;
+    }
+
+    $emailField = patient_email_enabled() ? ', email' : '';
+    $sql = 'SELECT id, full_name, cccd, phone' . $emailField . ', password_hash FROM patients WHERE cccd = ? LIMIT 1';
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        return null;
+    }
+
+    $stmt->bind_param('s', $cccd);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $patient = $result ? $result->fetch_assoc() : null;
+    $stmt->close();
+
+    return is_array($patient) ? $patient : null;
+}
+
 function password_reset_path(string $cccd): string
 {
     return APP_RESET_ROOT . DIRECTORY_SEPARATOR . hash('sha256', strtolower(trim($cccd))) . '.json';
@@ -2020,7 +2043,7 @@ function get_login_lockout(string $scope, string $identity): ?int
     return null;
 }
 
-function record_login_failure(string $scope, string $identity, int $maxAttempts = 5, int $lockoutSeconds = 900): int
+function record_login_failure_state(string $scope, string $identity, int $maxAttempts = 5, int $lockoutSeconds = 900): array
 {
     $path = login_attempt_path($scope, $identity);
     $data = [
@@ -2044,16 +2067,32 @@ function record_login_failure(string $scope, string $identity, int $maxAttempts 
     }
 
     $data['failures'] = (int) $data['failures'] + 1;
+    $locked = false;
 
     if ($data['failures'] >= $maxAttempts) {
         $data['locked_until'] = $now + $lockoutSeconds;
-        $data['failures'] = 0;
-        $data['first_failure_at'] = $now;
+        $locked = true;
     }
 
     file_put_contents($path, json_encode($data), LOCK_EX);
 
-    return (int) $data['locked_until'];
+    return [
+        'attempts' => (int) $data['failures'],
+        'locked' => $locked,
+        'locked_until' => (int) $data['locked_until'],
+    ];
+}
+
+function record_login_failure(string $scope, string $identity, int $maxAttempts = 5, int $lockoutSeconds = 900): int
+{
+    $state = record_login_failure_state($scope, $identity, $maxAttempts, $lockoutSeconds);
+    return (int) $state['locked_until'];
+}
+
+function record_login_success(string $scope, string $identity): void
+{
+    clear_login_failures($scope, $identity);
+    clear_login_submit_attempts($scope . '_submit', $identity);
 }
 
 function clear_login_failures(string $scope, string $identity): void

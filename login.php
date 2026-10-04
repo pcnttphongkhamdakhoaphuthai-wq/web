@@ -31,37 +31,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $minutesLeft = max(1, (int) ceil(($lockedUntil - time()) / 60));
         security_log('patient_login_attempt_while_locked', ['cccd' => $cccd, 'minutes_left' => $minutesLeft]);
         set_flash('error', 'Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau ' . $minutesLeft . ' phút.');
+    } elseif ($cccd === '' || $password === '') {
+        set_flash('error', 'Vui lòng nhập đầy đủ số CCCD và mật khẩu.');
+    } elseif (!validate_cccd($cccd)) {
+        set_flash('error', 'Số CCCD không đúng định dạng (phải gồm 12 chữ số).');
     } else {
-        $patient = find_patient_by_cccd($conn, $cccd);
-        if ($patient && password_verify($password, (string) ($patient['password_hash'] ?? ''))) {
-            record_login_success('patient_login', $cccd);
-            security_log('patient_login_success', ['patient_id' => (int) $patient['id'], 'cccd' => $cccd]);
-            session_regenerate_id(true);
-            $_SESSION['user_id'] = (int) $patient['id'];
-            $_SESSION['role'] = 'patient';
-            $_SESSION['name'] = (string) ($patient['full_name'] ?? 'Bệnh nhân');
-            $_SESSION['cccd'] = (string) ($patient['cccd'] ?? $cccd);
-            $_SESSION['phone'] = (string) ($patient['phone'] ?? '');
+        register_login_submit_attempt('patient_login_submit', $cooldownIdentity, 10);
+        try {
+            $patient = find_patient_by_cccd($conn, $cccd);
+            $temporaryPasswordRecord = $patient ? verify_temporary_patient_password($cccd, $password) : null;
+            $passwordValid = $patient && (verify_password($password, (string) ($patient['password_hash'] ?? '')) || $temporaryPasswordRecord !== null);
 
-            if ($redirectTarget === 'records') {
-                redirect('dashboard.php#records');
-            }
-            redirect('dashboard.php');
-        } else {
-            $lockoutState = record_login_failure('patient_login', $cccd !== '' ? $cccd : 'guest', 5, 86400);
-            security_log('patient_login_failure', [
-                'cccd' => $cccd,
-                'attempt_count' => $lockoutState['attempts'],
-                'locked' => $lockoutState['locked'],
-            ]);
+            if ($patient && $passwordValid) {
+                record_login_success('patient_login', $cccd);
+                clear_patient_password_change_requirement();
+                clear_login_submit_attempts('patient_login_submit', $cooldownIdentity);
 
-            if ($lockoutState['locked']) {
-                $hoursLeft = max(1, (int) ceil(($lockoutState['locked_until'] - time()) / 3600));
-                set_flash('error', 'Đăng nhập sai quá 5 lần. Tài khoản bị tạm khóa 24 giờ. Vui lòng thử lại sau ' . $hoursLeft . ' giờ hoặc liên hệ hotline để được hỗ trợ.');
+                session_regenerate_id(true);
+                $_SESSION['user_id'] = (int) $patient['id'];
+                $_SESSION['role'] = 'patient';
+                $_SESSION['name'] = (string) ($patient['full_name'] ?? 'Bệnh nhân');
+                $_SESSION['cccd'] = (string) ($patient['cccd'] ?? $cccd);
+                $_SESSION['phone'] = (string) ($patient['phone'] ?? '');
+                mark_session_authenticated();
+
+                if ($temporaryPasswordRecord !== null) {
+                    mark_temporary_patient_password_session($password, $temporaryPasswordRecord);
+                    clear_temporary_patient_password($cccd);
+                    security_log('patient_temporary_password_login_success', ['cccd' => $cccd, 'user_id' => (int) $patient['id']]);
+                    audit_log('patient_temporary_password_login_success', ['cccd' => $cccd, 'user_id' => (int) $patient['id']]);
+                    set_flash('success', 'Đã đăng nhập bằng mật khẩu tạm thời. Vui lòng đổi mật khẩu mới ngay bây giờ.');
+                    redirect('account.php');
+                }
+
+                security_log('patient_login_success', ['patient_id' => (int) $patient['id'], 'cccd' => $cccd]);
+                audit_log('patient_login_success', ['patient_id' => (int) $patient['id'], 'cccd' => $cccd]);
+                set_flash('success', 'Đăng nhập thành công.');
+
+                if ($redirectTarget === 'records') {
+                    redirect('dashboard.php#records');
+                } elseif ($redirectTarget === 'support') {
+                    redirect('dashboard.php#support');
+                }
+                redirect('dashboard.php');
             } else {
-                $remainingAttempts = max(0, 5 - $lockoutState['attempts']);
-                set_flash('error', 'Số CCCD hoặc mật khẩu không chính xác. Bạn còn ' . $remainingAttempts . ' lần thử.');
+                $lockoutState = record_login_failure_state('patient_login', $cccd !== '' ? $cccd : 'guest', 5, 86400);
+                security_log('patient_login_failure', [
+                    'cccd' => $cccd,
+                    'attempt_count' => $lockoutState['attempts'],
+                    'locked' => $lockoutState['locked'],
+                ]);
+
+                if ($lockoutState['locked']) {
+                    $hoursLeft = max(1, (int) ceil(($lockoutState['locked_until'] - time()) / 3600));
+                    set_flash('error', 'Đăng nhập sai quá 5 lần. Tài khoản bị tạm khóa 24 giờ. Vui lòng thử lại sau ' . $hoursLeft . ' giờ hoặc liên hệ hotline để được hỗ trợ.');
+                } else {
+                    $remainingAttempts = max(0, 5 - $lockoutState['attempts']);
+                    set_flash('error', 'Số CCCD hoặc mật khẩu không chính xác. Bạn còn ' . $remainingAttempts . ' lần thử.');
+                }
             }
+        } catch (Throwable $exception) {
+            log_internal_error('patient_login_failed', $exception, ['cccd' => $cccd]);
+            set_flash('error', 'Có lỗi xảy ra trong quá trình xử lý đăng nhập. Vui lòng thử lại sau giây lát.');
         }
     }
 }
