@@ -536,26 +536,46 @@ button:disabled {
 }
 
 /* Form Elements */
+.field-group,
 .field {
-  margin-bottom: 9px;
+  margin-bottom: 18px;
 }
 
 label {
   display: block;
-  margin-bottom: 4px;
-  font-size: 13px;
+  margin-bottom: 7px;
+  font-size: 13.5px;
   line-height: 18px;
   font-weight: 600;
   color: #072e56;
+  letter-spacing: 0.2px;
 }
 
 input {
   display: block;
   width: 100%;
-  height: 36px;
+  height: 46px;
   min-width: 0;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) inset;
-  transition: border-color .15s, box-shadow .15s;
+  padding: 10px 16px;
+  border: 1.5px solid var(--border, #c8dced);
+  border-radius: 12px;
+  background: #fbfdff;
+  font-size: 15px;
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(8, 45, 86, 0.03);
+  transition: all 0.15s ease-in-out;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  display: inline-block;
+  width: auto;
+  height: auto;
+  min-width: unset;
+  padding: 0;
+  border-radius: 4px;
+  box-shadow: none;
+  cursor: pointer;
 }
 
 input::placeholder {
@@ -566,12 +586,23 @@ input::placeholder {
 
 input:hover {
   border-color: #82a8c7;
+  background: #ffffff;
 }
 
 input:focus {
-  border-color: #0077c8;
+  border-color: #005fa0;
+  background: #ffffff;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 119, 200, 0.16);
+  box-shadow: 0 0 0 3.5px rgba(0, 95, 160, 0.15), 0 1px 3px rgba(0, 30, 60, 0.05);
+}
+
+input[readonly],
+input:disabled {
+  background: #f1f5f9;
+  border-color: #d8e2ec;
+  color: #516f8e;
+  cursor: not-allowed;
+  font-weight: 500;
 }
 
 input[aria-invalid="true"] {
@@ -599,7 +630,7 @@ input[aria-invalid="true"] {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 4px;
+  margin-bottom: 7px;
 }
 
 .label-row label {
@@ -619,31 +650,60 @@ input[aria-invalid="true"] {
   white-space: nowrap;
 }
 
+/* Form Helper Classes */
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-wrap .input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.input-wrap.has-icon input {
+  padding-left: 42px;
+}
+
 .password-wrap {
   position: relative;
+  width: 100%;
 }
 
 .password-wrap input {
-  padding-right: 42px;
+  padding-right: 44px;
 }
 
+.password-wrap .password-toggle,
 .password-toggle {
   position: absolute;
-  top: 1px;
-  right: 1px;
-  bottom: 1px;
-  display: grid;
-  place-items: center;
-  width: 38px;
-  border: 0;
-  border-radius: 9px;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   background: transparent;
-  color: #3f6080;
-  transition: color 0.15s;
+  border: 0;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: #64748b;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background-color 0.15s;
 }
 
+.password-wrap .password-toggle:hover,
 .password-toggle:hover {
   color: #005fa0;
+  background: #eef6fc;
 }
 
 .password-toggle .icon {
@@ -654,14 +714,15 @@ input[aria-invalid="true"] {
 /* Primary Submit Button */
 .primary-button {
   width: 100%;
-  min-height: 38px;
+  min-height: 46px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 10px 16px;
   border: 1px solid #004c7d;
-  border-radius: 10px;
+  border-radius: 12px;
   background: linear-gradient(110deg, #006eb5 0%, #005a92 100%);
   color: #ffffff;
   font-size: 15px;
@@ -1073,9 +1134,17 @@ select {
 .actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
-  margin-top: 14px;
+  margin-top: 22px;
+}
+
+.actions button[type="submit"],
+.actions .btn-primary,
+.actions .primary-button {
+  height: 46px;
+  border-radius: 12px;
+  font-weight: 600;
 }
 
 button, .btn {
