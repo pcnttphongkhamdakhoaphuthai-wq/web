@@ -423,7 +423,11 @@ body.patient-login-page {
 }
 
 .patient-login-page .footer-address p {
-  font-size:12px;line-height:19px;color:#5f7a94;margin:0
+  font-size: 13.5px;
+  line-height: 19px;
+  color: #123a61;
+  font-weight: 700;
+  margin: 0;
 }
 
 .patient-login-page .footer-bottom {
@@ -664,7 +668,9 @@ body.patient-login-page {
 }
 
 .patient-login-page .footer-address p {
-  font-size:11px
+  font-size: 12px;
+  font-weight: 700;
+  color: #123a61;
 }
 
 .patient-login-page .footer-brand p {
@@ -895,7 +901,9 @@ body.patient-login-page {
 }
 
 .patient-login-page .footer-address p {
-  font-size:12px
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #123a61;
 }
 
 .patient-login-page .footer-bottom {
@@ -1255,7 +1263,8 @@ body.patient-login-page { display: block; min-height: 100vh; justify-content: no
   .patient-login-page .footer-icon { width: 32px; height: 32px; }
   .patient-login-page .footer-icon .icon { width: 18px; height: 18px; }
   .patient-login-page .footer-contact a { font-size: 16px; line-height: 22px; }
-  .patient-login-page .footer-address p { font-size: 12px; line-height: 18px; }
+  .patient-login-page .footer-address p { font-size: 13.5px; line-height: 19px; font-weight: 700; color: #123a61; }
+  .patient-login-page .footer-address strong { font-weight: 700; color: #123a61; }
   .patient-login-page .footer-bottom { min-height: 30px; }
   .patient-login-page .footer-bottom .text-button { padding-block: 4px; min-height: 28px; }
 }

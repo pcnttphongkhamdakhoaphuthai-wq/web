@@ -877,10 +877,10 @@ input[aria-invalid="true"] {
 
 .footer-address p {
   margin: 0;
-  font-size: 12px;
-  line-height: 16px;
-  color: #3b5770;
-  font-weight: 500;
+  font-size: 13.5px;
+  line-height: 18px;
+  color: #072e56;
+  font-weight: 700;
 }
 
 .footer-bottom {

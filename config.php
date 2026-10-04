@@ -3875,7 +3875,7 @@ function render_footer(): void
     </div>
     <div class="footer-address">
       <span class="footer-icon"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg></span>
-      <div><span>Địa chỉ phòng khám</span><p><?= e($address) ?></p></div>
+      <div><span>Địa chỉ phòng khám</span><p><strong><?= e($address) ?></strong></p></div>
     </div>
   </div>
   <div class="container footer-bottom">
