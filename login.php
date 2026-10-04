@@ -169,7 +169,7 @@ render_header('Đăng nhập người bệnh · Phú Thái', '', true);
         <p id="password-error" class="field-error" hidden></p>
       </div>
 
-      <?php render_captcha('patient_login', true); ?>
+      <?php render_captcha('patient_login'); ?>
 
       <button class="primary-button login-submit" type="submit" id="submit-login">
         <span>Đăng nhập</span>

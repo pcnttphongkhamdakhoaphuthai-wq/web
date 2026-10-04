@@ -2290,24 +2290,29 @@ function visual_captcha_required(string $context): bool
     ], true);
 }
 
-function render_captcha(string $context, bool $compact = false): void
+function render_captcha(string $context, string|bool $size = 'flexible'): void
 {
-    $widgetSize = $compact ? 'compact' : 'normal';
-    echo '<div class="field captcha-field" style="margin-bottom: 20px;">';
+    if (is_bool($size)) {
+        $widgetSize = $size ? 'compact' : 'flexible';
+    } else {
+        $widgetSize = in_array($size, ['compact', 'normal', 'flexible'], true) ? $size : 'flexible';
+    }
+    echo '<div class="field captcha-field" style="margin-bottom: 16px;">';
     echo '<input type="text" name="contact_website" tabindex="-1" autocomplete="off" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden" aria-hidden="true">';
     $turnstileSiteKey = turnstile_site_key();
     if ($turnstileSiteKey !== '') {
-        echo '<div class="turnstile-wrap" style="margin-bottom: 6px;">';
+        echo '<div class="turnstile-wrap" style="width:100%;min-height:65px;margin-bottom:6px;">';
         echo '<label style="display:block;margin-bottom:8px;font-size:14.5px;font-weight:600;color:var(--ink);">Xác minh an toàn</label>';
-        echo '<div class="cf-turnstile" data-sitekey="' . e($turnstileSiteKey) . '" data-theme="light" data-size="' . $widgetSize . '"></div>';
+        echo '<div class="cf-turnstile" data-sitekey="' . e($turnstileSiteKey) . '" data-theme="light" data-size="' . $widgetSize . '" style="width:100%;"></div>';
         echo '</div>';
         echo '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
     }
     $siteKey = $turnstileSiteKey === '' ? recaptcha_site_key() : '';
     if ($siteKey !== '') {
-        echo '<div class="recaptcha-wrap" style="margin-bottom: 6px;">';
+        $recaptchaSize = ($widgetSize === 'flexible') ? 'normal' : $widgetSize;
+        echo '<div class="recaptcha-wrap" style="width:100%;margin-bottom:6px;">';
         echo '<label style="display:block;margin-bottom:8px;font-size:14.5px;font-weight:600;color:var(--ink);">Xác minh an toàn</label>';
-        echo '<div class="g-recaptcha" data-sitekey="' . e($siteKey) . '" data-theme="light" data-size="' . $widgetSize . '"></div>';
+        echo '<div class="g-recaptcha" data-sitekey="' . e($siteKey) . '" data-theme="light" data-size="' . $recaptchaSize . '"></div>';
         echo '</div>';
         echo '<script src="https://www.google.com/recaptcha/api.js?hl=vi" async defer></script>';
     }

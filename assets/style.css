@@ -2200,4 +2200,27 @@ tr:hover td { background: #f8fbfe; }
   margin: 8px 0;
 }
 
+/* ===== Cloudflare Turnstile & Captcha: Thanh ngang toàn chiều rộng gọn gàng ===== */
+.turnstile-wrap {
+  width: 100%;
+  min-height: 65px;
+  display: block;
+  margin-bottom: 14px;
+}
+
+.turnstile-wrap .cf-turnstile {
+  width: 100% !important;
+  min-height: 65px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.turnstile-wrap .cf-turnstile iframe {
+  width: 100% !important;
+  min-width: 100% !important;
+  border-radius: 12px !important;
+  display: block;
+}
+
+
 

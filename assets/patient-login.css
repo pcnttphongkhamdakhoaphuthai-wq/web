@@ -1325,3 +1325,29 @@ body.patient-login-page { display: block; min-height: 100vh; justify-content: no
   .patient-login-page .benefit h2 { font-size: 16px; }
   .patient-login-page .benefit p { font-size: 14px; }
 }
+
+/* Cloudflare Turnstile & Captcha: Thanh ngang toàn chiều rộng đồng bộ với nút đăng nhập */
+.patient-login-page .turnstile-wrap,
+.turnstile-wrap {
+  width: 100%;
+  min-height: 65px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.patient-login-page .turnstile-wrap .cf-turnstile,
+.turnstile-wrap .cf-turnstile {
+  width: 100% !important;
+  min-height: 65px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.patient-login-page .turnstile-wrap .cf-turnstile iframe,
+.turnstile-wrap .cf-turnstile iframe {
+  width: 100% !important;
+  min-width: 100% !important;
+  border-radius: 12px !important;
+  display: block;
+}
+
