@@ -301,19 +301,48 @@ body.patient-login-page {
 }
 
 .patient-login-page .password-wrap input {
-  padding-right:48px
+  padding-right: 48px;
 }
 
 .patient-login-page .password-toggle {
-  position:absolute;top:1px;right:1px;bottom:1px;display:grid;place-items:center;width:44px;border:0;border-radius:9px;background:transparent;color:#4a6a8a
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #4a6a8a;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
 }
 
 .patient-login-page .password-toggle .icon {
-  width:22px;height:22px;stroke-width:2
+  width: 19px;
+  height: 19px;
+  stroke-width: 2;
+  stroke: currentColor;
+  fill: none;
 }
 
 .patient-login-page .password-toggle:hover {
-  background:#edf7ff
+  background: #edf7ff;
+  color: #0062a9;
+}
+
+.patient-login-page .password-toggle:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+.patient-login-page .password-toggle:focus-visible {
+  outline: 2px solid #0062a9;
+  outline-offset: 1px;
 }
 
 .patient-login-page .password-field {

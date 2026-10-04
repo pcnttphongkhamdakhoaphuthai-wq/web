@@ -35,6 +35,10 @@
       password.type = reveal ? 'text' : 'password';
       toggle.setAttribute('aria-pressed', String(reveal));
       toggle.setAttribute('aria-label', reveal ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+      var useEl = toggle.querySelector('use');
+      if (useEl) {
+        useEl.setAttribute('href', reveal ? '#i-eye-off' : '#i-eye');
+      }
     });
   }
 
