@@ -271,7 +271,7 @@ render_hero('Cổng hỗ trợ dịch vụ', 'Bảng điều khiển tổng hợ
           <?php foreach ($chatMessages as $chat): ?>
             <div class="chat-message <?= e($chat['sender']) ?>">
               <strong><?= e($chat['sender'] === 'patient' ? 'Bạn' : 'Hỗ trợ phòng khám') ?></strong>
-              <div><?= nl2br(e($chat['message'])) ?></div>
+              <div><?= format_chat_markdown($chat['message']) ?></div>
               <div class="muted text-sm" style="margin-top:8px;"><?= e(date('d/m/Y H:i', strtotime($chat['created_at']))) ?></div>
             </div>
           <?php endforeach; ?>

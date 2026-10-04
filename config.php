@@ -3992,4 +3992,174 @@ function render_hero(string $title, string $subtitle): void
 {
     // Stub function for backward compatibility
 }
+
+function format_chat_markdown(string $text): string
+{
+    if (trim($text) === '') {
+        return '';
+    }
+
+    $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+    $lines = preg_split('/\r?\n/', $escaped);
+    if (!is_array($lines)) {
+        return nl2br($escaped);
+    }
+
+    $output = [];
+    $tableLines = [];
+    $inTable = false;
+    $tables = [];
+
+    $lineCount = count($lines);
+    for ($i = 0; $i < $lineCount; $i++) {
+        $line = $lines[$i];
+        $trimmed = trim($line);
+        $isTableRow = str_starts_with($trimmed, '|') && str_ends_with($trimmed, '|') && strlen($trimmed) > 2;
+
+        if ($isTableRow) {
+            if (!$inTable) {
+                if ($i + 1 < $lineCount) {
+                    $nextTrimmed = trim($lines[$i + 1]);
+                    if (preg_match('/^\|(\s*:?-+:?\s*\|)+$/', $nextTrimmed)) {
+                        $inTable = true;
+                        $tableLines = [$trimmed];
+                        continue;
+                    }
+                }
+            } else {
+                $tableLines[] = $trimmed;
+                continue;
+            }
+        }
+
+        if ($inTable) {
+            $token = '@@@AICHAT_TABLE_' . count($tables) . '@@@';
+            $tables[] = render_chat_markdown_table_html($tableLines);
+            $output[] = $token;
+            $inTable = false;
+            $tableLines = [];
+        }
+
+        $output[] = $line;
+    }
+
+    if ($inTable && count($tableLines) >= 2) {
+        $token = '@@@AICHAT_TABLE_' . count($tables) . '@@@';
+        $tables[] = render_chat_markdown_table_html($tableLines);
+        $output[] = $token;
+    }
+
+    $html = implode("\n", $output);
+
+    // Links: [label](url)
+    $html = preg_replace('/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/', '<a href="$2" target="_blank" rel="noopener" class="aichat-link">$1</a>', $html);
+    $html = preg_replace('/(?<!href=["\'])(https?:\/\/[^\s<)]+)/i', '<a href="$1" target="_blank" rel="noopener" class="aichat-link">$1</a>', $html);
+    // Inline code: `code`
+    $html = preg_replace('/`([^`]+)`/', '<code class="aichat-code">$1</code>', $html);
+    // Bold: **text**
+    $html = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $html);
+    // Italic: *text*
+    $html = preg_replace('/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/', '<em>$1</em>', $html);
+
+    // Ordered list: 1. item
+    $html = preg_replace('/(?:^|\n)(\d+)\.\s(.+)/', "\n<li>$2</li>", $html);
+    if (str_contains($html, '<li>')) {
+        $html = preg_replace('/(<li>.*<\/li>)/s', '<ol class="aichat-ol">$1</ol>', $html);
+    }
+
+    // Unordered list: •/- item
+    $html = preg_replace('/(?:^|\n)[•\-]\s(.+)/', "\n<li>$1</li>", $html);
+    if (str_contains($html, '<li>') && !str_contains($html, '<ol')) {
+        $html = preg_replace('/(<li>.*<\/li>)/s', '<ul class="aichat-ul">$1</ul>', $html);
+    }
+
+    // Line breaks
+    $html = nl2br($html);
+
+    // Cleanup <br> around block tags and tokens
+    $html = preg_replace('/(?:<br\s*\/?>\s*)+(@@@AICHAT_TABLE_\d+@@@)/', '$1', $html);
+    $html = preg_replace('/(@@@AICHAT_TABLE_\d+@@@)(?:\s*<br\s*\/?>)+/', '$1', $html);
+    $html = preg_replace('/(?:<br\s*\/?>\s*)*(<\/?(?:ol|ul|li)[^>]*>)(?:\s*<br\s*\/?>)*/', '$1', $html);
+
+    // Restore tables
+    foreach ($tables as $idx => $tableHtml) {
+        $html = str_replace('@@@AICHAT_TABLE_' . $idx . '@@@', $tableHtml, $html);
+    }
+
+    return $html;
+}
+
+function render_chat_markdown_table_html(array $tableLines): string
+{
+    if (count($tableLines) < 2) {
+        return implode("\n", $tableLines);
+    }
+
+    $headerLine = trim($tableLines[0], "|\t\n\r ");
+    $headers = array_map('trim', explode('|', $headerLine));
+
+    $delimLine = trim($tableLines[1], "|\t\n\r ");
+    $delims = array_map('trim', explode('|', $delimLine));
+
+    $alignments = [];
+    foreach ($delims as $d) {
+        $left = str_starts_with($d, ':');
+        $right = str_ends_with($d, ':');
+        if ($left && $right) {
+            $alignments[] = 'text-center';
+        } elseif ($right) {
+            $alignments[] = 'text-right';
+        } else {
+            $alignments[] = 'text-left';
+        }
+    }
+
+    $html = '<div class="aichat-table-responsive"><table class="aichat-table"><thead><tr>';
+    foreach ($headers as $h => $headerText) {
+        $align = $alignments[$h] ?? 'text-left';
+        $cellHtml = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $headerText);
+        $html .= '<th class="' . $align . '">' . $cellHtml . '</th>';
+    }
+    $html .= '</tr></thead><tbody>';
+
+    $checkIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-1px;margin-right:3px"><polyline points="20 6 9 17 4 12"/></svg>';
+
+    $rowCount = count($tableLines);
+    for ($r = 2; $r < $rowCount; $r++) {
+        $rowLine = trim($tableLines[$r], "|\t\n\r ");
+        if ($rowLine === '') {
+            continue;
+        }
+        $cells = array_map('trim', explode('|', $rowLine));
+
+        $html .= '<tr>';
+        foreach ($headers as $c => $headerText) {
+            $cellText = $cells[$c] ?? '';
+            $align = $alignments[$c] ?? 'text-left';
+            $headerLower = mb_strtolower($headerText, 'UTF-8');
+            $isStt = ($c === 0 || $headerLower === 'stt');
+            $isPriceHeader = str_contains($headerLower, 'giá') || str_contains($headerLower, 'phí') || str_contains($headerLower, 'tiền');
+            $isPriceValue = (bool) preg_match('/(?:\d+[.,\d]*\s*(?:vnđ|vnd|đ|k|đồng)\b|miễn\s*phí|^\s*\d{1,3}([.,]\d{3})+\s*$)/iu', $cellText);
+            $isPrice = !$isStt && ($isPriceHeader || $isPriceValue);
+            $extraClass = $isPrice ? ' price-col' : '';
+
+            $formatted = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $cellText);
+            $plain = trim(strip_tags($cellText));
+
+            if (str_contains($headerLower, 'bhyt')) {
+                if (preg_match('/^(có|được|80%|100%|hỗ trợ)/iu', $plain)) {
+                    $formatted = '<span class="badge-bhyt-yes aichat-badge-bhyt">' . $checkIcon . $formatted . '</span>';
+                } elseif (preg_match('/^(không|chưa|0%)/iu', $plain)) {
+                    $formatted = '<span class="badge-bhyt-no aichat-badge-nobhyt">' . $formatted . '</span>';
+                }
+            }
+
+            $html .= '<td class="' . $align . $extraClass . '">' . $formatted . '</td>';
+        }
+        $html .= '</tr>';
+    }
+    $html .= '</tbody></table></div>';
+
+    return $html;
+}
 ?>

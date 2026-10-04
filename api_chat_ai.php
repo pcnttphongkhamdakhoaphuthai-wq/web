@@ -11,8 +11,8 @@ require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-// Chỉ chấp nhận POST
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+// Chỉ chấp nhận POST (hoặc CLI test)
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' && php_sapi_name() !== 'cli') {
     http_response_code(405);
     echo json_encode(['error' => 'Method Not Allowed']);
     exit;
@@ -20,6 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Đọc input
 $rawInput = file_get_contents('php://input');
+if ($rawInput === '' && php_sapi_name() === 'cli') {
+    $rawInput = file_get_contents('php://stdin');
+}
 $input = json_decode($rawInput, true);
 if (!is_array($input)) {
     http_response_code(400);
@@ -62,13 +65,6 @@ foreach (array_merge([$primaryKey], $extraKeys) as $k) {
     }
 }
 $allApiKeys = array_unique($allApiKeys);
-
-if (empty($allApiKeys)) {
-    echo json_encode([
-        'reply' => 'Xin lỗi, tính năng Chatbot AI hiện chưa được cấu hình. Vui lòng gọi hotline hoặc đến trực tiếp phòng khám để được hỗ trợ.'
-    ]);
-    exit;
-}
 
 // Lấy thông tin phòng khám từ database
 try {
@@ -144,6 +140,22 @@ Hotline: {$clinicSettings['support_hotline']}{$emailLine}{$mapLine}
 === BẢNG GIÁ DỊCH VỤ ===
 {$clinicSettings['ai_prompt_pricing']}
 
+=== QUY ĐỊNH BẮT BUỘC VỀ ĐỊNH DẠNG BẢNG GIÁ (TUYỆT ĐỐI TUÂN THỦ) ===
+- Khi tư vấn hoặc trả lời bất kỳ thông tin nào liên quan đến chi phí, giá dịch vụ khám chữa bệnh: BẮT BUỘC phải định dạng thành Bảng Markdown (Markdown Table) chuẩn gồm đúng 5 cột:
+  | STT | Tên dịch vụ | Giá niêm yết (VNĐ) | Hỗ trợ BHYT | Ghi chú |
+- Đơn giá BẮT BUỘC phải định dạng có dấu chấm phân cách hàng nghìn (ví dụ: 100.000 VNĐ, 150.000 VNĐ, 80.000 VNĐ).
+- TUYỆT ĐỐI KHÔNG xả danh sách dạng văn bản thô, gạch đầu dòng đơn thuần hoặc TSV/CSV dính liền nhau.
+- Bảng Markdown PHẢI đầy đủ dòng tiêu đề (Header) và dòng phân cách (| :---: | :--- | :---: | :---: | :--- |).
+- Mẫu bảng Markdown chuẩn bắt buộc áp dụng:
+
+| STT | Tên dịch vụ | Giá niêm yết (VNĐ) | Hỗ trợ BHYT | Ghi chú |
+| :---: | :--- | :---: | :---: | :--- |
+| 1 | Khám nội tổng quát | 100.000 VNĐ | Có hỗ trợ (80%) | Khám và tư vấn chuyên khoa ban đầu |
+| 2 | Siêu âm ổ bụng | 150.000 VNĐ | Có hỗ trợ | Bác sĩ chuyên khoa chẩn đoán hình ảnh |
+| 3 | Chụp X-quang | 120.000 VNĐ | Có hỗ trợ | Kỹ thuật số hiện đại |
+| 4 | Xét nghiệm máu | 150.000 VNĐ | Có hỗ trợ | Nhịn ăn sáng trước khi lấy máu |
+| 5 | Điện tim đồ | 80.000 VNĐ | Có hỗ trợ | Đánh giá chức năng tim mạch |
+
 === HỒ SƠ THỦ TỤC & CÔNG VĂN ===
 {$clinicSettings['ai_prompt_documents']}
 
@@ -168,8 +180,9 @@ Nếu câu hỏi KHÔNG liên quan đến y tế, sức khỏe hoặc phòng kh�
 1. Luôn trả lời bằng tiếng Việt, lịch sự và chuyên nghiệp.
 2. Phân tích câu hỏi, xác định đúng nhu cầu y tế của người dùng rồi trả lời đúng trọng tâm. Dùng danh sách khi cần.
 3. Với thông tin nội bộ (giá, thủ tục, dịch vụ phòng khám): dùng dữ liệu trên. Với câu hỏi về thông tư, nghị định, kiến thức y khoa chung: dùng Google Search để tra cứu và trả lời chính xác nhất.
-4. Không tư vấn điều trị chuyên sâu, không chẩn đoán bệnh cụ thể — hãy khuyến nghị bệnh nhân đến gặp bác sĩ.
-5. Nếu không chắc về thông tin phòng khám: "Vui lòng liên hệ hotline {$clinicSettings['support_hotline']} để được hỗ trợ chính xác hơn."
+4. BẮT BUỘC KẺ BẢNG GIÁ: Mọi thông tin về giá khám hay chi phí dịch vụ PHẢI kẻ bảng Markdown theo đúng mẫu quy định trên (| STT | Tên dịch vụ | Giá niêm yết (VNĐ) | Hỗ trợ BHYT | Ghi chú |), tuyệt đối không liệt kê thô dạng văn bản.
+5. Không tư vấn điều trị chuyên sâu, không chẩn đoán bệnh cụ thể — hãy khuyến nghị bệnh nhân đến gặp bác sĩ.
+6. Nếu không chắc về thông tin phòng khám: "Vui lòng liên hệ hotline {$clinicSettings['support_hotline']} để được hỗ trợ chính xác hơn."
 PROMPT;
 
 // Chuẩn bị lịch sử hội thoại (tối đa 10 lượt)
@@ -235,7 +248,7 @@ function callGemini(string $key, string $model, array $payload): array {
     $response  = curl_exec($ch);
     $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curlError = curl_error($ch);
-    curl_close($ch);
+    @curl_close($ch);
     return ['code' => $httpCode, 'body' => (string)$response, 'curl_error' => $curlError];
 }
 
@@ -281,59 +294,486 @@ function buildPayload(array $basePayload, bool $supportsThinking, bool $supports
     return $p;
 }
 
+// ── Các hàm xử lý trích xuất và lọc thông minh bảng giá dịch vụ y tế ──
+if (!function_exists('fixDoubleUtf8')) {
+    function fixDoubleUtf8(string $str): string {
+        if (preg_match('/[\xc3\xc4\xc5][\x80-\xbf]/', $str)) {
+            $test = @mb_convert_encoding($str, 'ISO-8859-1', 'UTF-8');
+            if ($test !== false && mb_check_encoding($test, 'UTF-8') && preg_match('/[\x{00C0}-\x{1EF9}]/u', $test)) {
+                return $test;
+            }
+        }
+        return $str;
+    }
+}
+
+if (!function_exists('removeVietnameseAccents')) {
+    function removeVietnameseAccents(string $str): string {
+        $str = mb_strtolower($str, 'UTF-8');
+        $patterns = [
+            '/[àáạảãâầấậẩẫăằắặẳẵ]/u' => 'a',
+            '/[èéẹẻẽêềếệểễ]/u'         => 'e',
+            '/[ìíịỉĩ]/u'               => 'i',
+            '/[òóọỏõôồốộổỗơờớợởỡ]/u' => 'o',
+            '/[ùúụủũưừứựửữ]/u'         => 'u',
+            '/[ỳýỵỷỹ]/u'               => 'y',
+            '/[đ]/u'                   => 'd',
+        ];
+        return preg_replace(array_keys($patterns), array_values($patterns), $str) ?? $str;
+    }
+}
+
+if (!function_exists('hasVietnameseAccents')) {
+    function hasVietnameseAccents(string $str): bool {
+        return (bool) preg_match('/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/iu', $str);
+    }
+}
+
+if (!function_exists('parsePricingServices')) {
+    function parsePricingServices(string $pricingText): array {
+        $lines = explode("\n", $pricingText);
+        $services = [];
+        $seen = [];
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '') continue;
+
+            // Bỏ BOM UTF-8 nếu có
+            $line = preg_replace('/^\xEF\xBB\xBF/', '', $line);
+            $line = trim($line);
+
+            if (str_starts_with($line, '---') || str_starts_with($line, '===') || str_starts_with($line, '###')) {
+                continue;
+            }
+
+            $line = fixDoubleUtf8($line);
+
+            $lineLower = mb_strtolower($line, 'UTF-8');
+            if (preg_match('/^(stt|mã\s*(?:dịch\s*vụ|dv)|tên\s*(?:dịch\s*vụ|dv)|giá\s*(?:dịch\s*vụ|dv))/u', $lineLower) ||
+                (str_contains($lineLower, 'tên dịch vụ') && str_contains($lineLower, 'giá'))) {
+                continue;
+            }
+
+            $code = '';
+            $name = '';
+            $price = '';
+            $bhyt = '';
+
+            // Format 1: Phân tách bằng Tab (\t)
+            if (str_contains($line, "\t")) {
+                $parts = array_map('trim', explode("\t", $line));
+                $parts = array_values(array_filter($parts, fn($p) => $p !== ''));
+                if (count($parts) >= 2) {
+                    if (is_numeric($parts[0])) {
+                        array_shift($parts);
+                    }
+                    if (count($parts) >= 3 && preg_match('/^[A-Z0-9_\-\.]{2,12}$/i', $parts[0])) {
+                        $code  = $parts[0];
+                        $name  = $parts[1];
+                        $price = $parts[2];
+                        $bhyt  = $parts[3] ?? '';
+                    } elseif (count($parts) >= 2) {
+                        $name  = $parts[0];
+                        $price = $parts[1];
+                        $bhyt  = $parts[2] ?? '';
+                    }
+                }
+            }
+            // Format 2: "Tên dịch vụ: Giá" hoặc "Mã - Tên: Giá"
+            elseif (preg_match('/^(?:([A-Za-z0-9_\-]+)\s*[\-\.]\s*)?([^:]+?)\s*:\s*([0-9\.,]+(?:\s*(?:vnđ|vnd|đ|d))?)(?:\s*[\-\|\(]\s*(.*?)\)?)?$/iu', $line, $m)) {
+                $code  = $m[1] ?? '';
+                $name  = trim($m[2]);
+                $price = trim($m[3]);
+                $bhyt  = trim($m[4] ?? '');
+            }
+            // Format 3: Markdown table row "| STT | Mã | Tên | Giá | BHYT |"
+            elseif (str_contains($line, '|')) {
+                $parts = array_map('trim', explode('|', trim($line, '|')));
+                if (count($parts) >= 3 && !preg_match('/^[\-\:\s]+$/', $parts[0])) {
+                    if (is_numeric($parts[0])) {
+                        array_shift($parts);
+                    }
+                    if (count($parts) >= 3 && preg_match('/^[A-Z0-9_\-\.]{2,12}$/i', $parts[0])) {
+                        $code  = $parts[0];
+                        $name  = $parts[1];
+                        $price = $parts[2];
+                        $bhyt  = $parts[3] ?? '';
+                    } elseif (count($parts) >= 2) {
+                        $name  = $parts[0];
+                        $price = $parts[1];
+                        $bhyt  = $parts[2] ?? '';
+                    }
+                }
+            }
+
+            $name = trim($name, " \t\n\r\0\x0B-•*");
+            if ($name === '' || mb_strlen($name, 'UTF-8') < 2) {
+                continue;
+            }
+
+            $testName = mb_strtolower($name, 'UTF-8');
+            if (in_array($testName, ['stt', 'mã dịch vụ', 'mã dv', 'tên dịch vụ', 'tên dv', 'giá dịch vụ', 'đơn giá', 'bảo hiểm y tế', 'bhyt', 'ghi chú'], true)) {
+                continue;
+            }
+
+            $numPrice = preg_replace('/[^\d]/', '', $price);
+            $priceFormatted = $numPrice !== '' ? number_format((float)$numPrice, 0, ',', '.') . ' đ' : 'Liên hệ';
+
+            $bhytClean = trim($bhyt);
+            if ($bhytClean === '') {
+                $bhytDisplay = 'Theo quy định';
+            } elseif (preg_match('/có|áp dụng|hỗ trợ|đúng tuyến/iu', $bhytClean) && !preg_match('/không|chưa/iu', $bhytClean)) {
+                $bhytDisplay = 'Có áp dụng';
+            } elseif (preg_match('/không|ko|chưa/iu', $bhytClean)) {
+                $bhytDisplay = 'Không áp dụng';
+            } else {
+                $bhytDisplay = $bhytClean;
+            }
+
+            $codeDisplay = $code !== '' ? strtoupper($code) : '-';
+
+            $normKey = removeVietnameseAccents($name);
+            if (isset($seen[$normKey])) {
+                continue;
+            }
+            $seen[$normKey] = true;
+
+            $services[] = [
+                'code'        => $codeDisplay,
+                'name'        => $name,
+                'price'       => $priceFormatted,
+                'bhyt'        => $bhytDisplay,
+                'name_lower'  => mb_strtolower($name, 'UTF-8'),
+                'name_no_acc' => $normKey,
+            ];
+        }
+
+        return $services;
+    }
+}
+
+if (!function_exists('searchPricingServices')) {
+    function searchPricingServices(array $allServices, string $userMessage, int $limit = 10): array {
+        $cleanInput = preg_replace('/[,\.\?!:;\(\)\[\]"\'\+\*\/\\~_]/u', ' ', $userMessage) ?? $userMessage;
+        $msgLower   = mb_strtolower(trim($cleanInput), 'UTF-8');
+        $msgNoAcc   = removeVietnameseAccents($msgLower);
+
+        $intentWords = [
+            'bảng giá dịch vụ', 'bang gia dich vu', 'bảng giá', 'bang gia', 'báo giá', 'bao gia',
+            'giá dịch vụ', 'gia dich vu', 'chi phí khám', 'chi phi kham', 'chi phí', 'chi phi',
+            'giá cả', 'gia ca', 'bao nhiêu tiền', 'bao nhieu tien', 'hết bao nhiêu', 'het bao nhieu',
+            'bao nhiêu', 'bao nhieu', 'giá bao nhiêu', 'gia bao nhieu', 'giá tiền', 'gia tien',
+            'giá', 'gia', 'tiền', 'tien', 'phí', 'phi', 'mức giá', 'muc gia',
+            'cho tôi hỏi', 'cho em hỏi', 'cho em xin', 'cho minh hoi', 'làm ơn cho hỏi', 'xin hỏi',
+            'phòng khám', 'phong kham', 'dịch vụ', 'dich vu', 'khám bệnh', 'kham benh', 'tư vấn',
+            'tra cứu', 'tra cuu', 'xem bảng', 'xem', 'hỏi về', 'hoi ve', 'về', 've',
+            'ạ', 'ơi', 'nha', 'nhé', 'với', 'co nhung gi', 'có những gì',
+            'không có thật', 'khong co that', 'không', 'khong', 'có thật', 'co that', 'thật', 'that'
+        ];
+
+        $cleanQuery = $msgLower;
+        foreach ($intentWords as $iw) {
+            $cleanQuery = preg_replace('/(?:\b|^)' . preg_quote($iw, '/') . '(?:\b|$)/u', ' ', $cleanQuery);
+        }
+        $cleanQuery = trim(preg_replace('/\s+/', ' ', $cleanQuery));
+        $cleanNoAcc = removeVietnameseAccents($cleanQuery);
+
+        $medicalSynonyms = [
+            'tiểu đường' => ['glucose', 'đường huyết'],
+            'tieu duong' => ['glucose', 'duong huyet'],
+            'đường huyết' => ['glucose', 'đường huyết'],
+            'mỡ máu'     => ['cholesterol', 'triglycerid', 'lipid'],
+            'mo mau'     => ['cholesterol', 'triglycerid', 'lipid'],
+            'men gan'    => ['men gan', 'ast', 'alt', 'got', 'gpt'],
+            'nước tiểu'  => ['nước tiểu', 'urinalysis', 'tổng phân tích nước tiểu'],
+            'nuoc tieu'  => ['nuoc tieu', 'urinalysis'],
+            'nhổ răng'   => ['răng', 'nhổ'],
+            'nho rang'   => ['rang', 'nho'],
+            'răng'       => ['răng', 'nha chu', 'cao răng'],
+            'rang'       => ['rang', 'nha chu', 'cao rang'],
+            'mắt'        => ['mắt', 'thị lực', 'đáy mắt', 'khúc xạ', 'hốc mắt'],
+            'mat'        => ['mat', 'thi luc', 'day mat', 'khuc xa', 'hoc mat'],
+            'máu'        => ['máu', 'huyết', 'công thức máu', 'tế bào máu'],
+            'mau'        => ['mau', 'huyet', 'cong thuc mau', 'te bao mau'],
+            'x-quang'    => ['xquang', 'x-quang', 'x quang'],
+            'x quang'    => ['xquang', 'x-quang', 'x quang'],
+            'xquang'     => ['xquang', 'x-quang', 'x quang'],
+            'siêu âm'    => ['siêu âm', 'sieu am'],
+            'sieu am'    => ['siêu âm', 'sieu am'],
+            'nội soi'    => ['nội soi', 'noi soi'],
+            'noi soi'    => ['nội soi', 'noi soi'],
+            'điện tim'   => ['điện tim', 'điện tâm đồ', 'ecg'],
+            'dien tim'   => ['dien tim', 'dien tam do', 'ecg'],
+            'ecg'        => ['điện tim', 'điện tâm đồ', 'ecg'],
+            'khám thai'  => ['khám thai', 'siêu âm thai', 'phụ sản'],
+            'kham thai'  => ['kham thai', 'sieu am thai', 'phu san'],
+            'phụ khoa'   => ['phụ khoa', 'phụ sản', 'tử cung', 'âm đạo'],
+            'phu khoa'   => ['phu khoa', 'phu san', 'tu cung', 'am dao'],
+        ];
+
+        $isGeneral = (mb_strlen($cleanQuery, 'UTF-8') < 2);
+
+        if (!$isGeneral) {
+            $userHasAccents = hasVietnameseAccents($cleanQuery);
+            $synList = [];
+            foreach ($medicalSynonyms as $phrase => $syns) {
+                if ($userHasAccents) {
+                    if (str_contains($cleanQuery, $phrase)) {
+                        $synList = array_merge($synList, $syns);
+                    }
+                } else {
+                    if (str_contains($cleanNoAcc, removeVietnameseAccents($phrase))) {
+                        $synList = array_merge($synList, array_map('removeVietnameseAccents', $syns));
+                    }
+                }
+            }
+            $synList = array_unique($synList);
+
+            $queryTokens = array_filter(explode(' ', $cleanQuery), fn($w) => mb_strlen($w, 'UTF-8') >= 2);
+            $queryTokensNoAcc = array_filter(explode(' ', $cleanNoAcc), fn($w) => strlen($w) >= 2);
+
+            $scored = [];
+            foreach ($allServices as $svc) {
+                $score = 0;
+                $nameLower = $svc['name_lower'];
+                $nameNoAcc = $svc['name_no_acc'];
+
+                if ($userHasAccents) {
+                    if (str_contains($nameLower, $cleanQuery)) {
+                        $score += 200;
+                        if (str_starts_with($nameLower, $cleanQuery)) {
+                            $score += 50;
+                        }
+                    }
+                    foreach ($synList as $syn) {
+                        if (str_contains($nameLower, $syn)) {
+                            $score += 100;
+                        }
+                    }
+                    $matchedTokens = 0;
+                    foreach ($queryTokens as $tok) {
+                        if (preg_match('/(?:\b|^)' . preg_quote($tok, '/') . '(?:\b|$)/u', $nameLower)) {
+                            $score += 30;
+                            $matchedTokens++;
+                        }
+                    }
+                    if (count($queryTokens) > 1 && $matchedTokens === count($queryTokens)) {
+                        $score += 60;
+                    }
+                } else {
+                    if (str_contains($nameNoAcc, $cleanNoAcc)) {
+                        $score += 150;
+                        if (str_starts_with($nameNoAcc, $cleanNoAcc)) {
+                            $score += 40;
+                        }
+                    }
+                    foreach ($synList as $syn) {
+                        if (str_contains($nameNoAcc, $syn)) {
+                            $score += 80;
+                        }
+                    }
+                    $matchedTokens = 0;
+                    foreach ($queryTokensNoAcc as $tok) {
+                        if (preg_match('/(?:\b|^)' . preg_quote($tok, '/') . '(?:\b|$)/', $nameNoAcc)) {
+                            $score += 25;
+                            $matchedTokens++;
+                        }
+                    }
+                    if (count($queryTokensNoAcc) > 1 && $matchedTokens === count($queryTokensNoAcc)) {
+                        $score += 50;
+                    }
+                }
+
+                if ($score < 50) {
+                    continue;
+                }
+
+                $score -= min(20, (int)(mb_strlen($svc['name'], 'UTF-8') / 6));
+
+                $scored[] = ['score' => $score, 'service' => $svc];
+            }
+
+            if (!empty($scored)) {
+                usort($scored, fn($a, $b) => $b['score'] <=> $a['score']);
+                $matched = array_map(fn($item) => $item['service'], array_slice($scored, 0, $limit));
+
+                return [
+                    'type'     => 'specific',
+                    'keyword'  => $cleanQuery,
+                    'services' => $matched,
+                ];
+            }
+
+            return [
+                'type'     => 'not_found',
+                'keyword'  => $cleanQuery,
+                'services' => [],
+            ];
+        }
+
+        // Trường hợp hỏi chung chung / click Bảng giá: chọn 8-10 dịch vụ tiêu biểu các chuyên khoa
+        $popularPatterns = [
+            ['khám nội tổng hợp', 'khám nội', 'kham noi'],
+            ['khám ngoại', 'kham ngoai'],
+            ['cấp cứu', 'sơ cứu', 'khâu vết thương'],
+            ['siêu âm tổng quát', 'siêu âm ổ bụng', 'siêu âm'],
+            ['chụp xquang', 'chụp x-quang', 'x-quang'],
+            ['xét nghiệm máu', 'xét nghiệm công thức máu', 'tổng phân tích tế bào máu'],
+            ['glucose', 'định lượng glucose', 'đường huyết'],
+            ['điện tim', 'điện tâm đồ', 'ecg'],
+            ['nội soi tai mũi họng', 'nội soi'],
+            ['khám phụ sản', 'khám thai', 'khám phụ khoa'],
+        ];
+
+        $generalList = [];
+        $usedKeys = [];
+
+        foreach ($popularPatterns as $patterns) {
+            if (count($generalList) >= $limit) break;
+            foreach ($allServices as $svc) {
+                $matched = false;
+                foreach ($patterns as $p) {
+                    if (str_contains($svc['name_lower'], $p) || str_contains($svc['name_no_acc'], removeVietnameseAccents($p))) {
+                        $matched = true;
+                        break;
+                    }
+                }
+                if ($matched && !isset($usedKeys[$svc['name']])) {
+                    $generalList[] = $svc;
+                    $usedKeys[$svc['name']] = true;
+                    break;
+                }
+            }
+        }
+
+        if (count($generalList) < $limit) {
+            foreach ($allServices as $svc) {
+                if (count($generalList) >= $limit) break;
+                if (!isset($usedKeys[$svc['name']])) {
+                    $generalList[] = $svc;
+                    $usedKeys[$svc['name']] = true;
+                }
+            }
+        }
+
+        return [
+            'type'     => 'general',
+            'keyword'  => '',
+            'services' => $generalList,
+        ];
+    }
+}
+
+if (!function_exists('buildMarkdownPricingReply')) {
+    function buildMarkdownPricingReply(array $searchResult, string $clinicName, string $hotline): string {
+        $services = $searchResult['services'];
+        $type     = $searchResult['type'];
+        $keyword  = $searchResult['keyword'];
+
+        if ($type === 'not_found' || empty($services)) {
+            $kwDisplay = $keyword !== '' ? " \"{$keyword}\"" : '';
+            return "Dạ, hiện tại hệ thống chưa tìm thấy thông tin đơn giá chính xác cho dịch vụ{$kwDisplay} tại {$clinicName}.\n\n"
+                . "💡 *Quý khách có thể nhập tên dịch vụ cụ thể khác (VD: **khám nội, siêu âm, x-quang, xét nghiệm máu, nội soi, mắt...**) để tra cứu.*\n\n"
+                . "📞 Hoặc liên hệ trực tiếp hotline **{$hotline}** để được nhân viên y tế hỗ trợ bảng giá và tư vấn tận tình!";
+        }
+
+        $out = '';
+        if ($type === 'specific' && $keyword !== '') {
+            $out .= "💰 **Bảng giá dịch vụ liên quan đến \"{$keyword}\" tại {$clinicName}:**\n\n";
+        } else {
+            $out .= "💰 **Bảng giá một số dịch vụ y tế phổ biến tại {$clinicName}:**\n\n";
+        }
+
+        $out .= "| STT | Mã DV | Tên dịch vụ y tế | Đơn giá (VNĐ) | Áp dụng BHYT |\n";
+        $out .= "|---|---|---|---|---|\n";
+
+        $stt = 1;
+        foreach ($services as $s) {
+            $out .= sprintf(
+                "| %d | %s | %s | %s | %s |\n",
+                $stt++,
+                $s['code'],
+                $s['name'],
+                $s['price'],
+                $s['bhyt']
+            );
+        }
+
+        $out .= "\n💡 *Quý khách có thể nhập tên dịch vụ cụ thể (VD: *siêu âm, xét nghiệm, nội soi, nhổ răng, tiểu đường, mắt...*) để tra cứu chính xác đơn giá.*\n";
+        $out .= "📞 Để được tư vấn chi tiết hoặc đặt lịch khám, Quý khách vui lòng gọi Hotline: **{$hotline}**.";
+
+        return $out;
+    }
+}
+
+if (!function_exists('getSmartPricingFallback')) {
+    function getSmartPricingFallback(string $pricingText, string $userMessage, string $clinicName, string $hotline, int $limit = 10): string {
+        $allServices = parsePricingServices($pricingText);
+        $searchResult = searchPricingServices($allServices, $userMessage, $limit);
+        return buildMarkdownPricingReply($searchResult, $clinicName, $hotline);
+    }
+}
+
 // ── Vòng lặp: thử TẤT CẢ KEY với cùng model tier trước, rồi xuống tier thấp hơn ──
 // Chiến lược này ưu tiên giữ model chất lượng cao, tận dụng quota từ nhiều key khác nhau
 $result    = null;
 $usedKey   = '';
 $usedModel = '';
 
-foreach ($modelTiers as [$tryModel, $supportsThinking, $supportsSearch]) {
-    $tryPayload = buildPayload($payload, $supportsThinking, $supportsSearch);
-    foreach ($allApiKeys as $tryKey) {
-        $res = callGemini($tryKey, $tryModel, $tryPayload);
+if (!empty($allApiKeys)) {
+    foreach ($modelTiers as [$tryModel, $supportsThinking, $supportsSearch]) {
+        $tryPayload = buildPayload($payload, $supportsThinking, $supportsSearch);
+        foreach ($allApiKeys as $tryKey) {
+            $res = callGemini($tryKey, $tryModel, $tryPayload);
 
-        if ($res['curl_error'] !== '') {
-            // Lỗi mạng — thử key tiếp
+            if ($res['curl_error'] !== '') {
+                // Lỗi mạng — thử key tiếp
+                continue;
+            }
+
+            if ($res['code'] === 200) {
+                $result    = $res;
+                $usedKey   = $tryKey;
+                $usedModel = $tryModel;
+                break 2; // Thoát cả 2 vòng
+            }
+
+            if ($res['code'] === 429 || $res['code'] === 503) {
+                // Quota hết / overload trên key này — thử key khác cùng model
+                continue;
+            }
+
+            if ($res['code'] === 400 || $res['code'] === 404) {
+                // Model không hỗ trợ / params lỗi — bỏ model này, không cần thử key khác
+                break; // sang model tier thấp hơn
+            }
+
+            // Lỗi 401/403 (key sai) — thử key tiếp
             continue;
         }
-
-        if ($res['code'] === 200) {
-            $result    = $res;
-            $usedKey   = $tryKey;
-            $usedModel = $tryModel;
-            break 2; // Thoát cả 2 vòng
-        }
-
-        if ($res['code'] === 429 || $res['code'] === 503) {
-            // Quota hết / overload trên key này — thử key khác cùng model
-            continue;
-        }
-
-        if ($res['code'] === 400 || $res['code'] === 404) {
-            // Model không hỗ trợ / params lỗi — bỏ model này, không cần thử key khác
-            break; // sang model tier thấp hơn
-        }
-
-        // Lỗi 401/403 (key sai) — thử key tiếp
-        continue;
     }
 }
 
-
-
 if ($result === null || $result['code'] !== 200) {
     $lastCode = $result['code'] ?? 0;
-    security_log('ai_chat_api_error', ['http_code' => $lastCode, 'all_keys_exhausted' => true]);
+    if (!empty($allApiKeys)) {
+        security_log('ai_chat_api_error', ['http_code' => $lastCode, 'all_keys_exhausted' => true]);
+    }
 
-    // ── Smart fallback: trả lời tĩnh dựa trên từ khóa khi AI quá tải ──
+    // ── Smart fallback: trả lời tĩnh dựa trên từ khóa khi AI quá tải hoặc chưa cấu hình API key ──
     $msgLower = mb_strtolower($message, 'UTF-8');
     $staticReply = null;
 
-    if (preg_match('/giá|chi phí|phí|bảng giá|tiền|bao nhiêu/u', $msgLower)) {
-        $staticReply = "💰 **Bảng giá dịch vụ** tại {$clinicSettings['clinic_name']}:\n\n"
-            . $clinicSettings['ai_prompt_pricing']
-            . "\n\n📞 Hotline: **{$clinicSettings['support_hotline']}**.";
-    } elseif (preg_match('/quy trình|thủ tục|khám|đăng ký|đặt lịch|hướng dẫn|các bước/u', $msgLower)) {
+    if (preg_match('/giá|chi phí|phí|bảng giá|tiền|bao nhiêu|báo giá/u', $msgLower)) {
+        $staticReply = getSmartPricingFallback(
+            (string)($clinicSettings['ai_prompt_pricing'] ?? ''),
+            $message,
+            (string)$clinicSettings['clinic_name'],
+            (string)$clinicSettings['support_hotline'],
+            10
+        );
+    } elseif (preg_match('/quy trình|thủ tục|hướng dẫn khám|các bước khám|đăng ký khám|đặt lịch/u', $msgLower)) {
         $staticReply = "📋 **Quy trình khám bệnh** tại {$clinicSettings['clinic_name']}:\n\n"
             . $clinicSettings['ai_prompt_procedures']
             . "\n\n📞 Hotline: **{$clinicSettings['support_hotline']}**.";
@@ -372,6 +812,15 @@ if ($result === null || $result['code'] !== 200) {
             }
         }
         $staticReply = $schedText . "\n📞 Hotline: **{$clinicSettings['support_hotline']}**.";
+    }
+
+    // Nếu người dùng không dùng từ 'giá' nhưng gõ thẳng tên dịch vụ y tế (VD: siêu âm, xét nghiệm, nội soi, nhổ răng, x-quang, khám mắt...)
+    if ($staticReply === null) {
+        $allServices = parsePricingServices((string)($clinicSettings['ai_prompt_pricing'] ?? ''));
+        $searchRes   = searchPricingServices($allServices, $message, 10);
+        if ($searchRes['type'] === 'specific' && !empty($searchRes['services'])) {
+            $staticReply = buildMarkdownPricingReply($searchRes, (string)$clinicSettings['clinic_name'], (string)$clinicSettings['support_hotline']);
+        }
     }
 
     if ($staticReply === null) {

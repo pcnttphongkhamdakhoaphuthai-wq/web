@@ -93,6 +93,264 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${pad(parsed.getDate())}/${pad(parsed.getMonth() + 1)}/${parsed.getFullYear()} ${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
   };
 
+  const formatMarkdown = (text) => {
+    if (!text) return '';
+    let html = escapeHtml(text);
+
+    function formatInlineMarkdown(str) {
+      if (!str) return '';
+      let res = str;
+      res = res.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" class="aichat-link">$1</a>');
+      res = res.replace(/(?<!href=["'])(https?:\/\/[^\s<)]+)/gi, '<a href="$1" target="_blank" rel="noopener" class="aichat-link">$1</a>');
+      res = res.replace(/`([^`]+)`/g, '<code class="aichat-code">$1</code>');
+      res = res.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      res = res.replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+      return res;
+    }
+
+    function formatTableCell(rawVal, isHeader, isPriceCol, isBhytCol) {
+      const trimmed = (rawVal || '').trim();
+      if (isHeader) {
+        return formatInlineMarkdown(trimmed);
+      }
+      if (!trimmed) return '&nbsp;';
+
+      const bhytPositivePattern = /^(có\s*bhyt|được\s*áp\s*dụng|áp\s*dụng\s*bhyt|có\s*áp\s*dụng|bhyt(\s+đúng\s+tuyến)?|hỗ\s*trợ\s*bhyt|đúng\s*tuyến|có\s*hỗ\s*trợ.*)$/i;
+      const bhytNegativePattern = /^(không\s*bhyt|không\s*áp\s*dụng|chưa\s*áp\s*dụng|không\s*hỗ\s*trợ.*|không.*|chưa.*|tự\s*túc.*|tự\s*trả.*|tự\s*nguyện.*)$/i;
+      const checkIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-1px;margin-right:3px"><polyline points="20 6 9 17 4 12"/></svg>';
+
+      if (bhytPositivePattern.test(trimmed) || (isBhytCol && /^(có.*|áp\s*dụng.*|được.*)$/i.test(trimmed))) {
+        return '<span class="badge-bhyt-yes aichat-badge-bhyt">' + checkIcon + formatInlineMarkdown(trimmed) + '</span>';
+      }
+
+      if (bhytNegativePattern.test(trimmed) || (isBhytCol && /^(không.*|chưa.*|tự\s*túc.*|tự\s*trả.*|tự\s*nguyện.*)$/i.test(trimmed))) {
+        return '<span class="badge-bhyt-no aichat-badge-nobhyt">' + formatInlineMarkdown(trimmed) + '</span>';
+      }
+
+      let formatted = formatInlineMarkdown(trimmed);
+      formatted = formatted.replace(/\b(Có\s+BHYT|Được\s+áp\s+dụng|Áp\s+dụng\s+BHYT|Có\s+hỗ\s+trợ)\b/gi, '<span class="badge-bhyt-yes aichat-badge-bhyt">' + checkIcon + '$1</span>');
+      return formatted;
+    }
+
+    // 1. Fenced Code blocks
+    const codeBlocks = [];
+    html = html.replace(/```([a-z0-9_-]*)\n([\s\S]*?)```/gi, (match, lang, code) => {
+      const placeholder = '<!--AICHAT_CODEBLOCK_' + codeBlocks.length + '-->';
+      codeBlocks.push('<pre class="aichat-pre"><code class="aichat-code-block">' + code.trim() + '</code></pre>');
+      return placeholder;
+    });
+
+    // 2. Markdown Tables Parser
+    const lines = html.split('\n');
+    const processedLines = [];
+    const tableBlocks = [];
+    let i = 0;
+
+    function isSeparatorRow(line) {
+      if (!line) return false;
+      let trimmed = line.trim();
+      if (!trimmed.includes('-')) return false;
+      if (trimmed.startsWith('|')) trimmed = trimmed.slice(1);
+      if (trimmed.endsWith('|')) trimmed = trimmed.slice(0, -1);
+      const parts = trimmed.split('|');
+      if (parts.length === 0) return false;
+      return parts.every((p) => /^[\s:]*-{1,}[\s:]*$/.test(p));
+    }
+
+    function isTableRow(line) {
+      if (!line) return false;
+      const trimmed = line.trim();
+      return trimmed.length > 0 && trimmed.includes('|');
+    }
+
+    function splitCells(line) {
+      let trimmed = line.trim();
+      if (trimmed.startsWith('|')) trimmed = trimmed.slice(1);
+      if (trimmed.endsWith('|')) trimmed = trimmed.slice(0, -1);
+      return trimmed.split('|').map((c) => c.trim());
+    }
+
+    function getAlignment(sepCell) {
+      const t = (sepCell || '').trim();
+      const left = t.startsWith(':');
+      const right = t.endsWith(':');
+      if (left && right) return 'center';
+      if (right) return 'right';
+      if (left) return 'left';
+      return '';
+    }
+
+    while (i < lines.length) {
+      const currentLine = lines[i];
+      const nextLine = (i + 1 < lines.length) ? lines[i + 1] : null;
+
+      if (nextLine && isTableRow(currentLine) && isSeparatorRow(nextLine)) {
+        const headerLine = currentLine;
+        const sepLine = nextLine;
+        const dataLines = [];
+        i += 2;
+
+        while (i < lines.length && isTableRow(lines[i]) && !isSeparatorRow(lines[i])) {
+          dataLines.push(lines[i]);
+          i++;
+        }
+
+        const headerCells = splitCells(headerLine);
+        const sepCells = splitCells(sepLine);
+        const aligns = sepCells.map(getAlignment);
+        const numCols = headerCells.length;
+
+        const priceHeaderPattern = /(giá|đơn\s*giá|thành\s*tiền|chi\s*phí|viện\s*phí|lệ\s*phí|tiền|price|cost|fee)/i;
+        const bhytHeaderPattern = /(bhyt|bảo\s*hiểm|áp\s*dụng)/i;
+        const priceValuePattern = /(?:\d+[.,\d]*\s*(?:vnđ|vnd|đ|k|đồng)\b|miễn\s*phí|^\s*\d{1,3}([.,]\d{3})+\s*$)/i;
+
+        const priceCols = {};
+        const bhytCols = {};
+
+        for (let c = 0; c < numCols; c++) {
+          if (priceHeaderPattern.test(headerCells[c])) {
+            priceCols[c] = true;
+          }
+          if (bhytHeaderPattern.test(headerCells[c])) {
+            bhytCols[c] = true;
+          }
+        }
+
+        for (let c = 0; c < numCols; c++) {
+          if (!priceCols[c] && dataLines.length > 0) {
+            let matchCount = 0;
+            for (let r = 0; r < dataLines.length; r++) {
+              const rowCells = splitCells(dataLines[r]);
+              const cellVal = (c < rowCells.length) ? rowCells[c] : '';
+              if (priceValuePattern.test(cellVal)) {
+                matchCount++;
+              }
+            }
+            if (matchCount > 0 && matchCount >= dataLines.length * 0.5) {
+              priceCols[c] = true;
+            }
+          }
+        }
+
+        let thead = '<thead><tr>';
+        for (let c = 0; c < numCols; c++) {
+          const classes = [];
+          if (priceCols[c]) {
+            classes.push('col-price text-right price-col');
+          } else if (bhytCols[c] || c === 0) {
+            classes.push('col-center text-center');
+          } else if (aligns[c]) {
+            classes.push('text-' + aligns[c]);
+          }
+          const clsAttr = classes.length ? ' class="' + classes.join(' ') + '"' : '';
+          thead += '<th' + clsAttr + '>' + formatTableCell(headerCells[c], true, priceCols[c], bhytCols[c]) + '</th>';
+        }
+        thead += '</tr></thead>';
+
+        let tbody = '<tbody>';
+        for (let r = 0; r < dataLines.length; r++) {
+          const rowCells = splitCells(dataLines[r]);
+          tbody += '<tr>';
+          for (let c = 0; c < numCols; c++) {
+            const cellVal = (c < rowCells.length) ? rowCells[c] : '';
+            const classes = [];
+            if (priceCols[c]) {
+              classes.push('col-price text-right price-col');
+            } else if (bhytCols[c] || c === 0) {
+              classes.push('col-center text-center');
+            } else if (aligns[c]) {
+              classes.push('text-' + aligns[c]);
+            }
+            const clsAttr = classes.length ? ' class="' + classes.join(' ') + '"' : '';
+            tbody += '<td' + clsAttr + '>' + formatTableCell(cellVal, false, priceCols[c], bhytCols[c]) + '</td>';
+          }
+          tbody += '</tr>';
+        }
+        tbody += '</tbody>';
+
+        const fullTable = '<div class="aichat-table-responsive"><table class="aichat-table">' + thead + tbody + '</table></div>';
+        const placeholder = '<!--AICHAT_TABLE_' + tableBlocks.length + '-->';
+        tableBlocks.push(fullTable);
+        processedLines.push(placeholder);
+      } else {
+        processedLines.push(currentLine);
+        i++;
+      }
+    }
+
+    html = processedLines.join('\n');
+
+    // 3. Lists (Ordered & Unordered)
+    const listLines = html.split('\n');
+    const parsedListLines = [];
+    let currentListType = null;
+    let currentListItems = [];
+
+    function flushList() {
+      if (!currentListType) return;
+      const itemsHtml = currentListItems.map((item) => '<li>' + formatInlineMarkdown(item) + '</li>').join('');
+      parsedListLines.push('<' + currentListType + ' class="aichat-' + currentListType + '">' + itemsHtml + '</' + currentListType + '>');
+      currentListType = null;
+      currentListItems = [];
+    }
+
+    for (let j = 0; j < listLines.length; j++) {
+      const l = listLines[j];
+      if (l.startsWith('<!--AICHAT_')) {
+        flushList();
+        parsedListLines.push(l);
+        continue;
+      }
+
+      const olMatch = l.match(/^\s*(\d+)\.\s+(.+)$/);
+      const ulMatch = l.match(/^\s*[•\-\*]\s+(.+)$/);
+
+      if (olMatch) {
+        if (currentListType === 'ul') flushList();
+        currentListType = 'ol';
+        currentListItems.push(olMatch[2]);
+      } else if (ulMatch) {
+        if (currentListType === 'ol') flushList();
+        currentListType = 'ul';
+        currentListItems.push(ulMatch[1]);
+      } else {
+        flushList();
+        parsedListLines.push(l);
+      }
+    }
+    flushList();
+
+    html = parsedListLines.join('\n');
+
+    // 4. Inline format cho phần text còn lại ngoài bảng và list
+    const finalLines = html.split('\n').map((l) => {
+      if (l.startsWith('<!--AICHAT_') || l.startsWith('<ol') || l.startsWith('<ul') || l.startsWith('<pre')) {
+        return l;
+      }
+      return formatInlineMarkdown(l);
+    });
+
+    html = finalLines.join('\n');
+
+    // 5. Line breaks \n -> <br>
+    html = html.replace(/\n/g, '<br>');
+
+    // Dọn dẹp <br> thừa xung quanh các khối block
+    html = html.replace(/(?:<br>\s*)+(<!--AICHAT_(?:TABLE|CODEBLOCK)_\d+-->)/g, '$1');
+    html = html.replace(/(<!--AICHAT_(?:TABLE|CODEBLOCK)_\d+-->)(?:\s*<br>)+/g, '$1');
+    html = html.replace(/(?:<br>\s*)*(<\/?(?:ol|ul|li|pre)[^>]*>)(?:\s*<br>)*/g, '$1');
+
+    // 6. Khôi phục placeholders
+    for (let t = 0; t < tableBlocks.length; t++) {
+      html = html.replace('<!--AICHAT_TABLE_' + t + '-->', tableBlocks[t]);
+    }
+    for (let k = 0; k < codeBlocks.length; k++) {
+      html = html.replace('<!--AICHAT_CODEBLOCK_' + k + '-->', codeBlocks[k]);
+    }
+
+    return html;
+  };
+
   const buildThreadMarkup = (messages) => {
     if (!messages.length) {
       return '<div class="empty-state">Chưa có tin nhắn nào. Bạn có thể chọn một câu hỏi nhanh hoặc nhập nội dung cần hỗ trợ.</div>';
@@ -101,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return messages.map((message) => `
       <div class="chat-message ${escapeHtml(message.sender || '')}">
         <strong>${message.sender === 'patient' ? 'Bạn' : 'Hỗ trợ phòng khám'}</strong>
-        <div>${escapeHtml(message.message || '').replace(/\n/g, '<br>')}</div>
+        <div>${formatMarkdown(message.message || '')}</div>
         <div class="muted text-sm" style="margin-top:8px;">${formatTimestamp(message.created_at || '')}</div>
       </div>
     `).join('');

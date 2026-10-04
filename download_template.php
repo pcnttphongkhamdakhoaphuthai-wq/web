@@ -2,13 +2,19 @@
 declare(strict_types=1);
 require_once 'config.php';
 
-// Chỉ cho phép admin đã đăng nhập tải file mẫu
-require_admin_login();
+// Cho phép admin đã đăng nhập tải file mẫu, hoặc tải các file mẫu bảng giá / dịch vụ công khai
+$type = strtolower(trim((string)($_GET['type'] ?? '')));
 
-$type = trim((string)($_GET['type'] ?? ''));
+if (php_sapi_name() !== 'cli' && !isset($_SESSION['admin_id']) && !in_array($type, ['bang_gia', 'services', 'ai_prompt_pricing'], true)) {
+    require_admin_login();
+} elseif (isset($_SESSION['admin_id'])) {
+    refresh_admin_session();
+}
 
 $allowedTypes = [
     'ai_prompt_pricing'    => 'mau_bang_gia_dich_vu.csv',
+    'bang_gia'             => 'mau_bang_gia_dich_vu.csv',
+    'services'             => 'mau_bang_gia_dich_vu.csv',
     'ai_prompt_procedures' => 'mau_quy_trinh_kham_benh.csv',
     'ai_prompt_documents'  => 'mau_ho_so_thu_tuc_hanh_chinh.csv',
     'ai_prompt_benefits'   => 'mau_quyen_loi_va_che_do_bhyt.csv'
@@ -23,12 +29,14 @@ if (!array_key_exists($type, $allowedTypes)) {
 $filename = $allowedTypes[$type];
 
 // Thiết lập header tải file CSV
-header('Content-Type: text/csv; charset=utf-8');
-header('Content-Disposition: attachment; filename="' . $filename . '"');
-header('Pragma: no-cache');
-header('Expires: 0');
+if (!headers_sent()) {
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+}
 
-// Ghi UTF-8 BOM để Excel hiển thị tiếng Việt chuẩn không bị lỗi font
+// Ghi UTF-8 BOM để Excel hiển thị tiếng Việt chuẩn không bị lỗi font trên Windows
 echo "\xEF\xBB\xBF";
 
 $output = fopen('php://output', 'w');
@@ -36,19 +44,16 @@ if (!$output) {
     exit;
 }
 
-if ($type === 'ai_prompt_pricing') {
-    // Tiêu đề cột
-    fputcsv($output, ['STT', 'Mã Dịch Vụ', 'Tên Dịch Vụ / Khám Chuyên Khoa', 'Giá Dịch Vụ (VNĐ)', 'Bảo Hiểm Y Tế (BHYT)', 'Ghi Chú / Thời Gian Thực Hiện']);
+if (in_array($type, ['ai_prompt_pricing', 'bang_gia', 'services'], true)) {
+    // Tiêu đề 5 cột chuẩn
+    fputcsv($output, ['STT', 'Mã dịch vụ', 'Tên dịch vụ kỹ thuật', 'Đơn giá (VNĐ)', 'Bảo hiểm y tế'], ',', '"', "\\");
     
-    // Dữ liệu mẫu
-    fputcsv($output, ['1', 'DV001', 'Khám nội tổng quát', '100,000', 'Có áp dụng', 'Khám lâm sàng ban đầu']);
-    fputcsv($output, ['2', 'DV002', 'Siêu âm ổ bụng tổng quát (4D)', '150,000', 'Có áp dụng', 'Yêu cầu nhịn ăn sáng']);
-    fputcsv($output, ['3', 'DV003', 'Chụp X-quang tim phổi thẳng', '120,000', 'Có áp dụng', 'Thời gian trả kết quả: 15 phút']);
-    fputcsv($output, ['4', 'DV004', 'Xét nghiệm công thức máu toàn bộ (24 chỉ số)', '150,000', 'Có áp dụng', 'Lấy máu tĩnh mạch, trả kết quả sau 45 phút']);
-    fputcsv($output, ['5', 'DV005', 'Điện tâm đồ (ECG)', '80,000', 'Có áp dụng', 'Chẩn đoán nhịp tim, các bệnh lý mạch vành']);
-    fputcsv($output, ['6', 'DV006', 'Nội soi dạ dày không đau (gây mê)', '1,200,000', 'Hỗ trợ một phần', 'Cần có người nhà đi cùng, nhịn ăn uống 6 tiếng']);
-    fputcsv($output, ['7', 'DV007', 'Tầm soát ung thư cổ tử cung (Pap Smear)', '250,000', 'Không áp dụng', 'Dành cho nữ giới đã kết hôn']);
-    fputcsv($output, ['8', 'DV008', 'Khám chuyên khoa Răng Hàm Mặt', '120,000', 'Có áp dụng', 'Kiểm tra răng sâu, cao răng, nha chu']);
+    // Dữ liệu mẫu chuẩn
+    fputcsv($output, ['1', 'K01', 'Khám Bệnh Nội Tổng Hợp', '150000', 'Được áp dụng'], ',', '"', "\\");
+    fputcsv($output, ['2', 'CC01', 'Cấp Cứu Ban Đầu', '250000', 'Được áp dụng'], ',', '"', "\\");
+    fputcsv($output, ['3', 'SA01', 'Siêu Âm Doppler Màu Mạch Máu', '350000', 'Được áp dụng'], ',', '"', "\\");
+    fputcsv($output, ['4', 'XQ01', 'Chụp X-Quang Kỹ Thuật Số Tim Phổi', '180000', 'Được áp dụng'], ',', '"', "\\");
+    fputcsv($output, ['5', 'XN01', 'Xét Nghiệm Tổng Phân Tích Tế Bào Máu', '120000', 'Được áp dụng'], ',', '"', "\\");
 
 } elseif ($type === 'ai_prompt_procedures') {
     fputcsv($output, ['Bước', 'Tên Bước Thực Hiện', 'Nơi Thực Hiện', 'Chi Tiết Quy Trình / Hướng Dẫn Cho Bệnh Nhân', 'Giấy Tờ Cần Chuẩn Bị']);

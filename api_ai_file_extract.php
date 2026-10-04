@@ -49,15 +49,69 @@ if (!in_array($ext, $allowedExt, true)) {
 
 // ─── Text extraction functions ───────────────────────────────────────────────
 
+function normalize_text_encoding(string $raw): string {
+    if ($raw === '') {
+        return '';
+    }
+
+    // 1. Cắt bỏ ký tự UTF-8 BOM nếu có ở đầu chuỗi
+    if (str_starts_with($raw, "\xEF\xBB\xBF")) {
+        $raw = substr($raw, 3);
+    }
+
+    // 2. Kiểm tra UTF-8 trước tiên. Nếu hợp lệ thì giữ nguyên tuyệt đối (chống mojibake / double-encoding)
+    if (mb_check_encoding($raw, 'UTF-8')) {
+        return $raw;
+    }
+
+    // 3. Nhận diện UTF-16LE / UTF-16BE qua BOM
+    if (str_starts_with($raw, "\xFF\xFE")) {
+        return (string)mb_convert_encoding(substr($raw, 2), 'UTF-8', 'UTF-16LE');
+    }
+    if (str_starts_with($raw, "\xFE\xFF")) {
+        return (string)mb_convert_encoding(substr($raw, 2), 'UTF-8', 'UTF-16BE');
+    }
+
+    // 4. Nhận diện UTF-16LE / UTF-16BE không có BOM (chứa null byte \0 giữa các ký tự)
+    if (str_contains($raw, "\0")) {
+        $enc = mb_detect_encoding($raw, ['UTF-16LE', 'UTF-16BE'], true);
+        if ($enc) {
+            return (string)mb_convert_encoding($raw, 'UTF-8', $enc);
+        }
+    }
+
+    // 5. Chuyển đổi bảng mã tiếng Việt cũ: Windows-1258 hoặc TCVN3 (ABC)
+    $asWin = @iconv('Windows-1258', 'UTF-8//IGNORE', $raw);
+    if ($asWin !== false && function_exists('normalizer_normalize')) {
+        $asWin = (string)normalizer_normalize($asWin, Normalizer::FORM_C);
+    }
+    $asTcvn = @iconv('TCVN', 'UTF-8//IGNORE', $raw);
+
+    $evalVn = static function (?string $t): int {
+        if ($t === null || $t === '') return -999;
+        $vnChars   = (int)preg_match_all('/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/iu', $t);
+        $penDouble = (int)preg_match_all('/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹ]{2}/u', $t);
+        $penSym    = (int)preg_match_all('/[¶¸÷Ö®]/u', $t);
+        return $vnChars - ($penDouble * 5) - ($penSym * 5);
+    };
+
+    $scoreWin  = ($asWin !== false) ? $evalVn($asWin) : -999;
+    $scoreTcvn = ($asTcvn !== false) ? $evalVn($asTcvn) : -999;
+
+    if ($scoreWin > 0 && $scoreWin >= $scoreTcvn) {
+        return (string)$asWin;
+    }
+    if ($scoreTcvn > 0) {
+        return (string)$asTcvn;
+    }
+
+    return $raw;
+}
+
 function extract_txt(string $path): string {
     $content = file_get_contents($path);
     if ($content === false) return '';
-    // Detect and convert encoding
-    $enc = mb_detect_encoding($content, ['UTF-8', 'UTF-16', 'ISO-8859-1'], true);
-    if ($enc && $enc !== 'UTF-8') {
-        $content = mb_convert_encoding($content, 'UTF-8', $enc);
-    }
-    return trim($content);
+    return trim(normalize_text_encoding($content));
 }
 
 function extract_docx(string $path): string {
@@ -136,31 +190,41 @@ function extract_xlsx(string $path): string {
 }
 
 function extract_csv(string $path): string {
-    $rows = [];
-    $enc = null;
     $raw = file_get_contents($path);
-    if ($raw !== false) {
-        $enc = mb_detect_encoding($raw, ['UTF-8', 'UTF-16', 'ISO-8859-1'], true);
-        if ($enc && $enc !== 'UTF-8') {
-            $raw = mb_convert_encoding($raw, 'UTF-8', $enc);
-            // Write to tmp for fgetcsv
-            $path = tempnam(sys_get_temp_dir(), 'csv_');
-            file_put_contents($path, $raw);
-        }
-    }
+    if ($raw === false) return '';
 
-    $handle = fopen($path, 'r');
+    $raw = normalize_text_encoding($raw);
+    if ($raw === '') return '';
+
+    // Dùng php://memory để parse CSV trực tiếp trên bộ nhớ đã chuẩn hóa UTF-8, không tạo file rác trên ổ cứng
+    $handle = fopen('php://memory', 'r+');
     if (!$handle) return '';
+    fwrite($handle, $raw);
+    rewind($handle);
 
-    // Detect delimiter
+    // Phát hiện ký tự phân cách (delimiter: tab, semicolon, comma)
     $firstLine = fgets($handle);
     rewind($handle);
-    $delim = (substr_count((string)$firstLine, "\t") > substr_count((string)$firstLine, ",")) ? "\t" : ",";
 
-    while (($cols = fgetcsv($handle, 0, $delim)) !== false) {
-        $rows[] = implode("\t", $cols);
+    $tabCount   = substr_count((string)$firstLine, "\t");
+    $semiCount  = substr_count((string)$firstLine, ';');
+    $commaCount = substr_count((string)$firstLine, ',');
+    $delim = ',';
+    if ($tabCount > $commaCount && $tabCount >= $semiCount) {
+        $delim = "\t";
+    } elseif ($semiCount > $commaCount && $semiCount > $tabCount) {
+        $delim = ';';
+    }
+
+    $rows = [];
+    while (($cols = fgetcsv($handle, null, $delim, '"', '\\')) !== false) {
+        $cleanCols = array_map(static fn($c) => trim((string)$c), $cols);
+        if (!empty(array_filter($cleanCols, static fn($v) => $v !== ''))) {
+            $rows[] = implode("\t", $cleanCols);
+        }
     }
     fclose($handle);
+
     return trim(implode("\n", $rows));
 }
 
