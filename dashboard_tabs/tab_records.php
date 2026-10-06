@@ -16,44 +16,46 @@
     <?php if (count($appointments) === 0): ?>
       <p class="muted" style="margin-top:10px;">Chưa có lịch hẹn nào được đặt.</p>
     <?php else: ?>
-      <table style="margin-top:10px;">
-        <thead>
-          <tr>
-            <th>Thời gian</th>
-            <th>Bác sĩ</th>
-            <th>Khoa</th>
-            <th>Lý do</th>
-            <th>Trạng thái</th>
-            <th>Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($appointments as $appt): ?>
+      <div class="table-responsive" style="margin-top:10px;">
+        <table>
+          <thead>
             <tr>
-              <td><?= e(date('d/m/Y H:i', strtotime($appt['appointment_date']))) ?></td>
-              <td><?= e($appt['doctor_name']) ?></td>
-              <td><?= e($appt['department']) ?></td>
-              <td><?= nl2br(e($appt['reason'])) ?></td>
-              <td><?= e($appt['status']) ?></td>
-              <td>
-                <?php if (appointment_is_editable($appt)): ?>
-                  <div class="actions">
-                    <a class="btn btn-light" href="book_appointment.php?edit=<?= (int) $appt['id'] ?>">Sửa</a>
-                    <form method="post" class="inline-form" onsubmit="return confirm('Xóa lịch hẹn này?');">
-                      <?php render_form_guard('patient_appointment_manage'); ?>
-                      <input type="hidden" name="action" value="delete_appointment">
-                      <input type="hidden" name="appointment_id" value="<?= (int) $appt['id'] ?>">
-                      <button type="submit" class="danger-btn">Xóa</button>
-                    </form>
-                  </div>
-                <?php else: ?>
-                  <span class="muted">Đã khóa</span>
-                <?php endif; ?>
-              </td>
+              <th>Thời gian</th>
+              <th>Bác sĩ</th>
+              <th>Khoa</th>
+              <th>Lý do</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
             </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <?php foreach ($appointments as $appt): ?>
+              <tr>
+                <td><?= e(date('d/m/Y H:i', strtotime($appt['appointment_date']))) ?></td>
+                <td><?= e($appt['doctor_name']) ?></td>
+                <td><?= e($appt['department']) ?></td>
+                <td><?= nl2br(e($appt['reason'])) ?></td>
+                <td><?= e($appt['status']) ?></td>
+                <td>
+                  <?php if (appointment_is_editable($appt)): ?>
+                    <div class="actions">
+                      <a class="btn btn-light" href="book_appointment.php?edit=<?= (int) $appt['id'] ?>">Sửa</a>
+                      <form method="post" class="inline-form" onsubmit="return confirm('Xóa lịch hẹn này?');">
+                        <?php render_form_guard('patient_appointment_manage'); ?>
+                        <input type="hidden" name="action" value="delete_appointment">
+                        <input type="hidden" name="appointment_id" value="<?= (int) $appt['id'] ?>">
+                        <button type="submit" class="danger-btn">Xóa</button>
+                      </form>
+                    </div>
+                  <?php else: ?>
+                    <span class="muted">Đã khóa</span>
+                  <?php endif; ?>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
     <?php endif; ?>
   </section>
 

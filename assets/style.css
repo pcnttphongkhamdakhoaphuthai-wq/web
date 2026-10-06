@@ -1320,7 +1320,7 @@ tr:hover td { background: #f8fbfe; }
   top: 84px;
   right: 20px;
   z-index: 99;
-  width: min(400px, calc(100vw - 28px));
+  width: min(400px, calc(100% - 28px));
   padding: 16px 18px 14px;
   border-radius: 18px;
   background: linear-gradient(135deg, #fff5f5, #ffffff);
@@ -1653,7 +1653,7 @@ tr:hover td { background: #f8fbfe; }
 }
 
 .floating-chat-panel {
-  width: min(400px, calc(100vw - 32px));
+  width: min(400px, calc(100% - 32px));
   height: min(78vh, 720px);
   display: none;
   background: #ffffff;
@@ -1845,7 +1845,7 @@ tr:hover td { background: #f8fbfe; }
 
 .floating-chat-nudge {
   position: relative;
-  width: min(320px, calc(100vw - 44px));
+  width: min(320px, calc(100% - 44px));
 }
 
 .floating-chat-nudge-body {
@@ -2223,4 +2223,57 @@ tr:hover td { background: #f8fbfe; }
 }
 
 
+/* ==========================================================================
+   Layout & Responsive Hardening (Chống tràn an toàn & Header Mobile chuẩn gọn)
+   ========================================================================== */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
 
+.site-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-area {
+  position: relative;
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 800px) {
+  .header-nav .text-button,
+  .header-nav .support-button,
+  .header-nav .guide-nav,
+  .header-nav .preview-label {
+    display: none !important;
+  }
+  .mobile-menu {
+    display: grid !important;
+  }
+  .header-inner {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .mobile-navigation:not([hidden]) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 10px 0 14px;
+  }
+}

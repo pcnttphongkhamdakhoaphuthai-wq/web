@@ -3787,15 +3787,16 @@ function render_header(string $title, string $activeNav = '', bool $patientLogin
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap">
   <link rel="icon" href="/logo.png">
-  <link rel="stylesheet" href="/assets/style.css?v=<?= (int) filemtime(__DIR__ . '/assets/style.css') ?>">
+  <link rel="stylesheet" href="/assets/style.css?v=<?= (int) filemtime(__DIR__ . '/assets/style.css') ?>_mobile_v4">
   <?php if ($patientLoginPage): ?>
   <link rel="preload" href="/assets/fonts/roboto-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/roboto-700.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/assets/patient-login.css?v=<?= (int) filemtime(__DIR__ . '/assets/patient-login.css') ?>">
+  <link rel="stylesheet" href="/assets/patient-login.css?v=<?= (int) filemtime(__DIR__ . '/assets/patient-login.css') ?>_mobile_v4">
   <script src="/assets/patient-login.js?v=<?= (int) filemtime(__DIR__ . '/assets/patient-login.js') ?>" defer></script>
   <?php endif; ?>
 </head>
 <body<?= $patientLoginPage ? ' class="patient-login-page"' : '' ?>>
+<div class="site-wrapper">
 <a class="skip-link" href="<?= $patientLoginPage ? '#login-title' : '#main-content' ?>"><?= $patientLoginPage ? 'Đến phần đăng nhập' : 'Đến nội dung chính' ?></a>
 
 <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -3837,13 +3838,22 @@ function render_header(string $title, string $activeNav = '', bool $patientLogin
     </nav>
   </div>
   <nav class="container mobile-navigation" id="mobile-navigation" aria-label="Menu điện thoại" hidden>
-    <button type="button" data-dialog="guide">Hướng dẫn sử dụng</button>
-    <button type="button" data-dialog="support">Liên hệ hỗ trợ</button>
-    <button type="button" data-dialog="staff">Dành cho nhân viên</button>
     <?php if ($isPatient): ?>
-      <a class="text-button" href="dashboard.php">Hồ sơ cá nhân</a>
-      <a class="text-button" href="logout.php">Đăng xuất</a>
+      <a class="text-button" href="dashboard.php" style="font-weight:700;color:var(--blue);"><?= !empty($_SESSION['name']) ? e((string)$_SESSION['name']) . ' (Hồ sơ)' : 'Hồ sơ bệnh nhân' ?></a>
+      <button type="button" data-dialog="guide">Hướng dẫn sử dụng</button>
+      <button type="button" data-dialog="support">Cần hỗ trợ?</button>
+      <button type="button" data-dialog="staff">Dành cho nhân viên</button>
+      <a class="text-button" href="logout.php" style="color:var(--muted);">Đăng xuất</a>
+    <?php elseif ($isAdmin): ?>
+      <a class="text-button" href="admin_add_record.php" style="font-weight:700;color:var(--blue);">Quản trị</a>
+      <button type="button" data-dialog="guide">Hướng dẫn sử dụng</button>
+      <button type="button" data-dialog="support">Cần hỗ trợ?</button>
+      <button type="button" data-dialog="staff">Dành cho nhân viên</button>
+      <a class="text-button" href="logout.php" style="color:var(--muted);">Đăng xuất</a>
     <?php else: ?>
+      <button type="button" data-dialog="guide">Hướng dẫn sử dụng</button>
+      <button type="button" data-dialog="support">Cần hỗ trợ?</button>
+      <button type="button" data-dialog="staff">Dành cho nhân viên</button>
       <a class="text-button" href="register.php">Đăng ký tài khoản</a>
       <a class="text-button" href="forgot_password.php">Quên mật khẩu</a>
     <?php endif; ?>
@@ -3976,6 +3986,7 @@ function render_footer(): void
   }
 })();
 </script>
+</div>
 </body>
 </html>
 <?php

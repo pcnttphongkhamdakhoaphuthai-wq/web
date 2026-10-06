@@ -1389,3 +1389,48 @@ body.patient-login-page { display: block; min-height: 100vh; justify-content: no
   display: block;
 }
 
+
+/* -- Fix tràn màn hình do set cứng width (Subagent 4) -- */
+.patient-login-page .login-layout {
+  grid-template-columns: minmax(0, 1fr) min(100%, 453px);
+}
+@media (min-width: 1450px) {
+  .patient-login-page .login-layout {
+    grid-template-columns: minmax(0, 1fr) min(100%, 480px);
+  }
+}
+@media (max-width: 1150px) {
+  .patient-login-page .login-layout {
+    grid-template-columns: minmax(0, 1fr) min(100%, 425px);
+  }
+}
+@media (max-width: 980px) {
+  .patient-login-page .login-layout {
+    grid-template-columns: minmax(0, 1fr) min(100%, 385px);
+  }
+}
+@media (max-width: 800px) {
+  .patient-login-page .login-card {
+    max-width: 100%;
+    width: 100%;
+  }
+  .patient-login-page .intro h1,
+  .patient-login-page .login-card h2 {
+    white-space: normal;
+  }
+}
+
+/* Bổ sung fix lỗi tràn viền */
+html, body.patient-login-page {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+.main-area {
+  overflow-x: hidden;
+  position: relative;
+  max-width: 100%;
+}
+.turnstile-wrap .cf-turnstile iframe {
+  max-width: 100%;
+  overflow: hidden;
+}
