@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const launcher = widget.querySelector('[data-chat-toggle="true"]');
-  const closeButton = widget.querySelector('[data-chat-close="true"]');
+  const closeButtons = widget.querySelectorAll('[data-chat-close], .floating-chat-close');
   const thread = widget.querySelector('[data-chat-thread]');
   const counter = widget.querySelector('.floating-chat-count');
   const nudge = widget.querySelector('[data-chat-nudge]');
@@ -62,10 +62,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const endpoint = widget.getAttribute('data-chat-endpoint');
   let latestChatId = Number(widget.getAttribute('data-chat-latest-id') || '0');
 
-  const scrollThreadToBottom = () => {
-    if (thread) {
-      thread.scrollTop = thread.scrollHeight;
+  const scrollThreadToBottom = (smooth = true) => {
+    if (!thread) {
+      return;
     }
+    const scrollToBottomDirect = () => {
+      try {
+        if (smooth && typeof thread.scrollTo === 'function') {
+          thread.scrollTo({
+            top: thread.scrollHeight,
+            behavior: 'smooth',
+          });
+        } else {
+          thread.scrollTop = thread.scrollHeight;
+        }
+      } catch (_) {
+        thread.scrollTop = thread.scrollHeight;
+      }
+    };
+
+    scrollToBottomDirect();
+    requestAnimationFrame(scrollToBottomDirect);
+    setTimeout(scrollToBottomDirect, 120);
+    setTimeout(scrollToBottomDirect, 300);
   };
 
   const escapeHtml = (value) => String(value || '')
@@ -374,7 +393,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (counter) {
       counter.textContent = String(payload.message_count || 0);
     }
-    requestAnimationFrame(scrollThreadToBottom);
+    scrollThreadToBottom(true);
+  };
+
+  const isMobileScreen = () => window.innerWidth <= 768;
+
+  const updateBodyScrollLock = (open) => {
+    if (open && isMobileScreen()) {
+      document.body.classList.add('chat-modal-open');
+    } else {
+      document.body.classList.remove('chat-modal-open');
+    }
   };
 
   const syncState = (open) => {
@@ -382,9 +411,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (launcher) {
       launcher.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
+    updateBodyScrollLock(open);
     if (open) {
       hideNudge();
-      requestAnimationFrame(scrollThreadToBottom);
+      scrollThreadToBottom(true);
     }
   };
 
@@ -430,11 +460,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (closeButton) {
-    closeButton.addEventListener('click', () => {
+  closeButtons.forEach((btn) => {
+    const handleClose = (event) => {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
       syncState(false);
-    });
-  }
+    };
+    btn.addEventListener('click', handleClose);
+    btn.addEventListener('touchend', (event) => {
+      event.preventDefault();
+      handleClose(event);
+    }, { passive: false });
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && isOpen()) {
+      syncState(false);
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (isOpen()) {
+      updateBodyScrollLock(true);
+    } else {
+      document.body.classList.remove('chat-modal-open');
+    }
+  });
 
   openButtons.forEach((button) => {
     button.addEventListener('click', (event) => {
@@ -443,12 +496,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  if (window.location.hash === '#support') {
+  // Hỗ trợ tự cuộn và giữ trạng thái mở khi bấm câu hỏi gợi ý / gửi tin nhắn
+  const quickReplyButtons = widget.querySelectorAll('.quick-replies button');
+  quickReplyButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      sessionStorage.setItem('phuthai_chat_open', 'true');
+      scrollThreadToBottom(true);
+    });
+  });
+
+  const chatForms = widget.querySelectorAll('.floating-chat-body form');
+  chatForms.forEach((form) => {
+    form.addEventListener('submit', () => {
+      sessionStorage.setItem('phuthai_chat_open', 'true');
+      scrollThreadToBottom(true);
+    });
+  });
+
+  const shouldAutoOpen = window.location.hash === '#support' || sessionStorage.getItem('phuthai_chat_open') === 'true';
+  if (shouldAutoOpen) {
+    sessionStorage.removeItem('phuthai_chat_open');
     syncState(true);
+    setTimeout(() => scrollThreadToBottom(true), 250);
   }
 
   if (thread) {
-    scrollThreadToBottom();
+    scrollThreadToBottom(false);
     ['wheel', 'touchstart', 'touchmove'].forEach((eventName) => {
       thread.addEventListener(eventName, (event) => {
         event.stopPropagation();
@@ -489,6 +562,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (hasIncoming) {
       const newestIncoming = incomingMessages[incomingMessages.length - 1];
       showNudge(newestIncoming ? newestIncoming.message : '');
+      if (isOpen()) {
+        scrollThreadToBottom(true);
+      }
     }
 
     latestChatId = nextLatestChatId;

@@ -3787,11 +3787,11 @@ function render_header(string $title, string $activeNav = '', bool $patientLogin
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap">
   <link rel="icon" href="/logo.png">
-  <link rel="stylesheet" href="/assets/style.css?v=<?= (int) filemtime(__DIR__ . '/assets/style.css') ?>_mobile_v4">
+  <link rel="stylesheet" href="/assets/style.css?v=<?= (int) filemtime(__DIR__ . '/assets/style.css') ?>_mobile_v5">
   <?php if ($patientLoginPage): ?>
   <link rel="preload" href="/assets/fonts/roboto-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/roboto-700.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/assets/patient-login.css?v=<?= (int) filemtime(__DIR__ . '/assets/patient-login.css') ?>_mobile_v4">
+  <link rel="stylesheet" href="/assets/patient-login.css?v=<?= (int) filemtime(__DIR__ . '/assets/patient-login.css') ?>_mobile_v5">
   <script src="/assets/patient-login.js?v=<?= (int) filemtime(__DIR__ . '/assets/patient-login.js') ?>" defer></script>
   <?php endif; ?>
 </head>
