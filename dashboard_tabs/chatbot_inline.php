@@ -101,6 +101,11 @@
   line-height: 1.5;
   word-break: break-word;
 }
+.aichat-msg-bubble, .aichat-msg-bubble p, .aichat-msg-bubble em, .aichat-msg-bubble strong {
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+}
 .aichat-msg--bot .aichat-msg-bubble {
   background: white;
   color: var(--aichat-text);
@@ -126,15 +131,18 @@
 }
 
 /* ===== AI Chat Table & Responsive Medical Price Table ===== */
-.aichat-msg--bot .aichat-msg-bubble:has(.aichat-table-responsive) {
+.aichat-msg--bot .aichat-msg-bubble:has(.aichat-table-responsive),
+.aichat-msg--bot .aichat-msg-bubble.has-table {
   max-width: 96%;
 }
 
 .aichat-table-responsive {
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin;
+  scrollbar-color: #93c5fd #f1f5f9;
   margin: 10px 0;
   border-radius: 10px;
   border: 1px solid rgba(14, 165, 233, 0.2);
@@ -145,18 +153,18 @@
 }
 
 .aichat-table-responsive::-webkit-scrollbar {
-  height: 5px;
+  height: 6px;
 }
 .aichat-table-responsive::-webkit-scrollbar-track {
-  background: rgba(240, 249, 255, 0.8);
+  background: #f1f5f9;
   border-radius: 0 0 10px 10px;
 }
 .aichat-table-responsive::-webkit-scrollbar-thumb {
-  background: #bae6fd;
-  border-radius: 4px;
+  background: #93c5fd;
+  border-radius: 999px;
 }
 .aichat-table-responsive::-webkit-scrollbar-thumb:hover {
-  background: #7dd3fc;
+  background: #60a5fa;
 }
 
 .aichat-table {
@@ -194,6 +202,13 @@
   vertical-align: middle;
   color: #334155;
 }
+
+/* Tối ưu tỉ lệ các cột cho bảng .aichat-table */
+.aichat-table th:nth-child(1), .aichat-table td:nth-child(1) { width: 34px; text-align: center; }
+.aichat-table th:nth-child(2), .aichat-table td:nth-child(2) { width: 60px; font-size: 11.5px; }
+.aichat-table th:nth-child(3), .aichat-table td:nth-child(3) { min-width: 130px; word-break: break-word; }
+.aichat-table th:nth-child(4), .aichat-table td:nth-child(4) { width: 95px; text-align: right; white-space: nowrap; font-weight: 700; color: #0284c7; }
+.aichat-table th:nth-child(5), .aichat-table td:nth-child(5) { width: 80px; text-align: center; }
 
 .aichat-table tbody tr:last-child td {
   border-bottom: none;
@@ -412,8 +427,9 @@
     padding: 10px 13px;
     font-size: 14px;
   }
-  .aichat-msg--bot .aichat-msg-bubble:has(.aichat-table-responsive) {
-    max-width: 100%;
+  .aichat-msg--bot .aichat-msg-bubble:has(.aichat-table-responsive),
+  .aichat-msg--bot .aichat-msg-bubble.has-table {
+    max-width: 100% !important;
     padding: 10px 8px;
   }
   .aichat-table {
@@ -808,6 +824,9 @@ var aichat = (function() {
     bubble.className = 'aichat-msg-bubble';
     if (isHtml) {
       bubble.innerHTML = content;
+      if (bubble.querySelector('.aichat-table-responsive')) {
+        bubble.classList.add('has-table');
+      }
     } else {
       bubble.innerText = content;
     }

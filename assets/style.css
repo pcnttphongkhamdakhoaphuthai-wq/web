@@ -1973,6 +1973,18 @@ body.chat-modal-open {
   .aichat-table td {
     padding: 5px 8px !important;
   }
+
+  /* Bong bóng chat chứa bảng đạt max-width 100% trên mobile */
+  .chat-message:has(.aichat-table-responsive),
+  .chat-message.bot:has(.aichat-table-responsive),
+  .aichat-msg-bubble:has(.aichat-table-responsive),
+  .aichat-msg--bot .aichat-msg-bubble:has(.aichat-table-responsive) {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 10px 8px !important;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1998,21 +2010,23 @@ body.chat-modal-open {
   box-shadow: 0 2px 8px rgba(14, 165, 233, 0.08);
   background: #ffffff;
   box-sizing: border-box !important;
+  scrollbar-width: thin;
+  scrollbar-color: #93c5fd #f1f5f9;
 }
 
 .aichat-table-responsive::-webkit-scrollbar {
-  height: 5px;
+  height: 6px;
 }
 .aichat-table-responsive::-webkit-scrollbar-track {
-  background: rgba(240, 249, 255, 0.8);
+  background: #f1f5f9;
   border-radius: 0 0 10px 10px;
 }
 .aichat-table-responsive::-webkit-scrollbar-thumb {
-  background: #bae6fd;
+  background: #93c5fd;
   border-radius: 4px;
 }
 .aichat-table-responsive::-webkit-scrollbar-thumb:hover {
-  background: #7dd3fc;
+  background: #60a5fa;
 }
 
 .aichat-table {
@@ -2074,18 +2088,77 @@ body.chat-modal-open {
   background-color: rgba(224, 242, 254, 0.7);
 }
 
-/* Căn phải cột tiền tệ */
-.aichat-table .col-price {
-  text-align: right;
-  font-weight: 600;
-  color: #0284c7;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+/* Tối ưu phân bổ cột bảng giá .aichat-table (Cột 1: 34px, Cột 2: 60px, Cột 3: min 130px, Cột 4: 95px căn phải in đậm, Cột 5: 80px căn giữa) */
+.aichat-table th:nth-child(1),
+.aichat-table td:nth-child(1),
+.chat-message .aichat-table th:nth-child(1),
+.chat-message .aichat-table td:nth-child(1) {
+  width: 34px !important;
+  max-width: 34px !important;
+  text-align: center !important;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+  white-space: nowrap !important;
 }
 
-.aichat-table th.col-price {
-  text-align: right;
-  color: #ffffff;
+.aichat-table th:nth-child(2),
+.aichat-table td:nth-child(2),
+.chat-message .aichat-table th:nth-child(2),
+.chat-message .aichat-table td:nth-child(2) {
+  width: 60px !important;
+  min-width: 60px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+.aichat-table th:nth-child(3),
+.aichat-table td:nth-child(3),
+.chat-message .aichat-table th:nth-child(3),
+.chat-message .aichat-table td:nth-child(3) {
+  min-width: 130px !important;
+  word-break: break-word !important;
+}
+
+.aichat-table th:nth-child(4),
+.aichat-table td:nth-child(4),
+.aichat-table .col-price,
+.aichat-table .price-col,
+.chat-message .aichat-table th:nth-child(4),
+.chat-message .aichat-table td:nth-child(4),
+.chat-message .aichat-table .price-col {
+  width: 95px !important;
+  min-width: 95px !important;
+  text-align: right !important;
+  font-weight: 700 !important;
+  color: #0284c7;
+  white-space: nowrap !important;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.aichat-table th:nth-child(4),
+.aichat-table th.col-price,
+.aichat-table th.price-col,
+.chat-message .aichat-table th:nth-child(4),
+.chat-message .aichat-table th.price-col {
+  text-align: right !important;
+  color: #ffffff !important;
+}
+
+.aichat-table th:nth-child(5),
+.aichat-table td:nth-child(5),
+.aichat-table .col-bhyt,
+.chat-message .aichat-table th:nth-child(5),
+.chat-message .aichat-table td:nth-child(5) {
+  width: 80px !important;
+  min-width: 80px !important;
+  text-align: center !important;
+}
+
+.aichat-table th:nth-child(5),
+.chat-message .aichat-table th:nth-child(5) {
+  text-align: center !important;
+  color: #ffffff !important;
 }
 
 .aichat-table .col-center {
@@ -2123,6 +2196,27 @@ body.chat-modal-open {
   line-height: 1.3;
 }
 
+/* Ép buộc văn bản bong bóng chat */
+.chat-message, .chat-message p, .chat-message em, .chat-message strong, .aichat-msg-bubble {
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Định dạng tối ưu cho dòng ghi chú trong chatbot (cho cả Floating Chat và Inline) */
+.chat-message em,
+.chat-message p em,
+.aichat-msg-bubble em,
+.aichat-msg-bubble p em,
+.aichat-table-note {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 6px;
+  line-height: 1.45;
+  font-style: italic;
+}
+
 /* Bảo đảm an toàn layout bong bóng chat */
 .aichat-msg-bubble {
   min-width: 0;
@@ -2137,8 +2231,11 @@ body.chat-modal-open {
   .aichat-msg-bubble {
     max-width: 94%;
   }
-  .aichat-msg--bot .aichat-msg-bubble:has(.aichat-table-responsive) {
-    max-width: 100%;
+  .aichat-msg--bot .aichat-msg-bubble:has(.aichat-table-responsive),
+  .chat-message:has(.aichat-table-responsive),
+  .chat-message.bot:has(.aichat-table-responsive) {
+    max-width: 100% !important;
+    width: 100% !important;
     padding: 10px 8px;
   }
   .aichat-table {

@@ -674,7 +674,7 @@ if (!function_exists('buildMarkdownPricingReply')) {
         if ($type === 'not_found' || empty($services)) {
             $kwDisplay = $keyword !== '' ? " \"{$keyword}\"" : '';
             return "Dạ, hiện tại hệ thống chưa tìm thấy thông tin đơn giá chính xác cho dịch vụ{$kwDisplay} tại {$clinicName}.\n\n"
-                . "💡 *Quý khách có thể nhập tên dịch vụ cụ thể khác (VD: **khám nội, siêu âm, x-quang, xét nghiệm máu, nội soi, mắt...**) để tra cứu.*\n\n"
+                . "💡 *Quý khách có thể nhập tên dịch vụ cụ thể khác (VD: khám nội, siêu âm, x-quang, xét nghiệm máu, nội soi, mắt...) để tra cứu.*\n\n"
                 . "📞 Hoặc liên hệ trực tiếp hotline **{$hotline}** để được nhân viên y tế hỗ trợ bảng giá và tư vấn tận tình!";
         }
 
@@ -685,6 +685,7 @@ if (!function_exists('buildMarkdownPricingReply')) {
             $out .= "💰 **Bảng giá một số dịch vụ y tế phổ biến tại {$clinicName}:**\n\n";
         }
 
+        $out .= "*(Vuốt bảng sang phải để xem Đơn giá và BHYT trên điện thoại)*\n\n";
         $out .= "| STT | Mã DV | Tên dịch vụ y tế | Đơn giá (VNĐ) | Áp dụng BHYT |\n";
         $out .= "|---|---|---|---|---|\n";
 
@@ -700,7 +701,7 @@ if (!function_exists('buildMarkdownPricingReply')) {
             );
         }
 
-        $out .= "\n💡 *Quý khách có thể nhập tên dịch vụ cụ thể (VD: *siêu âm, xét nghiệm, nội soi, nhổ răng, tiểu đường, mắt...*) để tra cứu chính xác đơn giá.*\n";
+        $out .= "\n💡 *Quý khách có thể nhập tên dịch vụ cụ thể (VD: siêu âm, xét nghiệm, nội soi, nhổ răng, tiểu đường, mắt...) để tra cứu chính xác đơn giá.*\n";
         $out .= "📞 Để được tư vấn chi tiết hoặc đặt lịch khám, Quý khách vui lòng gọi Hotline: **{$hotline}**.";
 
         return $out;
