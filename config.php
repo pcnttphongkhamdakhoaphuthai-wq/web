@@ -3792,7 +3792,7 @@ function render_header(string $title, string $activeNav = '', bool $patientLogin
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap">
   <link rel="icon" href="/logo.png">
-  <link rel="stylesheet" href="/assets/style.css?v=<?= (int) filemtime(__DIR__ . '/assets/style.css') ?>_mobile_v7">
+  <link rel="stylesheet" href="/assets/style.css?v=<?= (int) filemtime(__DIR__ . '/assets/style.css') ?>_mobile_v8_chat">
   <?php if ($patientLoginPage): ?>
   <link rel="preload" href="/assets/fonts/roboto-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/roboto-700.woff2" as="font" type="font/woff2" crossorigin>
@@ -3992,7 +3992,7 @@ function render_footer(): void
 })();
 </script>
 </div>
-<script src="/assets/app.js?v=<?= (int) filemtime(__DIR__ . '/assets/app.js') ?>_chat_v1" defer></script>
+<script src="/assets/app.js?v=<?= (int) filemtime(__DIR__ . '/assets/app.js') ?>_chat_v2" defer></script>
 </body>
 </html>
 <?php
