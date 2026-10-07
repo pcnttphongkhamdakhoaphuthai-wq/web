@@ -3992,6 +3992,7 @@ function render_footer(): void
 })();
 </script>
 </div>
+<script src="/assets/app.js?v=<?= (int) filemtime(__DIR__ . '/assets/app.js') ?>_chat_v1" defer></script>
 </body>
 </html>
 <?php

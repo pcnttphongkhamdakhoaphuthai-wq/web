@@ -44,7 +44,15 @@ const fileDialogGuard = (() => {
   };
 })();
 
-document.addEventListener('DOMContentLoaded', () => {
+const onReady = (fn) => {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn);
+  } else {
+    fn();
+  }
+};
+
+onReady(() => {
   const widget = document.querySelector('[data-floating-chat]');
   if (!widget) {
     return;
@@ -442,13 +450,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (launcher) {
-    launcher.addEventListener('click', () => {
+    launcher.addEventListener('click', (event) => {
+      if (event) event.preventDefault();
       syncState(!isOpen());
     });
   }
 
   if (nudgeOpenButton) {
-    nudgeOpenButton.addEventListener('click', () => {
+    nudgeOpenButton.addEventListener('click', (event) => {
+      if (event) event.preventDefault();
       syncState(true);
     });
   }
@@ -494,6 +504,15 @@ document.addEventListener('DOMContentLoaded', () => {
       event.preventDefault();
       syncState(true);
     });
+  });
+
+  // Global delegation dự phòng cho mọi nút mở chat nổi (đảm bảo hoạt động trên mọi trang & vị trí DOM)
+  document.addEventListener('click', (event) => {
+    const target = event.target.closest('[data-chat-open="true"]');
+    if (target) {
+      event.preventDefault();
+      syncState(true);
+    }
   });
 
   // Hỗ trợ tự cuộn và giữ trạng thái mở khi bấm câu hỏi gợi ý / gửi tin nhắn
@@ -579,7 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 5000);
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   const supportProbe = document.querySelector('[data-admin-support-endpoint]');
   if (!supportProbe) {
     return;
@@ -754,62 +773,64 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 5000);
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  // ── TAB SWITCHING ──
+onReady(() => {
+  // ── TAB SWITCHING (Chỉ chạy khi có các phần tử tab quản trị tương ứng) ──
   const tabs = document.querySelectorAll('.tab-bar .tab-btn, .admin-tabs .tab-btn, .tab-bar-modern .tab-btn-modern');
   const panels = document.querySelectorAll('.tab-content');
   
-  const switchTab = (id) => {
-    panels.forEach(p => p.classList.remove('tab-active'));
-    tabs.forEach(t => t.classList.remove('active'));
-    const el = document.getElementById(id);
-    if (el) el.classList.add('tab-active');
-    const btn = document.querySelector(`.tab-btn[data-target="${id}"], .tab-btn-modern[data-tab="${id}"]`);
-    if (btn) btn.classList.add('active');
-    try { history.replaceState(null, '', `#${id}`); } catch(e) {}
-  };
+  if (tabs.length > 0 && panels.length > 0) {
+    const switchTab = (id) => {
+      panels.forEach(p => p.classList.remove('tab-active'));
+      tabs.forEach(t => t.classList.remove('active'));
+      const el = document.getElementById(id);
+      if (el) el.classList.add('tab-active');
+      const btn = document.querySelector(`.tab-btn[data-target="${id}"], .tab-btn-modern[data-tab="${id}"]`);
+      if (btn) btn.classList.add('active');
+      try { history.replaceState(null, '', `#${id}`); } catch(e) {}
+    };
 
-  tabs.forEach(b => {
-    b.addEventListener('click', function(e) { 
-      const target = this.getAttribute('data-target') || this.getAttribute('data-tab');
-      if (target && document.getElementById(target)) {
-        e.preventDefault();
-        switchTab(target);
-      }
+    tabs.forEach(b => {
+      b.addEventListener('click', function(e) { 
+        const target = this.getAttribute('data-target') || this.getAttribute('data-tab');
+        if (target && document.getElementById(target)) {
+          e.preventDefault();
+          switchTab(target);
+        }
+      });
     });
-  });
 
-  const h = location.hash;
-  const path = window.location.pathname.toLowerCase();
-  const isAuthPage = path.includes('login') || path.includes('register') || path === '/' || path.endsWith('/index.php') || path === '';
+    const h = location.hash;
+    const path = window.location.pathname.toLowerCase();
+    const isAuthPage = path.includes('login') || path.includes('register') || path === '/' || path.endsWith('/index.php') || path === '';
 
-  if (isAuthPage) {
-    // On auth/home pages, always strip the hash to keep the URL extremely clean!
-    if (window.history.replaceState) {
-      window.history.replaceState(null, null, window.location.pathname);
-    }
-  }
-
-  if (h) {
-    const targetElement = document.getElementById(h.slice(1));
-    if (targetElement && !isAuthPage) {
-      switchTab(h.slice(1));
-    } else {
-      // If hash target does not exist or we are on an auth page, clean it from the URL
-      if (window.history.replaceState && !isAuthPage) {
+    if (isAuthPage) {
+      // On auth/home pages, always strip the hash to keep the URL extremely clean!
+      if (window.history.replaceState) {
         window.history.replaceState(null, null, window.location.pathname);
       }
+    }
+
+    if (h) {
+      const targetElement = document.getElementById(h.slice(1));
+      if (targetElement && !isAuthPage) {
+        switchTab(h.slice(1));
+      } else {
+        // If hash target does not exist or we are on an auth page, clean it from the URL
+        if (window.history.replaceState && !isAuthPage) {
+          window.history.replaceState(null, null, window.location.pathname);
+        }
+        activateFirstTab();
+      }
+    } else {
       activateFirstTab();
     }
-  } else {
-    activateFirstTab();
-  }
 
-  function activateFirstTab() {
-    const activePanel = document.querySelector('.tab-content.tab-active');
-    if (activePanel) {
-      const btn = document.querySelector(`.tab-btn[data-target="${activePanel.id}"], .tab-btn-modern[data-tab="${activePanel.id}"]`);
-      if (btn) btn.classList.add('active');
+    function activateFirstTab() {
+      const activePanel = document.querySelector('.tab-content.tab-active');
+      if (activePanel) {
+        const btn = document.querySelector(`.tab-btn[data-target="${activePanel.id}"], .tab-btn-modern[data-tab="${activePanel.id}"]`);
+        if (btn) btn.classList.add('active');
+      }
     }
   }
 
