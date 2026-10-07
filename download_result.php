@@ -12,12 +12,17 @@ if (!$isAdmin && !$isPatient) {
     exit('Forbidden');
 }
 
+if ($isAdmin && !admin_can('manage_records')) {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
 if ($recordId <= 0) {
     http_response_code(404);
     exit('Not found');
 }
 
-$stmt = $conn->prepare('SELECT id, patient_id, result_file, visit_date FROM medical_records WHERE id = ? LIMIT 1');
+$stmt = $conn->prepare('SELECT mr.id, mr.patient_id, mr.result_file, mr.visit_date, d.department FROM medical_records mr LEFT JOIN doctors d ON d.id = mr.doctor_id WHERE mr.id = ? LIMIT 1');
 $stmt->bind_param('i', $recordId);
 $stmt->execute();
 $record = $stmt->get_result()->fetch_assoc();
@@ -35,6 +40,21 @@ if ($isPatient && (int) $record['patient_id'] !== (int) $_SESSION['user_id']) {
     ]);
     http_response_code(403);
     exit('Forbidden');
+}
+
+if ($isAdmin) {
+    $adminDepartment = (string) ($_SESSION['admin_department'] ?? '');
+    $recordDepartment = (string) ($record['department'] ?? '');
+    if (!admin_can('manage_all_records') && $adminDepartment !== '' && $recordDepartment !== $adminDepartment) {
+        security_log('result_download_forbidden', [
+            'record_id' => $recordId,
+            'admin_id' => (int) $_SESSION['admin_id'],
+            'admin_department' => $adminDepartment,
+            'record_department' => $recordDepartment,
+        ]);
+        http_response_code(403);
+        exit('Forbidden');
+    }
 }
 
 $filePath = resolve_result_file_path((string) $record['result_file']);

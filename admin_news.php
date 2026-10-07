@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once 'config.php';
-require_admin_login();
+require_admin_permission('manage_clinic_content');
 
 $adminId = (int) ($_SESSION['admin_id'] ?? 0);
 

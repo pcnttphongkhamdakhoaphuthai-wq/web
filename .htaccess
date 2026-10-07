@@ -17,7 +17,7 @@ Options -Indexes
 </FilesMatch>
 
 # 3. Chặn các tệp ẩn và tệp cấu hình hệ thống
-<FilesMatch "^\.(git|htaccess|dockerignore)">
+<FilesMatch "^\.">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
@@ -69,6 +69,15 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
+
+    # Ép HTTPS toàn cục (trừ endpoint kiểm tra sức khỏe healthz)
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+    RewriteCond %{REQUEST_URI} !^/healthz(\.php)?$
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Chặn truy cập dotfiles và dotfolders (cho phép .well-known)
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
 
     # Tự động chuyển hướng 301 ẩn đuôi .php khi người dùng gõ trực tiếp .php trên thanh địa chỉ (trừ POST/API)
     RewriteCond %{REQUEST_METHOD} !POST

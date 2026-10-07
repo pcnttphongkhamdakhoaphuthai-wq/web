@@ -209,6 +209,8 @@ render_header('Trung tâm Hỗ trợ & Hướng dẫn người bệnh · ' . $cl
             <textarea id="message" name="message" rows="4" placeholder="Mô tả cụ thể khó khăn hoặc thông tin cần phòng khám hỗ trợ..." required style="width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 15px; color: var(--ink);"><?= e($_POST['message'] ?? '') ?></textarea>
           </div>
 
+          <?php render_captcha('public_support_request'); ?>
+
           <div style="margin-top: 8px;">
             <button class="btn btn-primary btn-block" type="submit" id="submitSupportBtn" style="height: 48px; font-size: 16px;">
               <span id="submitSupportText">Gửi yêu cầu hỗ trợ</span> <svg class="icon" style="width:18px;height:18px;" aria-hidden="true"><use href="#i-arrow"/></svg>

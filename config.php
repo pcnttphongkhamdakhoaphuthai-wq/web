@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+ini_set('log_errors', '1');
+error_reporting(E_ALL);
+
 date_default_timezone_set('Asia/Bangkok');
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -92,9 +97,9 @@ $appConfig = load_app_config();
 
 if (($appConfig['db_user'] ?? '') === '') {
     http_response_code(500);
-    echo "<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>L\u{1ED7}i c\u{1EA5}u h\u{00EC}nh b\u{1EA3}o m\u{1EAD}t</title>";
+    echo "<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>H\u{1EC7} th\u{1ED1}ng ch\u{01B0}a s\u{1EB5}n s\u{00E0}ng</title>";
     echo '<style>body{font-family:Segoe UI,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;margin:0;padding:32px}.box{max-width:720px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(15,23,42,.08)}code{background:#e2e8f0;padding:2px 6px;border-radius:6px}</style>';
-    echo "</head><body><div class=\"box\"><h1>Thi\u{1EBF}u c\u{1EA5}u h\u{00EC}nh k\u{1EBF}t n\u{1ED1}i an to\u{00E0}n</h1><p>H\u{00E3}y t\u{1EA1}o file <code>C:\xampp\hospital_full_ALL.secrets.php</code> ho\u{1EB7}c \u{0111}\u{1EB7}t c\u{00E1}c bi\u{1EBF}n m\u{00F4}i tr\u{01B0}\u{1EDD}ng <code>HOSPITAL_DB_HOST</code>, <code>HOSPITAL_DB_NAME</code>, <code>HOSPITAL_DB_USER</code>, <code>HOSPITAL_DB_PASSWORD</code>.</p></div></body></html>";
+    echo '</head><body><div class="box"><h1>Hệ thống chưa sẵn sàng</h1><p>Hệ thống đang được cấu hình hoặc bảo trì. Vui lòng liên hệ quản trị viên.</p></div></body></html>';
     exit;
 }
 
@@ -195,7 +200,7 @@ try {
     http_response_code(500);
     echo "<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>L\u{1ED7}i k\u{1EBF}t n\u{1ED1}i c\u{01A1} s\u{1EDF} d\u{1EEF} li\u{1EC7}u</title>";
     echo '<style>body{font-family:Segoe UI,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;margin:0;padding:32px}.box{max-width:720px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(15,23,42,.08)}code{background:#e2e8f0;padding:2px 6px;border-radius:6px}</style>';
-    echo "</head><body><div class=\"box\"><h1>Kh\u{00F4}ng th\u{1EC3} k\u{1EBF}t n\u{1ED1}i c\u{01A1} s\u{1EDF} d\u{1EEF} li\u{1EC7}u</h1><p>H\u{00E3}y ch\u{1EAF}c r\u{1EB1}ng MySQL \u{0111}ang ch\u{1EA1}y v\u{00E0} database <code>benhvien_support</code> \u{0111}\u{00E3} \u{0111}\u{01B0}\u{1EE3}c import t\u{1EEB} file <code>database.sql</code>.</p><p>Chi ti\u{1EBF}t k\u{1EF9} thu\u{1EAD}t \u{0111}\u{00E3} \u{0111}\u{01B0}\u{1EE3}c ghi log n\u{1ED9}i b\u{1ED9}.</p></div></body></html>";
+    echo '</head><body><div class="box"><h1>Không thể kết nối cơ sở dữ liệu</h1><p>Dịch vụ lưu trữ dữ liệu tạm thời không khả dụng. Vui lòng thử lại sau ít phút hoặc liên hệ bộ phận hỗ trợ kỹ thuật.</p><p>Chi tiết kỹ thuật đã được ghi log nội bộ.</p></div></body></html>';
     exit;
 }
 
@@ -301,12 +306,6 @@ function handle_cors_headers(): void
     ];
 
     $isAllowed = in_array($origin, $allowedExactOrigins, true);
-    if (!$isAllowed && preg_match('#^https://[a-z0-9\-]+\.pages\.dev$#i', $origin)) {
-        $isAllowed = true;
-    }
-    if (!$isAllowed && preg_match('#^https://[a-z0-9\-\.]+\.workers\.dev$#i', $origin)) {
-        $isAllowed = true;
-    }
 
     if ($isAllowed) {
         header('Access-Control-Allow-Origin: ' . $origin);
@@ -2535,14 +2534,17 @@ function resolve_result_file_path(?string $stored): ?string
         return null;
     }
 
-    $candidates = [
-        result_storage_path(basename($stored)),
-        APP_ROOT . DIRECTORY_SEPARATOR . ltrim($stored, "\\/"),
-    ];
+    $path = result_storage_path(basename($stored));
+    if (!is_file($path)) {
+        return null;
+    }
 
-    foreach ($candidates as $path) {
-        if (is_file($path)) {
-            return $path;
+    $realPath = realpath($path);
+    $realResultsRoot = realpath(APP_RESULTS_ROOT);
+    if ($realPath !== false && $realResultsRoot !== false) {
+        $prefix = rtrim($realResultsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        if (str_starts_with($realPath, $prefix)) {
+            return $realPath;
         }
     }
 
@@ -3245,20 +3247,23 @@ function store_clinic_logo(array $file, ?string $currentLogo = null): string
     }
 
     $extension = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
-    if (!in_array($extension, ['svg', 'png', 'jpg', 'jpeg', 'webp'], true)) {
-        throw new RuntimeException('Chỉ chấp nhận logo SVG, PNG, JPG hoặc WEBP.');
+    if (!in_array($extension, ['png', 'jpg', 'jpeg', 'webp'], true)) {
+        throw new RuntimeException('Chỉ chấp nhận logo PNG, JPG hoặc WEBP.');
     }
 
-    if ($extension !== 'svg' && function_exists('finfo_open')) {
+    $mimeType = false;
+    if (function_exists('finfo_open')) {
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mimeType = $finfo ? finfo_file($finfo, $file['tmp_name']) : false;
         if ($finfo) {
             finfo_close($finfo);
         }
+    } elseif (function_exists('mime_content_type')) {
+        $mimeType = mime_content_type($file['tmp_name']);
+    }
 
-        if (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/webp'], true)) {
-            throw new RuntimeException('Tệp logo không phải ảnh hợp lệ.');
-        }
+    if (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+        throw new RuntimeException('Tệp logo không phải ảnh hợp lệ.');
     }
 
     $normalizedExtension = $extension === 'jpeg' ? 'jpg' : $extension;
@@ -3787,11 +3792,11 @@ function render_header(string $title, string $activeNav = '', bool $patientLogin
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap">
   <link rel="icon" href="/logo.png">
-  <link rel="stylesheet" href="/assets/style.css?v=<?= (int) filemtime(__DIR__ . '/assets/style.css') ?>_mobile_v6">
+  <link rel="stylesheet" href="/assets/style.css?v=<?= (int) filemtime(__DIR__ . '/assets/style.css') ?>_mobile_v7">
   <?php if ($patientLoginPage): ?>
   <link rel="preload" href="/assets/fonts/roboto-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/roboto-700.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/assets/patient-login.css?v=<?= (int) filemtime(__DIR__ . '/assets/patient-login.css') ?>_mobile_v6">
+  <link rel="stylesheet" href="/assets/patient-login.css?v=<?= (int) filemtime(__DIR__ . '/assets/patient-login.css') ?>_mobile_v7">
   <script src="/assets/patient-login.js?v=<?= (int) filemtime(__DIR__ . '/assets/patient-login.js') ?>" defer></script>
   <?php endif; ?>
 </head>

@@ -322,6 +322,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'save_staff') {
         require_admin_accounts_permission('manage_accounts');
+        $currentAdminId = (int) ($_SESSION['admin_id'] ?? 0);
         $staffId = (int) ($_POST['staff_id'] ?? 0);
         $username = normalize_single_line_input($_POST['username'] ?? '');
         $fullName = normalize_single_line_input($_POST['full_name'] ?? '');
@@ -341,6 +342,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $canCreateBackup = isset($_POST['can_create_backup']) ? 1 : 0;
         $canViewLogs = isset($_POST['can_view_logs']) ? 1 : 0;
         $passwordError = $password !== '' ? validate_password_strength($password) : null;
+
+        if ($staffId > 0 && $staffId === $currentAdminId) {
+            set_flash('error', 'Bạn không thể tự chỉnh sửa quyền hoặc tài khoản của chính mình.');
+            redirect('admin_accounts.php' . $_tab);
+        }
+
+        if (!is_root_admin() && ($canManageAccounts === 1 || $canCreateBackup === 1)) {
+            set_flash('error', 'Chỉ admin gốc mới có quyền cấp quyền quản lý tài khoản hoặc sao lưu dữ liệu.');
+            redirect('admin_accounts.php' . $_tab);
+        }
 
         if (!validate_username_format($username) || !validate_person_name($fullName) || ($department !== '' && !validate_generic_label($department)) || !validate_generic_label($role, 50)) {
             set_flash('error', 'Thông tin nhân viên không hợp lệ.');
@@ -367,7 +378,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($staffId > 0) {
-            $stmt = $conn->prepare('SELECT is_root FROM admins WHERE id = ? LIMIT 1');
+            $stmt = $conn->prepare('SELECT is_root, can_manage_accounts, can_create_backup FROM admins WHERE id = ? LIMIT 1');
             $stmt->bind_param('i', $staffId);
             $stmt->execute();
             $target = $stmt->get_result()->fetch_assoc();
@@ -376,6 +387,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$target || (int) $target['is_root'] === 1) {
                 set_flash('error', 'Không được chỉnh sửa tài khoản admin gốc ở khu vực này.');
                 redirect('admin_accounts.php');
+            }
+
+            if (!is_root_admin() && ((int) ($target['can_manage_accounts'] ?? 0) === 1 || (int) ($target['can_create_backup'] ?? 0) === 1)) {
+                set_flash('error', 'Chỉ admin gốc mới có quyền chỉnh sửa tài khoản đang nắm giữ quyền quản lý tài khoản hoặc sao lưu dữ liệu.');
+                redirect('admin_accounts.php' . $_tab);
             }
 
             if ($password !== '') {
